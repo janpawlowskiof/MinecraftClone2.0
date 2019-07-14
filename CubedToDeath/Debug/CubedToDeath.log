@@ -1,0 +1,8 @@
+﻿  CubedToDeath.cpp
+CubedToDeath.obj : error LNK2019: unresolved external symbol _glfwTerminate referenced in function _main
+CubedToDeath.obj : error LNK2019: unresolved external symbol _glfwCreateWindow referenced in function _main
+CubedToDeath.obj : error LNK2019: unresolved external symbol _glfwMakeContextCurrent referenced in function _main
+CubedToDeath.obj : error LNK2019: unresolved external symbol _glfwGetProcAddress referenced in function _main
+.\lib\glfw3.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+.\lib\glfw3dll.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
+C:\Users\blond\source\repos\CubedToDeath\Debug\CubedToDeath.exe : fatal error LNK1120: 4 unresolved externals

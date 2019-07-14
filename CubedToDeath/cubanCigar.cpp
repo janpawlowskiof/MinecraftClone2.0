@@ -63,6 +63,7 @@ void CubanCigar::LoadConfig(std::string path)
 	{
 		std::string line;
 		while (getline(file, line)) {
+			//usuwanie spacji
 			line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
 			if (line[0] == '#' || line.empty())
 				continue;

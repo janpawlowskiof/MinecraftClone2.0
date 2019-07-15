@@ -8,6 +8,7 @@ CubanCigar::CubanCigar()
 CubanCigar::~CubanCigar()
 {
 	glfwTerminate();
+	delete basic_shader;
 }
 
 //inicjalizuje i odpala grê
@@ -39,21 +40,31 @@ void CubanCigar::Run()
 	}
 	glViewport(0, 0, width, height);
 
+	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
+	Chunk chunk(0, 0);
+
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+	///	test  ///
+
+	float counter = 0;
+
+	///		///
+
 	//main loop
 	while (!glfwWindowShouldClose(window))
 	{
-		glfwSwapBuffers(window);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glVertex2f(0.1f, 0.1f);
-		glVertex2f(0.9f, 0.1f);
-		glVertex2f(0.5f, 0.9f);
 		glfwPollEvents();
+		glClear(GL_COLOR_BUFFER_BIT);
+		counter += 0.01f;
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::rotate(trans, counter, glm::vec3(0.0, 1.0, 0.0));
+		basic_shader->SetMat4(basic_shader->transform_location, trans);
+		chunk.Draw();
+		glfwSwapBuffers(window);
 	}
 }
 
-//inicjalizacja!!!!
-std::map<std::string, std::string> CubanCigar::config_map;
 //wczytuje plik konfiguracyjny do mapy
 void CubanCigar::LoadConfig(std::string path)
 {
@@ -79,3 +90,7 @@ void CubanCigar::LoadConfig(std::string path)
 		std::cerr << "Couldn't open config file\n";
 	}
 }
+
+//inicjalizacja!!!!
+std::map<std::string, std::string> CubanCigar::config_map;
+Shader* CubanCigar::basic_shader = nullptr;

@@ -163,14 +163,17 @@
     <ClCompile Include="cubanCigar.cpp" />
     <ClCompile Include="CubedToDeath.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="cubanCigar.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="config.txt" />
     <Text Include="res\fragment.txt" />
     <Text Include="res\vertex.txt" />
   </ItemGroup>

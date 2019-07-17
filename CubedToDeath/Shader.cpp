@@ -74,15 +74,17 @@ Shader::Shader(std::string vertex_path, std::string fragment_path)
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
 
-	transform_location = glad_glGetUniformLocation(shader_id, "transform");
+	model_location = glad_glGetUniformLocation(shader_id, "model");
+	view_location = glad_glGetUniformLocation(shader_id, "view");
+	projection_location = glad_glGetUniformLocation(shader_id, "projection");
 }
 
-void Shader::SetFloat(int uniform_location, float value)
+void Shader::SetFloat(const int uniform_location, const float value)
 {
 	glUniform1f(uniform_location, value);
 }
 
-void Shader::SetMat4(int uniform_location, glm::mat4 value)
+void Shader::SetMat4(const int uniform_location, const glm::mat4 value)
 {
 	glUniformMatrix4fv(uniform_location, 1, GL_FALSE, glm::value_ptr(value));
 }

@@ -12,10 +12,12 @@ class Shader
 {
 public:
 	Shader(std::string vertex_path, std::string fragment_path);
-	void SetFloat(int uniform_location, float value);
-	void SetMat4(int uniform_location, glm::mat4 value);
+	void SetFloat(const int uniform_location, const float value);
+	void SetMat4(const int uniform_location, const glm::mat4 value);
 	void Use();
-	int transform_location;
+	int model_location;
+	int view_location;
+	int projection_location;
 private:
 	unsigned int shader_id;
 };

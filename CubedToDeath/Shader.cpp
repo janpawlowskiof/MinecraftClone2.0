@@ -3,6 +3,7 @@
 
 Shader::Shader(std::string vertex_path, std::string fragment_path)
 {
+	//kompilowanie shadera
 	std::string vertex_code;
 	std::string fragment_code;
 	std::ifstream file;
@@ -78,6 +79,7 @@ Shader::Shader(std::string vertex_path, std::string fragment_path)
 	view_location = glad_glGetUniformLocation(shader_id, "view");
 	projection_location = glad_glGetUniformLocation(shader_id, "projection");
 }
+
 
 void Shader::SetFloat(const int uniform_location, const float value)
 {

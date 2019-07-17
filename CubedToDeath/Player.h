@@ -14,12 +14,18 @@ private:
 	//camera pitch
 	float pitch = 0;
 
+	float fov;
 	float player_speed;
 	float mouse_sensitivity;
+	//time of previous update
 	float last_time;
+
+	glm::mat4 projection;
 public:
 	Player();
+	//Updates player position
 	void Update();
+	//Updates camera rotation
 	void UpdateMouse(float delta_yaw, float delta_pitch);
 };
 

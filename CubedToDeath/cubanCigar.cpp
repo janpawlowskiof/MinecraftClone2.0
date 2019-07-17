@@ -124,3 +124,5 @@ Player* CubanCigar::player = nullptr;
 bool CubanCigar::first_mouse = true;
 double CubanCigar::last_x = 0; 
 double CubanCigar::last_y = 0;
+int CubanCigar::width = 800;
+int CubanCigar::height = 600;

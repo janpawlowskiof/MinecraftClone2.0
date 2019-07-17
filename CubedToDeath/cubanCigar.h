@@ -21,9 +21,9 @@ public:
 	static std::map<std::string, std::string> config_map;
 	static GLFWwindow* window;
 	static Player* player;
+	static int height, width;
 private:
 	void LoadConfig(std::string path);
-	int height, width;
 	static bool first_mouse;
 	static double last_x, last_y;
 };

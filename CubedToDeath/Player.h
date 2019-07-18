@@ -18,7 +18,7 @@ private:
 	float player_speed;
 	float mouse_sensitivity;
 	//time of previous update
-	float last_time;
+	double last_time;
 
 	glm::mat4 projection;
 public:

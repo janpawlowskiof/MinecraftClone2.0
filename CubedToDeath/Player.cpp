@@ -31,7 +31,7 @@ void Player::UpdateMouse(float delta_yaw, float delta_pitch)
 void Player::Update()
 {
 	//time form prev update
-	float delta_time = glfwGetTime() - last_time;
+	double delta_time = glfwGetTime() - last_time;
 	last_time = glfwGetTime();
 
 	//movement delta in every given LOCAL direction

@@ -9,6 +9,8 @@
 #include "Shader.h"
 #include "Chunk.h"
 #include "Player.h"
+#include "Block.h"
+#include "Texture.h"
 
 class CubanCigar
 {
@@ -23,7 +25,9 @@ public:
 	static Player* player;
 	static int height, width;
 private:
+	void InitializeOpenGL();
 	void LoadConfig(std::string path);
 	static bool first_mouse;
 	static double last_x, last_y;
+	Texture* texture_terrain;
 };

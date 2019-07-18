@@ -2,27 +2,16 @@
 
 CubanCigar::CubanCigar()
 {
-	LoadConfig("config.txt");
+
 }
 
-CubanCigar::~CubanCigar()
-{
-	glfwTerminate();
-	delete basic_shader;
-}
-
-//inicjalizuje i odpala grê
-void CubanCigar::Run()
+void CubanCigar::InitializeOpenGL()
 {
 	//standardowa inicjalizacja
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	//domyœlne wymiary
-	height = std::stoi(config_map["height"]);
-	width = std::stoi(config_map["width"]);
 
 	window = glfwCreateWindow(width, height, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
@@ -40,35 +29,50 @@ void CubanCigar::Run()
 	}
 	glViewport(0, 0, width, height);
 
-	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
-	Chunk chunk(0, 0);
-
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-	///	test  ///
-
-	float counter = 0;
-
-	///		///
-
 	//input things 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+}
+
+//inicjalizuje i odpala grê
+void CubanCigar::Run()
+{
+	//Loading config file into a map
+	LoadConfig("config.txt");
+	height = std::stoi(config_map["height"]);
+	width = std::stoi(config_map["width"]);
+
+	//Initializing opengl stuff
+	InitializeOpenGL();
+
+	texture_terrain = new Texture(config_map["texture_terrain_path"]);
+
+	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
+
 	player = new Player();
+
+	///	test  ///
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	Chunk chunk(0, 0);
+	float counter = 0;
+	///		///
 
 	//main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
-		glClear(GL_COLOR_BUFFER_BIT);
-		counter += 0.01f;
-		glm::mat4 trans = glm::mat4(1.0f);
-		trans = glm::translate(trans, glm::vec3(0, 0, -2));
-		trans = glm::rotate(trans, counter, glm::vec3(0.0, 1.0, 0.0));
-		basic_shader->SetMat4(basic_shader->model_location, trans);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		player->Update();
+		basic_shader->Use();
+		texture_terrain->Bind();
 		chunk.Draw();
+
 		glfwSwapBuffers(window);
 	}
 }
@@ -116,7 +120,16 @@ void CubanCigar::mouse_callback(GLFWwindow* window, double x, double y)
 	player->UpdateMouse(xoffset, yoffset);
 }
 
-//inicjalizacja!!!!
+CubanCigar::~CubanCigar()
+{
+	glfwTerminate();
+	delete basic_shader;
+	delete player;
+	delete window;
+	delete texture_terrain;
+}
+
+//inicjalizacja statycznych zmiennych
 std::map<std::string, std::string> CubanCigar::config_map;
 Shader* CubanCigar::basic_shader = nullptr;
 GLFWwindow* CubanCigar::window = nullptr;

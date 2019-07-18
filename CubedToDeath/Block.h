@@ -5,172 +5,75 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
+//klasa bazowa kostki
 class Block
 {
 public:
-	int id = 0;
+	//id klocka
+	int id = -1;
+	//koordynaty w œwiecie
 	int world_x = 0, world_y = 0, world_z = 0;
+	//pozycja textur na boku
 	int side_x = 0, side_y = 0;
+	//pozycja textur na górze
 	int top_x = 0, top_y = 0;
+	//pozycja textur na dole
 	int bottom_x = 0, bottom_y = 0;
-	bool opaque = false;
-
+	//czy klicek jest nieprzejrzysty
+	bool opaque = true;
+	//które œcianki s¹ widoczne
 	bool face_visible[6] = { true,true,true,true,true,true };
-	//bitset<6> face_visible;
 
-	virtual std::vector<float> GetModel()
+	Block() {};
+	Block(int world_x, int world_y, int world_z)
 	{
-		return GetCubeModel(face_visible, world_x, world_y, world_z, side_x, side_y, top_x, top_y, bottom_x, bottom_y);
+		this->world_x = world_x;
+		this->world_y = world_y;
+		this->world_z = world_z;
 	}
+	//Od zera przelicza widocznoœæ klocków
 	virtual void RecalculateVisibility();
-
+	//zwraca liczbê trójk¹tów które w obecnym stanie bêdzie rysowa³ klocek;
+	virtual int GetNumberOfTriangles();
+	//		WA¯NE		//
+	//wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
+	virtual float* CreateModel(float* target);
+	//wnum kierunków œwiata
 	enum Direction
 	{
+		//	z+
 		NORTH,
+		//	z-
 		SOUTH,
+		//	x+
 		EAST,
+		//	x-
 		WEST,
+		//	y+
 		TOP,
+		//	y-
 		BOTTOM
 	};
-
-	#define u (1.0f/16.0f)
-	static std::vector<float> GetCubeModel(bool face_visible[6], int world_x, int world_y, int world_z, int side_x, int side_y, int top_x, int top_y, int bottom_x, int bottom_y)
-	{
-		std::vector<float> model;
-		std::vector<float> face;
-		if (face_visible[NORTH])
-		{
-			face = GetNorthFace(world_x, world_y, world_z, side_x, side_y);
-			model.insert(model.end(), face.data(), face.data() + 48);
-		}
-		if (face_visible[SOUTH])
-		{
-			face = GetSouthFace(world_x, world_y, world_z, side_x, side_y);
-			model.insert(model.end(), face.data(), face.data() + 48);
-		}
-		if (face_visible[WEST])
-		{
-			face = GetWestFace(world_x, world_y, world_z, side_x, side_y);
-			model.insert(model.end(), face.data(), face.data() + 48);
-		}
-		if (face_visible[EAST])
-		{
-			face = GetEastFace(world_x, world_y, world_z, side_x, side_y);
-			model.insert(model.end(), face.data(), face.data() + 48);
-		}
-		if (face_visible[TOP])
-		{
-			face = GetTopFace(world_x, world_y, world_z, top_x, top_y);
-			model.insert(model.end(), face.data(), face.data() + 48);
-		}
-		if (face_visible[BOTTOM])
-		{
-			face = GetBottomFace(world_x, world_y, world_z, bottom_x, bottom_y);
-			model.insert(model.end(), face.data(), face.data() + 48);
-		}
-		return model;
-	}
-
-	static std::vector<float> GetNorthFace(int world_x, int world_y, int world_z, int texture_x, int texture_y)
-	{
-		return std::vector<float>{
-				world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, texture_x* u, (texture_y + 1)* u, 0, 0, 1,
-				world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)* u, (texture_y + 1)* u, 0, 0, 1,
-				world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)* u, texture_y* u, 0, 0, 1,
-
-				world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, texture_x* u, (texture_y + 1)* u, 0, 0, 1,
-				world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)* u, texture_y* u, 0, 0, 1,
-				world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, texture_x* u, texture_y* u, 0, 0, 1
-		};
-	}
-
-	static std::vector<float> GetSouthFace(int world_x, int world_y, int world_z, int texture_x, int texture_y)
-	{
-		return std::vector<float>{
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x* u, (texture_y + 1)* u, 0, 0, -1,
-				world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (texture_x + 1) * u, texture_y* u, 0, 0, -1,
-				world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (texture_x + 1) * u, (texture_y + 1)* u, 0, 0, -1,
-
-				world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x * u, (texture_y + 1)* u, 0, 0, -1,
-				world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x * u, texture_y* u, 0, 0, -1,
-				world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (texture_x + 1) * u, texture_y* u, 0, 0, -1,
-		};
-	}
-
-	static std::vector<float> GetTopFace(int world_x, int world_y, int world_z, int texture_x, int texture_y)
-	{
-		return std::vector<float>{
-			world_x + 0.0f, 1.0f, world_z + 0.0f, texture_x* u, (texture_y)* u, 0, 1, 0,
-				world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (texture_x)* u, (texture_y+1)* u, 0, 1, 0,
-				world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)* u, (texture_y + 1)* u, 0, 1, 0,
-
-				world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x* u, (texture_y)* u, 0, 1, 0,
-				world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x+1)* u, (texture_y+1)* u, 0, 1, 0,
-				world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (texture_x + 1)* u, texture_y* u, 0, 1, 0,
-		};
-	}
-
-	static std::vector<float> GetBottomFace(int world_x, int world_y, int world_z, int texture_x, int texture_y)
-	{
-		return std::vector<float>{
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x* u, (texture_y)* u, 0, -1, 0,
-				world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)* u, (texture_y + 1)* u, 0, -1, 0,
-				world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x)* u, (texture_y + 1)* u, 0, -1, 0,
-
-				world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x* u, (texture_y)* u, 0, 1, 0,
-				world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (texture_x + 1)* u, texture_y* u, 0, -1, 0,
-				world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) * u, (texture_y + 1)* u, 0, -1, 0,
-		};
-	}
-
-	static std::vector<float> GetWestFace(int world_x, int world_y, int world_z, int texture_x, int texture_y)
-	{
-		return std::vector<float>{
-			world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, texture_x* u, (texture_y + 1)* u, 1, 0, 0,
-				world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)* u, texture_y* u, 1, 0, 0,
-				world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)* u, (texture_y + 1)* u, 1, 0, 0,
-
-				world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, texture_x* u, (texture_y + 1)* u, 1, 0, 0,
-				world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, texture_x* u, texture_y* u, 1, 0, 0,
-				world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)* u, texture_y* u, 1, 0, 0,
-		};
-	}
-
-	static std::vector<float> GetEastFace(int world_x, int world_y, int world_z, int texture_x, int texture_y)
-	{
-		return std::vector<float>{
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x * u, (texture_y + 1)* u, -1, 0, 0,
-				world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) * u, (texture_y + 1)* u, -1, 0, 0,
-				world_x + 0.0f, world_y + 1.0f, 1, (texture_x + 1) * u, texture_y* u, -1, 0, 0,
-
-				world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x * u, (texture_y + 1)* u, -1, 0, 0,
-				world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) * u, texture_y* u, -1, 0, 0,
-				world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x * u, texture_y* u, -1, 0, 0,
-		};
-	}
-
 private:
-
 };
 
-namespace blocks
+
+//					definicje bloków				//
+namespace blk
 {
 	class Air : public Block
 	{
 	public:
-		Air(){ id = 0; }
-		std::vector<float> GetModel() override
-		{
-			return std::vector<float>();
-		}
+		Air(int world_x, int world_y, int world_z) : Block(world_x, world_y, world_z) { id = 0; opaque = false; }
+		int GetNumberOfTriangles() override { return 0; }
+		float* CreateModel(float* target) override { return target; }
 	private:
 	};
 
 	class Stone : public Block
 	{
 	public:
-		Stone()
+		Stone(int world_x, int world_y, int world_z) : Block(world_x, world_y, world_z)
 		{
 			id = 1;
 			top_x = 1; top_y = 0;
@@ -182,7 +85,7 @@ namespace blocks
 	class Grass : public Block
 	{
 	public:
-		Grass()
+		Grass(int world_x, int world_y, int world_z) : Block(world_x, world_y, world_z)
 		{
 			id = 2;
 			top_x = 8; top_y = 2;
@@ -194,7 +97,7 @@ namespace blocks
 	class Dirt : public Block
 	{
 	public:
-		Dirt() 
+		Dirt(int world_x, int world_y, int world_z) : Block(world_x, world_y, world_z)
 		{
 			id = 3;
 			side_x = 2; side_y = 0;

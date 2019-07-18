@@ -1,6 +1,6 @@
 width=800
 height=600
 mouse_sensitivity = 0.1;
-player_speed = 1.0;
+player_speed = 3.0;
 fov = 90.0;
 texture_terrain_path = res/terrain.png

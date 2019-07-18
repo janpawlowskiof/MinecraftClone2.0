@@ -2,7 +2,6 @@
 
 CubanCigar::CubanCigar()
 {
-
 }
 
 void CubanCigar::InitializeOpenGL()
@@ -51,9 +50,7 @@ void CubanCigar::Run()
 	InitializeOpenGL();
 
 	texture_terrain = new Texture(config_map["texture_terrain_path"]);
-
 	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
-
 	player = new Player();
 
 	///	test  ///
@@ -117,6 +114,7 @@ void CubanCigar::mouse_callback(GLFWwindow* window, double x, double y)
 	last_x = x;
 	last_y = y;
 
+	//updates player camera position
 	player->UpdateMouse(xoffset, yoffset);
 }
 

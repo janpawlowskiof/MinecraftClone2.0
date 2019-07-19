@@ -135,8 +135,4 @@ int Block::GetNumberOfTriangles()
 	return result;
 }
 
-void Block::RecalculateVisibility()
-{
-
-}
 

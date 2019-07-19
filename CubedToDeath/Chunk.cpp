@@ -54,13 +54,112 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	UpdateVBO();
 }
 
-void Chunk::RecalculateVisibility()
+void Chunk::CountVisibleTriangles()
 {
+	visible_blocks.clear();
+	triangles_count = 0;
+
 	for (int y = 0; y < 128; ++y){
 		for (int x = 0; x < 16; ++x){
-			for (int z = 0; z < 16; z++){
-				//if(blocks)
+			for (int z = 0; z < 16; ++z){
+				Block *block = blocks[x][y][z];
+				bool visible = false;
 
+				//non-opaque blocks are always set to be visible
+				if (!block->opaque) {
+					//you can't see air
+					if (block->id != 0) visible_blocks.push_back(block);
+					continue;
+				}
+
+				//if block is a cube, sides that are adjacent to non-opaque or non-cube blocks are set to be visible
+				if(block->cube){
+					if (z + 1 < 16) {
+						if (!blocks[x][y][z + 1]->opaque or !blocks[x][y][z + 1]->cube) {
+							block->face_visible[Block::NORTH] = true;
+							visible = true;
+						}
+						else
+							block->face_visible[Block::NORTH] = false;
+					}
+					else {
+						block->face_visible[Block::NORTH] = true;
+						visible = true;
+					}
+
+					if (z - 1 >= 0) {
+						if (!blocks[x][y][z - 1]->opaque or !blocks[x][y][z - 1]->cube) {
+							block->face_visible[Block::SOUTH] = true;
+							visible = true;
+						}
+						else
+							block->face_visible[Block::SOUTH] = false;
+					}
+					else {
+						block->face_visible[Block::SOUTH] = true;
+						visible = true;
+					}
+
+					if (x + 1 < 16) {
+						if (!blocks[x + 1][y][z]->opaque or !blocks[x + 1][y][z]->cube) {
+							block->face_visible[Block::WEST] = true;
+							visible = true;
+						}
+						else
+							block->face_visible[Block::WEST] = false;
+					}
+					else {
+						block->face_visible[Block::WEST] = true;
+						visible = true;
+					}
+
+					if (x - 1 >= 0) {
+						if (!blocks[x - 1][y][z]->opaque or !blocks[x - 1][y][z]->cube) {
+							block->face_visible[Block::EAST] = true;
+							visible = true;
+						}
+						else
+							block->face_visible[Block::EAST] = false;
+					}
+					else {
+						block->face_visible[Block::EAST] = true;
+						visible = true;
+					}
+
+					if (y + 1 < 128) {
+						if (!blocks[x][y + 1][z]->opaque or !blocks[x][y + 1][z]->cube) {
+							block->face_visible[Block::TOP] = true;
+							visible = true;
+						}			
+						else
+							block->face_visible[Block::TOP] = false;
+					}
+					else {
+						block->face_visible[Block::TOP] = true;
+						visible = true;
+					}
+
+					if (y - 1 >= 0) {
+						if (!blocks[x][y - 1][z]->opaque or !blocks[x][y - 1][z]->cube) {
+							block->face_visible[Block::BOTTOM] = true;
+							visible = true;
+						}
+							
+						else
+							block->face_visible[Block::BOTTOM] = false;
+					}
+					else {
+						block->face_visible[Block::BOTTOM] = true;
+						visible = true;
+					}
+					//if block is visible it is added to vector of visible blocks
+					if (visible) visible_blocks.push_back(block);
+				}
+				//if non-cube block is aligned to non-opaque or non-cube block , all it's faces are visible 
+				else {
+				}
+
+				triangles_count += block->GetNumberOfTriangles();
 			}
 		}
 	}	
@@ -68,29 +167,20 @@ void Chunk::RecalculateVisibility()
 
 void Chunk::UpdateVBO()
 {
-	//First pass	->		We count number of triangles that will be drawn
-	triangles_count = 0;
-	for (int y = 0; y < 128; ++y) {
-		for (int x = 0; x < 16; ++x) {
-			for (int z = 0; z < 16; z++) {
-				triangles_count += blocks[x][y][z]->GetNumberOfTriangles();
-			}
-		}
-	}
+	//We count number of triangles that will be drawn
+	CountVisibleTriangles();
+
 	std::cout << triangles_count << " triangles\n";
 
 	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
 	float* vertices = new float[triangles_count*3*8];
 	//target adress that we will insert our data into
 	float* target = vertices;
-	for (int y = 0; y < 128; ++y) {
-		for (int x = 0; x < 16; ++x) {
-			for (int z = 0; z < 16; z++) {
-				//we insert vertices of each block into the array at address pointed by target (and update the target adress)
-				target = blocks[x][y][z]->CreateModel(target);
-			}
-		}
+
+	for (Block* block : visible_blocks) {
+		target = block->CreateModel(target);
 	}
+
 	//transfering our data to the gpu
 	glBindVertexArray(vao);
 	glBufferData(GL_ARRAY_BUFFER, triangles_count * 3 * 8 * sizeof(float), vertices, GL_STATIC_DRAW);

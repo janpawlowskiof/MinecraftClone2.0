@@ -21,6 +21,8 @@ public:
 	int bottom_x = 0, bottom_y = 0;
 	//czy klicek jest nieprzejrzysty
 	bool opaque = true;
+	//czy klocek jest szescianem
+	bool cube = true;
 	//które œcianki s¹ widoczne
 	bool face_visible[6] = { true,true,true,true,true,true };
 
@@ -30,9 +32,17 @@ public:
 		this->world_x = world_x;
 		this->world_y = world_y;
 		this->world_z = world_z;
+
+		//przezroczyste klocki sa zawsze widoczne
+		if (!opaque) {
+			face_visible[Block::NORTH] = true;
+			face_visible[Block::SOUTH] = true;
+			face_visible[Block::WEST] = true;
+			face_visible[Block::EAST] = true;
+			face_visible[Block::TOP] = true;
+			face_visible[Block::BOTTOM] = true;
+		}
 	}
-	//Od zera przelicza widocznoœæ klocków
-	virtual void RecalculateVisibility();
 	//zwraca liczbê trójk¹tów które w obecnym stanie bêdzie rysowa³ klocek;
 	virtual int GetNumberOfTriangles();
 	//		WA¯NE		//

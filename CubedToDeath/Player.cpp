@@ -24,8 +24,8 @@ void Player::UpdateMouse(float delta_yaw, float delta_pitch)
 	else if (yaw < 0) yaw += 360;
 
 	pitch += delta_pitch * mouse_sensitivity;
-	if (pitch > 89) pitch = 89.999f;
-	if (pitch < -89) pitch = -89.999f;
+	if (pitch > 89) pitch = 89.0f;
+	if (pitch < -89) pitch = -89.0f;
 }
 
 void Player::Update()

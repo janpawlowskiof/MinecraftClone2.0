@@ -10,15 +10,15 @@ class Block
 {
 public:
 	//id klocka
-	int id = -1;
+	char id = -1;
 	//koordynaty w œwiecie
 	int world_x = 0, world_y = 0, world_z = 0;
 	//pozycja textur na boku
-	int side_x = 0, side_y = 0;
+	char side_x = 0, side_y = 0;
 	//pozycja textur na górze
-	int top_x = 0, top_y = 0;
+	char top_x = 0, top_y = 0;
 	//pozycja textur na dole
-	int bottom_x = 0, bottom_y = 0;
+	char bottom_x = 0, bottom_y = 0;
 	//czy klicek jest nieprzejrzysty
 	bool opaque = true;
 	//czy klocek jest szescianem
@@ -48,6 +48,8 @@ public:
 	//		WA¯NE		//
 	//wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 	virtual float* CreateModel(float* target);
+	virtual int NeighbourDestroyed() { return 3; }
+	virtual void Powered() {}
 	//wnum kierunków œwiata
 	enum Direction
 	{

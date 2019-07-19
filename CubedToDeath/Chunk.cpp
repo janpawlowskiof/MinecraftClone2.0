@@ -1,6 +1,7 @@
 #include "Chunk.h"
 #include "cubanCigar.h"
 #include "Block.h"
+#include "SimpleBlock.h"
 
 Chunk::Chunk(int chunk_x, int chunk_z)
 {
@@ -32,31 +33,50 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
-				blk::Stone* dirt = new blk::Stone(x + chunk_x * 16, y, z + chunk_z * 16);
-				blocks[x][y][z] = dirt;
+				//blk::Stone* dirt = new blk::Stone(x + chunk_x * 16, y, z + chunk_z * 16);
+				//blocks[x][y][z] = dirt;
+				simple_blocks[y][x][z] = SimpleBlock(blk_id::dirt_id);
 			}
 
 	for (int y = 5; y < 8; y++)
 		for (int x= 0; x < 16; x++)
 			for (int z= 0; z < 16; z++)
 			{
-				blk::Dirt* air = new blk::Dirt(x + chunk_x * 16, y, z + chunk_z * 16);
-				blocks[x][y][z] = air;
+				//blk::Dirt* air = new blk::Dirt(x + chunk_x * 16, y, z + chunk_z * 16);
+				//blocks[x][y][z] = air;
+				simple_blocks[y][x][z] = SimpleBlock(blk_id::stone_id);
 			}
 	for (int y = 8; y < 128; y++)
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
-				blk::Air* air = new blk::Air(x + chunk_x * 16, y, z + chunk_z * 16);
-				blocks[x][y][z] = air;
+				//blk::Air* air = new blk::Air(x + chunk_x * 16, y, z + chunk_z * 16);
+				//blocks[x][y][z] = air;
+				simple_blocks[y][x][z] = SimpleBlock(blk_id::air_id);
 			}
+
 	///											///
+	std::cout << "Chunk size: " << sizeof(simple_blocks) << std::endl;
+	RecalculateVisibility();
 	UpdateVBO();
 }
 
 void Chunk::CountVisibleTriangles()
 {
-	visible_blocks.clear();
+	/*triangles_count = 0;
+	for (int y = 1; y < 127; y++)
+		for (int x = 1; x < 15; x++)
+			for (int z = 1; z < 15; z++)
+			{
+				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::NORTH);
+				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::SOUTH);
+				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::EAST);
+				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::WEST);
+				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::TOP);
+				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::BOTTOM);
+			}*/
+
+	/*visible_blocks.clear();
 	triangles_count = 0;
 
 	for (int y = 0; y < 128; ++y){
@@ -162,13 +182,52 @@ void Chunk::CountVisibleTriangles()
 				triangles_count += block->GetNumberOfTriangles();
 			}
 		}
-	}	
+	}*/	
+}
+
+void Chunk::RecalculateVisibility()
+{
+	triangles_count = 0;
+	bool visible = false;
+	for (int y = 1; y < 127; y++)
+		for (int x = 1; x < 15; x++)
+			for (int z = 1; z < 15; z++)
+			{
+				if (simple_blocks[y][x][z].id == blk_id::air_id)
+					continue;
+				visible = !simple_blocks[y][x][z + 1].GetFlag(SimpleBlock::OPAQUE);
+				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::NORTH, visible);
+				triangles_count += 2 * visible;
+
+				visible = !simple_blocks[y][x][z - 1].GetFlag(SimpleBlock::OPAQUE);
+				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::SOUTH, visible);
+				triangles_count += 2 * visible;
+
+				visible = !simple_blocks[y][x + 1][z].GetFlag(SimpleBlock::OPAQUE);
+				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::WEST, visible);
+				triangles_count += 2 * visible;
+
+
+				visible = !simple_blocks[y][x - 1][z].GetFlag(SimpleBlock::OPAQUE);
+				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::EAST, visible);
+				triangles_count += 2 * visible;
+
+
+				visible = !simple_blocks[y + 1][x][z].GetFlag(SimpleBlock::OPAQUE);
+				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::TOP, visible);
+				triangles_count += 2 * visible;
+
+
+				visible = !simple_blocks[y - 1][x][z].GetFlag(SimpleBlock::OPAQUE);
+				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::BOTTOM, visible);
+				triangles_count += 2 * visible;
+			}
 }
 
 void Chunk::UpdateVBO()
 {
 	//We count number of triangles that will be drawn
-	CountVisibleTriangles();
+	//CountVisibleTriangles();
 
 	std::cout << triangles_count << " triangles\n";
 
@@ -177,9 +236,16 @@ void Chunk::UpdateVBO()
 	//target adress that we will insert our data into
 	float* target = vertices;
 
-	for (Block* block : visible_blocks) {
+	for (int x = 1; x < 15; x++)
+		for (int y = 1; y < 127; y++)
+			for (int z = 1; z < 15; z++)
+			{
+				target = simple_blocks[y][x][z].CreateModel(target, x + 16 * chunk_x, y, z + 16 * chunk_z);
+			}
+
+	/*for (Block* block : visible_blocks) {
 		target = block->CreateModel(target);
-	}
+	}*/
 
 	//transfering our data to the gpu
 	glBindVertexArray(vao);

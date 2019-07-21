@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "cubanCigar.h"
+#include "MyCraft.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -7,13 +7,13 @@
 Player::Player()
 {
 	//config settings
-	player_speed = std::stof(CubanCigar::config_map["player_speed"]);
-	mouse_sensitivity = std::stof(CubanCigar::config_map["mouse_sensitivity"]);
-	fov = std::stof(CubanCigar::config_map["fov"]);
+	player_speed = std::stof(MyCraft::config_map["player_speed"]);
+	mouse_sensitivity = std::stof(MyCraft::config_map["mouse_sensitivity"]);
+	fov = std::stof(MyCraft::config_map["fov"]);
 	//initial last time setting
 	last_time = glfwGetTime();
 	//initial projecition matrix calculation
-	projection = glm::perspective(glm::radians(fov), (float)CubanCigar::width / CubanCigar::height, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(fov), (float)MyCraft::width / MyCraft::height, 0.1f, 1000.0f);
 }
 
 void Player::UpdateMouse(float delta_yaw, float delta_pitch)
@@ -36,11 +36,11 @@ void Player::Update()
 
 	//movement delta in every given LOCAL direction
 	float delta_forward =
-		((glfwGetKey(CubanCigar::window, GLFW_KEY_W) == GLFW_PRESS) - (glfwGetKey(CubanCigar::window, GLFW_KEY_S) == GLFW_PRESS)) * player_speed * delta_time;
+		((glfwGetKey(MyCraft::window, GLFW_KEY_W) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_S) == GLFW_PRESS)) * player_speed * delta_time;
 	float delta_right =
-		((glfwGetKey(CubanCigar::window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(CubanCigar::window, GLFW_KEY_A) == GLFW_PRESS)) * player_speed * delta_time;
+		((glfwGetKey(MyCraft::window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_A) == GLFW_PRESS)) * player_speed * delta_time;
 	float delta_up =
-		((glfwGetKey(CubanCigar::window, GLFW_KEY_SPACE) == GLFW_PRESS) - (glfwGetKey(CubanCigar::window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)) * player_speed * delta_time;
+		((glfwGetKey(MyCraft::window, GLFW_KEY_SPACE) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)) * player_speed * delta_time;
 
 	//forward but aligned to the ground
 	glm::vec3 forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);
@@ -52,9 +52,11 @@ void Player::Update()
 
 	//calculating view matrix
 	glm::mat4 view = glm::lookAt(position, position + forward, glm::vec3(0, 1, 0));
-	CubanCigar::basic_shader->SetMat4(CubanCigar::basic_shader->view_location, view);
+	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->view_location, view);
 	//updating projection matrix
-	CubanCigar::basic_shader->SetMat4(CubanCigar::basic_shader->projection_location, projection);
+	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
 
 	//std::cout << forward.x << " " << forward.y << " " << forward.z << std::endl;
 }
+
+glm::vec3 Player::position = glm::vec3(10, 10, 10);

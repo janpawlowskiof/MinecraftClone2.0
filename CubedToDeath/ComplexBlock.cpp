@@ -2,11 +2,6 @@
 
 
 
-ComplexBlock::ComplexBlock()
-{
-}
-
-
 ComplexBlock::~ComplexBlock()
 {
 }

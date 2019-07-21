@@ -1,5 +1,5 @@
 #include "Chunk.h"
-#include "cubanCigar.h"
+#include "MyCraft.h"
 #include "Block.h"
 #include "SimpleBlock.h"
 
@@ -10,14 +10,13 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	this->chunk_z = chunk_z;
 
 	//generating vbo that belongs to chunk
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	
-	//glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+	glGenBuffers(2, vbo);
+	glGenVertexArrays(2, vao);
 
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
+	
 	//generating vao that belongs to chunk
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	glBindVertexArray(vao[SIMPLE]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -28,6 +27,18 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	glEnableVertexAttribArray(2);
 
 
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	//generating vao that belongs to chunk
+	glBindVertexArray(vao[COMPLEX]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
 	///			TEST INITIALIZATION			///
 	for (int y = 0; y < 5; y++)
 		for (int x = 0; x < 16; x++)
@@ -35,7 +46,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			{
 				//blk::Stone* dirt = new blk::Stone(x + chunk_x * 16, y, z + chunk_z * 16);
 				//blocks[x][y][z] = dirt;
-				simple_blocks[y][x][z] = SimpleBlock(blk_id::dirt_id);
+				blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
 			}
 
 	for (int y = 5; y < 8; y++)
@@ -44,7 +55,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			{
 				//blk::Dirt* air = new blk::Dirt(x + chunk_x * 16, y, z + chunk_z * 16);
 				//blocks[x][y][z] = air;
-				simple_blocks[y][x][z] = SimpleBlock(blk_id::stone_id);
+				blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
 			}
 	for (int y = 8; y < 128; y++)
 		for (int x = 0; x < 16; x++)
@@ -52,211 +63,238 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			{
 				//blk::Air* air = new blk::Air(x + chunk_x * 16, y, z + chunk_z * 16);
 				//blocks[x][y][z] = air;
-				simple_blocks[y][x][z] = SimpleBlock(blk_id::air_id);
+				blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
 			}
+
+	ReplaceBlock(new blk::Torch(), 3, 8, 3);
+	ReplaceBlock(new SimpleBlock(blk_id::dirt_id), 0, 8, 5);
+	//ReplaceBlock(new SimpleBlock(blk_id::dirt_id), 15, 8, 5);
 
 	///											///
-	std::cout << "Chunk size: " << sizeof(simple_blocks) << std::endl;
-	RecalculateVisibility();
-	UpdateVBO();
-}
-
-void Chunk::CountVisibleTriangles()
-{
-	/*triangles_count = 0;
-	for (int y = 1; y < 127; y++)
-		for (int x = 1; x < 15; x++)
-			for (int z = 1; z < 15; z++)
-			{
-				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::NORTH);
-				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::SOUTH);
-				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::EAST);
-				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::WEST);
-				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::TOP);
-				triangles_count += 2 * simple_blocks[y][x][z].GetFaceVisible(SimpleBlock::BOTTOM);
-			}*/
-
-	/*visible_blocks.clear();
-	triangles_count = 0;
-
-	for (int y = 0; y < 128; ++y){
-		for (int x = 0; x < 16; ++x){
-			for (int z = 0; z < 16; ++z){
-				Block *block = blocks[x][y][z];
-				bool visible = false;
-
-				//non-opaque blocks are always set to be visible
-				if (!block->opaque) {
-					//you can't see air
-					if (block->id != 0) visible_blocks.push_back(block);
-					continue;
-				}
-
-				//if block is a cube, sides that are adjacent to non-opaque or non-cube blocks are set to be visible
-				if(block->cube){
-					if (z + 1 < 16) {
-						if (!blocks[x][y][z + 1]->opaque or !blocks[x][y][z + 1]->cube) {
-							block->face_visible[Block::NORTH] = true;
-							visible = true;
-						}
-						else
-							block->face_visible[Block::NORTH] = false;
-					}
-					else {
-						block->face_visible[Block::NORTH] = true;
-						visible = true;
-					}
-
-					if (z - 1 >= 0) {
-						if (!blocks[x][y][z - 1]->opaque or !blocks[x][y][z - 1]->cube) {
-							block->face_visible[Block::SOUTH] = true;
-							visible = true;
-						}
-						else
-							block->face_visible[Block::SOUTH] = false;
-					}
-					else {
-						block->face_visible[Block::SOUTH] = true;
-						visible = true;
-					}
-
-					if (x + 1 < 16) {
-						if (!blocks[x + 1][y][z]->opaque or !blocks[x + 1][y][z]->cube) {
-							block->face_visible[Block::WEST] = true;
-							visible = true;
-						}
-						else
-							block->face_visible[Block::WEST] = false;
-					}
-					else {
-						block->face_visible[Block::WEST] = true;
-						visible = true;
-					}
-
-					if (x - 1 >= 0) {
-						if (!blocks[x - 1][y][z]->opaque or !blocks[x - 1][y][z]->cube) {
-							block->face_visible[Block::EAST] = true;
-							visible = true;
-						}
-						else
-							block->face_visible[Block::EAST] = false;
-					}
-					else {
-						block->face_visible[Block::EAST] = true;
-						visible = true;
-					}
-
-					if (y + 1 < 128) {
-						if (!blocks[x][y + 1][z]->opaque or !blocks[x][y + 1][z]->cube) {
-							block->face_visible[Block::TOP] = true;
-							visible = true;
-						}			
-						else
-							block->face_visible[Block::TOP] = false;
-					}
-					else {
-						block->face_visible[Block::TOP] = true;
-						visible = true;
-					}
-
-					if (y - 1 >= 0) {
-						if (!blocks[x][y - 1][z]->opaque or !blocks[x][y - 1][z]->cube) {
-							block->face_visible[Block::BOTTOM] = true;
-							visible = true;
-						}
-							
-						else
-							block->face_visible[Block::BOTTOM] = false;
-					}
-					else {
-						block->face_visible[Block::BOTTOM] = true;
-						visible = true;
-					}
-					//if block is visible it is added to vector of visible blocks
-					if (visible) visible_blocks.push_back(block);
-				}
-				//if non-cube block is aligned to non-opaque or non-cube block , all it's faces are visible 
-				else {
-				}
-
-				triangles_count += block->GetNumberOfTriangles();
-			}
-		}
-	}*/	
 }
 
 void Chunk::RecalculateVisibility()
 {
-	triangles_count = 0;
+	triangles_count[SIMPLE] = triangles_count[COMPLEX] = 0;
 	bool visible = false;
-	for (int y = 1; y < 127; y++)
-		for (int x = 1; x < 15; x++)
-			for (int z = 1; z < 15; z++)
+	//chunks in each direciton
+	auto iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x, chunk_z + 1));
+	Chunk* north_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x, chunk_z - 1));
+	Chunk* south_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x + 1, chunk_z));
+	Chunk* west_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x - 1, chunk_z));
+	Chunk* east_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+
+	//adding faces to buffors
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
 			{
-				if (simple_blocks[y][x][z].id == blk_id::air_id)
+				//skipping air
+				if (blocks[y][x][z]->id == blk_id::air_id)
 					continue;
-				visible = !simple_blocks[y][x][z + 1].GetFlag(SimpleBlock::OPAQUE);
-				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::NORTH, visible);
-				triangles_count += 2 * visible;
+				//adding simple faces
+				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					if (z == 15)
+					{
+						visible = (north_chunk != nullptr && !north_chunk->blocks[y][x][0]->GetFlag(SimpleBlock::OPAQUE));
+					}
+					else
+					{
+						visible = !blocks[y][x][z + 1]->GetFlag(SimpleBlock::OPAQUE);
+					}
+					blocks[y][x][z]->SetFaceVisible(SimpleBlock::NORTH, visible);
+					triangles_count[SIMPLE] += 2 * visible;
 
-				visible = !simple_blocks[y][x][z - 1].GetFlag(SimpleBlock::OPAQUE);
-				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::SOUTH, visible);
-				triangles_count += 2 * visible;
+					if (z == 0)
+					{
+						visible = (south_chunk != nullptr && !south_chunk->blocks[y][x][15]->GetFlag(SimpleBlock::OPAQUE));
+					}
+					else
+					{
+						visible = !blocks[y][x][z - 1]->GetFlag(SimpleBlock::OPAQUE);
+					}
+					blocks[y][x][z]->SetFaceVisible(SimpleBlock::SOUTH, visible);
+					triangles_count[SIMPLE] += 2 * visible;
 
-				visible = !simple_blocks[y][x + 1][z].GetFlag(SimpleBlock::OPAQUE);
-				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::WEST, visible);
-				triangles_count += 2 * visible;
+					if (x == 15)
+					{
+						visible = (west_chunk != nullptr && !west_chunk->blocks[y][0][z]->GetFlag(SimpleBlock::OPAQUE));
+					}
+					else
+					{
+						visible = !blocks[y][x + 1][z]->GetFlag(SimpleBlock::OPAQUE);
+					}
+					blocks[y][x][z]->SetFaceVisible(SimpleBlock::WEST, visible);
+					triangles_count[SIMPLE] += 2 * visible;
 
+					if (x == 0)
+					{
+						visible = (east_chunk != nullptr && !east_chunk->blocks[y][15][z]->GetFlag(SimpleBlock::OPAQUE));
+					}
+					else
+					{
+						visible = !blocks[y][x - 1][z]->GetFlag(SimpleBlock::OPAQUE);
+					}
+					blocks[y][x][z]->SetFaceVisible(SimpleBlock::EAST, visible);
+					triangles_count[SIMPLE] += 2 * visible;
 
-				visible = !simple_blocks[y][x - 1][z].GetFlag(SimpleBlock::OPAQUE);
-				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::EAST, visible);
-				triangles_count += 2 * visible;
+					if (y == 128)
+					{
+						visible = true;
+					}
+					else
+					{
+						visible = !blocks[y + 1][x][z]->GetFlag(SimpleBlock::OPAQUE);
+					}
+					blocks[y][x][z]->SetFaceVisible(SimpleBlock::TOP, visible);
+					triangles_count[SIMPLE] += 2 * visible;
 
-
-				visible = !simple_blocks[y + 1][x][z].GetFlag(SimpleBlock::OPAQUE);
-				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::TOP, visible);
-				triangles_count += 2 * visible;
-
-
-				visible = !simple_blocks[y - 1][x][z].GetFlag(SimpleBlock::OPAQUE);
-				simple_blocks[y][x][z].SetFaceVisible(SimpleBlock::BOTTOM, visible);
-				triangles_count += 2 * visible;
+					if (y == 0)
+					{
+						visible = true;
+					}
+					else
+					{
+						visible = !blocks[y - 1][x][z]->GetFlag(SimpleBlock::OPAQUE);
+					}
+					blocks[y][x][z]->SetFaceVisible(SimpleBlock::BOTTOM, visible);
+					triangles_count[SIMPLE] += 2 * visible;
+				}
+				else
+				{
+					//adding complex models
+					triangles_count[COMPLEX] += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
+				}
 			}
 }
 
-void Chunk::UpdateVBO()
+void Chunk::RecalculateTrianglesCount()
 {
-	//We count number of triangles that will be drawn
-	//CountVisibleTriangles();
-
-	std::cout << triangles_count << " triangles\n";
-
-	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
-	float* vertices = new float[triangles_count*3*8];
-	//target adress that we will insert our data into
-	float* target = vertices;
-
-	for (int x = 1; x < 15; x++)
-		for (int y = 1; y < 127; y++)
-			for (int z = 1; z < 15; z++)
+	triangles_count[SIMPLE] = triangles_count[COMPLEX] = 0;
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
 			{
-				target = simple_blocks[y][x][z].CreateModel(target, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					if (blocks[y][x][z]->id == blk_id::air_id)
+						continue;
+					triangles_count[SIMPLE] += 
+						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::NORTH) + 
+						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::SOUTH) +
+						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::WEST) +
+						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::EAST) +
+						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::TOP) +
+						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::BOTTOM);
+				}
+				else
+				{
+					triangles_count[COMPLEX] += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
+				}
+			}
+}
+
+void Chunk::UpdateVboComplex()
+{
+	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
+	float* vertices_complex = new float[triangles_count[COMPLEX] * 3 * 8];
+	//target adress that we will insert our data into
+	float* target_complex = vertices_complex;
+
+	///LEPIEJ LISTA COMPLEXÓW
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
+			{
+				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
 			}
 
-	/*for (Block* block : visible_blocks) {
-		target = block->CreateModel(target);
-	}*/
+	//transfering our data to the gpu
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	glBindVertexArray(vao[COMPLEX]);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 8 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+
+	//deleting vertices array now that we're done
+	delete vertices_complex;
+}
+
+void Chunk::UpdateVbos()
+{
+	RecalculateTrianglesCount();
+
+	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
+	float* vertices_simple = new float[triangles_count[SIMPLE] * 3 * 8];
+	float* vertices_complex = new float[triangles_count[COMPLEX] * 3 * 8];
+	//target adress that we will insert our data into
+	float* target_simple = vertices_simple;
+	float* target_complex = vertices_complex;
+
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
+			{
+				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
+				else
+				{
+					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
+			}
 
 	//transfering our data to the gpu
-	glBindVertexArray(vao);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count * 3 * 8 * sizeof(float), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
+	glBindVertexArray(vao[SIMPLE]);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[SIMPLE] * 3 * 8 * sizeof(float), vertices_simple, GL_STATIC_DRAW);
+	
+	//transfering our data to the gpu
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	glBindVertexArray(vao[COMPLEX]);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 8 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+
 	//deleting vertices array now that we're done
-	delete vertices;
+	delete vertices_simple;
+	delete vertices_complex;
 }
 
 void Chunk::Draw()
 {
-	//binds it's vao and draw itself
-	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, triangles_count * 3);
+	//binds its vao and draw itself
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
+	glBindVertexArray(vao[SIMPLE]);
+	glDrawArrays(GL_TRIANGLES, 0, triangles_count[SIMPLE] * 3);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	glBindVertexArray(vao[COMPLEX]);
+	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
+}
+
+void Chunk::ReplaceBlock(SimpleBlock* block, int local_x, int local_y, int local_z)
+{
+	delete blocks[local_y][local_x][local_z];
+	blocks[local_y][local_x][local_z] = block;
+}
+
+Chunk::~Chunk()
+{
+	glDeleteVertexArrays(2, vao);
+	glDeleteBuffers(2, vbo);
+
+	for (int y = 0; y < 128; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
+			{
+				if(!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+					delete blocks[y][x][z];
+				else
+					delete ((ComplexBlock*)blocks[y][x][z]);
+			}
 }

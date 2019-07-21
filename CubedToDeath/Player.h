@@ -8,7 +8,6 @@ class Player
 {
 private:
 	//player in world pos
-	glm::vec3 position = glm::vec3(0, 10, 10);
 	//camera yaw
 	float yaw = 0;
 	//camera pitch
@@ -22,6 +21,7 @@ private:
 
 	glm::mat4 projection;
 public:
+	static glm::vec3 position;
 	Player();
 	//Updates player position
 	void Update();

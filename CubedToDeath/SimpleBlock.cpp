@@ -15,30 +15,27 @@ SimpleBlock::~SimpleBlock()
 {
 }
 
-//bo textura ma 16x16 bloków
-#define m_unit (1.0f/16.0f)
-
 //											vertex format										//
 //	world_x, world_y, world_z,		texture_x, texture_y,		normal_x, normal_y, normal_z	//
 
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 static float* CreateNorthFace(float* target, int world_x, int world_y, int world_z, int texture_x, int texture_y)
 {
-	float vertices[] = {
-			world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, texture_x *m_unit, (texture_y + 1) *m_unit, 0, 0, 1,
-			world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1) *m_unit, 0, 0, 1,
-			world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) *m_unit, texture_y *m_unit, 0, 0, 1,
+	const float vertices[] = {
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, texture_x *m_unit, (texture_y + 1) *m_unit, 0, 0, 1,
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1) *m_unit, 0, 0, 1,
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) *m_unit, texture_y *m_unit, 0, 0, 1,
 
-			world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, texture_x *m_unit, (texture_y + 1) *m_unit, 0, 0, 1,
-			world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) *m_unit, texture_y *m_unit, 0, 0, 1,
-			world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, texture_x *m_unit, texture_y *m_unit, 0, 0, 1 };
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, texture_x *m_unit, (texture_y + 1) *m_unit, 0, 0, 1,
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) *m_unit, texture_y *m_unit, 0, 0, 1,
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, texture_x *m_unit, texture_y *m_unit, 0, 0, 1 };
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
 }
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 static float* CreateSouthFace(float* target, int world_x, int world_y, int world_z, int texture_x, int texture_y)
 {
-	float vertices[] = {
+	const float vertices[] = {
 		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y + 1)*m_unit, 0, 0, -1,
 		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (texture_x + 1) *m_unit, texture_y*m_unit, 0, 0, -1,
 		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (texture_x + 1) *m_unit, (texture_y + 1)*m_unit, 0, 0, -1,
@@ -53,14 +50,14 @@ static float* CreateSouthFace(float* target, int world_x, int world_y, int world
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 static float* CreateTopFace(float* target, int world_x, int world_y, int world_z, int texture_x, int texture_y)
 {
-	float vertices[] = {
+	const float vertices[] = {
 		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, 1, 0,
-			world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (texture_x)*m_unit, (texture_y + 1)*m_unit, 0, 1, 0,
-			world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, 1, 0,
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (texture_x)*m_unit, (texture_y + 1)*m_unit, 0, 1, 0,
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, 1, 0,
 
-			world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, 1, 0,
-			world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, 1, 0,
-			world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 0, 1, 0,
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, 1, 0,
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, 1, 0,
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 0, 1, 0,
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
@@ -68,14 +65,14 @@ static float* CreateTopFace(float* target, int world_x, int world_y, int world_z
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 static float* CreateBottomFace(float* target, int world_x, int world_y, int world_z, int texture_x, int texture_y)
 {
-	float vertices[] = {
+	const float vertices[] = {
 		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, -1, 0,
-			world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
-			world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x)*m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x)*m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
 
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, 1, 0,
-			world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 0, -1, 0,
-			world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, 1, 0,
+		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 0, -1, 0,
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
@@ -83,14 +80,14 @@ static float* CreateBottomFace(float* target, int world_x, int world_y, int worl
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 static float* CreateWestFace(float* target, int world_x, int world_y, int world_z, int texture_x, int texture_y)
 {
-	float vertices[] = {
+	const float vertices[] = {
 		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y + 1)*m_unit, 1, 0, 0,
-			world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 1, 0, 0,
-			world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 1, 0, 0,
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 1, 0, 0,
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 1, 0, 0,
 
-			world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y + 1)*m_unit, 1, 0, 0,
-			world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, texture_x*m_unit, texture_y*m_unit, 1, 0, 0,
-			world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 1, 0, 0,
+		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y + 1)*m_unit, 1, 0, 0,
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, texture_x*m_unit, texture_y*m_unit, 1, 0, 0,
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 1, 0, 0,
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
@@ -98,14 +95,14 @@ static float* CreateWestFace(float* target, int world_x, int world_y, int world_
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
 static float* CreateEastFace(float* target, int world_x, int world_y, int world_z, int texture_x, int texture_y)
 {
-	float vertices[] = {
+	const float vertices[] = {
 		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x *m_unit, (texture_y + 1)*m_unit, -1, 0, 0,
-			world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1)*m_unit, -1, 0, 0,
-			world_x + 0.0f, world_y + 1.0f, 1 + world_z, (texture_x + 1) *m_unit, texture_y*m_unit, -1, 0, 0,
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1)*m_unit, -1, 0, 0,
+		world_x + 0.0f, world_y + 1.0f, 1 + world_z, (texture_x + 1) *m_unit, texture_y*m_unit, -1, 0, 0,
 
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x *m_unit, (texture_y + 1)*m_unit, -1, 0, 0,
-			world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) *m_unit, texture_y*m_unit, -1, 0, 0,
-			world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x *m_unit, texture_y*m_unit, -1, 0, 0,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x *m_unit, (texture_y + 1)*m_unit, -1, 0, 0,
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (texture_x + 1) *m_unit, texture_y*m_unit, -1, 0, 0,
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, texture_x *m_unit, texture_y*m_unit, -1, 0, 0,
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);

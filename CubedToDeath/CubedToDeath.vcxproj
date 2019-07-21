@@ -165,8 +165,9 @@
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
     <ClCompile Include="Chunk.cpp" />
+    <ClCompile Include="ChunkManager.cpp" />
     <ClCompile Include="ComplexBlock.cpp" />
-    <ClCompile Include="cubanCigar.cpp" />
+    <ClCompile Include="MyCraft.cpp" />
     <ClCompile Include="CubedToDeath.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Player.cpp" />
@@ -177,8 +178,9 @@
   <ItemGroup>
     <ClInclude Include="Block.h" />
     <ClInclude Include="Chunk.h" />
+    <ClInclude Include="ChunkManager.h" />
     <ClInclude Include="ComplexBlock.h" />
-    <ClInclude Include="cubanCigar.h" />
+    <ClInclude Include="MyCraft.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SimpleBlock.h" />

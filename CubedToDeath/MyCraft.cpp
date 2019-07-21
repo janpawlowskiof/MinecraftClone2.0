@@ -1,10 +1,10 @@
-#include "cubanCigar.h"
+#include "MyCraft.h"
 
-CubanCigar::CubanCigar()
+MyCraft::MyCraft()
 {
 }
 
-void CubanCigar::InitializeOpenGL()
+void MyCraft::InitializeOpenGL()
 {
 	//standardowa inicjalizacja
 	glfwInit();
@@ -39,12 +39,13 @@ void CubanCigar::InitializeOpenGL()
 }
 
 //inicjalizuje i odpala grê
-void CubanCigar::Run()
+void MyCraft::Run()
 {
 	//Loading config file into a map
 	LoadConfig("config.txt");
 	height = std::stoi(config_map["height"]);
 	width = std::stoi(config_map["width"]);
+	render_distance = std::stoi(config_map["render_distance"]);
 
 	//Initializing opengl stuff
 	InitializeOpenGL();
@@ -55,7 +56,6 @@ void CubanCigar::Run()
 
 	///	test  ///
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	Chunk chunk(0, 0);
 	float counter = 0;
 	///		///
 
@@ -68,14 +68,16 @@ void CubanCigar::Run()
 		player->Update();
 		basic_shader->Use();
 		texture_terrain->Bind();
-		chunk.Draw();
+		//chunk.Draw();
 
+		chunk_manager.Update();
+		chunk_manager.Draw();
 		glfwSwapBuffers(window);
 	}
 }
 
 //wczytuje plik konfiguracyjny do mapy
-void CubanCigar::LoadConfig(std::string path)
+void MyCraft::LoadConfig(std::string path)
 {
 	std::ifstream file(path);
 	
@@ -100,7 +102,7 @@ void CubanCigar::LoadConfig(std::string path)
 	}
 }
 
-void CubanCigar::mouse_callback(GLFWwindow* window, double x, double y)
+void MyCraft::mouse_callback(GLFWwindow* window, double x, double y)
 {
 	if (first_mouse)
 	{
@@ -118,7 +120,7 @@ void CubanCigar::mouse_callback(GLFWwindow* window, double x, double y)
 	player->UpdateMouse(xoffset, yoffset);
 }
 
-CubanCigar::~CubanCigar()
+MyCraft::~MyCraft()
 {
 	glfwTerminate();
 	delete basic_shader;
@@ -128,12 +130,13 @@ CubanCigar::~CubanCigar()
 }
 
 //inicjalizacja statycznych zmiennych
-std::map<std::string, std::string> CubanCigar::config_map;
-Shader* CubanCigar::basic_shader = nullptr;
-GLFWwindow* CubanCigar::window = nullptr;
-Player* CubanCigar::player = nullptr;
-bool CubanCigar::first_mouse = true;
-double CubanCigar::last_x = 0; 
-double CubanCigar::last_y = 0;
-int CubanCigar::width = 800;
-int CubanCigar::height = 600;
+std::map<std::string, std::string> MyCraft::config_map;
+Shader* MyCraft::basic_shader = nullptr;
+GLFWwindow* MyCraft::window = nullptr;
+Player* MyCraft::player = nullptr;
+bool MyCraft::first_mouse = true;
+double MyCraft::last_x = 0; 
+double MyCraft::last_y = 0;
+int MyCraft::width = 800;
+int MyCraft::height = 600; 
+int MyCraft::render_distance = 6;

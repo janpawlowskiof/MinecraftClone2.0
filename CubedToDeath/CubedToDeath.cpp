@@ -1,9 +1,9 @@
 #include <iostream>
-#include "cubanCigar.h"
+#include "MyCraft.h"
 
 int main()
 {
-	CubanCigar* cuban = new CubanCigar();
+	MyCraft* cuban = new MyCraft();
 	cuban->Run();
 	delete cuban;
 }

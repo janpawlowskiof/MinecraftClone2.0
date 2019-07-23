@@ -32,6 +32,7 @@ void MyCraft::InitializeOpenGL()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 
+	//setting opengl flags
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
@@ -50,14 +51,17 @@ void MyCraft::Run()
 	//Initializing opengl stuff
 	InitializeOpenGL();
 
+	std::cout << glGetString(GL_RENDERER) << std::endl;
+	//std::cout << glGetString(GL_VENDOR) << std::endl;
+
 	texture_terrain = new Texture(config_map["texture_terrain_path"]);
 	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
 	player = new Player();
+	world_manager = std::thread(WorldManagerFunction);
 
 	///	test  ///
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	float counter = 0;
-	///		///
 
 	//main loop
 	while (!glfwWindowShouldClose(window))
@@ -68,10 +72,8 @@ void MyCraft::Run()
 		player->Update();
 		basic_shader->Use();
 		texture_terrain->Bind();
-		//chunk.Draw();
-
-		chunk_manager.Update();
-		chunk_manager.Draw();
+		Draw();
+		ChunkManager::GiveThreadPermissionToUnloadBlocks(ChunkManager::MAIN);
 		glfwSwapBuffers(window);
 	}
 }
@@ -99,6 +101,41 @@ void MyCraft::LoadConfig(std::string path)
 	else
 	{
 		std::cerr << "Couldn't open config file\n";
+	}
+}
+
+void MyCraft::WorldManagerFunction()
+{
+	while(!glfwWindowShouldClose(window))
+		chunk_manager.Update();
+}
+
+void MyCraft::Draw()
+{
+	//iterates over every loaded chunk
+	auto iterator = chunk_manager.chunk_map.begin();
+	while (iterator != chunk_manager.chunk_map.end())
+	{
+		//shared pointer to the chunk
+		auto chunk = iterator->second;
+		//deletes unneeded chunks
+		if (chunk->chunk_waiting_to_unload)
+		{
+			iterator = chunk_manager.chunk_map.erase(iterator);
+		}
+		else
+		{
+			//initializes chunks that need to be initialized
+			if (!chunk->buffers_initialized)
+				chunk->InitializeBuffers();
+			//updates vbos on chunks that reqire to do so
+			if (chunk->buffers_update_needed)
+				chunk->UpdateVbos();
+			//draws th echunk
+			chunk->Draw();
+
+			iterator++;
+		}
 	}
 }
 
@@ -134,6 +171,7 @@ std::map<std::string, std::string> MyCraft::config_map;
 Shader* MyCraft::basic_shader = nullptr;
 GLFWwindow* MyCraft::window = nullptr;
 Player* MyCraft::player = nullptr;
+ChunkManager MyCraft::chunk_manager;
 bool MyCraft::first_mouse = true;
 double MyCraft::last_x = 0; 
 double MyCraft::last_y = 0;

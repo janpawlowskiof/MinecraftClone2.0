@@ -3,7 +3,7 @@
 
 int main()
 {
-	MyCraft* cuban = new MyCraft();
-	cuban->Run();
-	delete cuban;
+	MyCraft* mycraft = new MyCraft();
+	mycraft->Run();
+	delete mycraft;
 }

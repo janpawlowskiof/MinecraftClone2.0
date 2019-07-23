@@ -33,10 +33,12 @@ public:
 	SimpleBlock(unsigned char id = 255);
 	~SimpleBlock();
 	float* CreateModel(float* target, int world_x, int world_y, int world_z);
+	//returns if given face is currently visible
 	bool GetFaceVisible(Direction direction)
 	{
 		return ((face_visible & direction) > 0);
 	}
+	//sets if given face should be visible or not
 	void SetFaceVisible(Direction direction, bool value)
 	{
 		if (value) face_visible |= direction; else face_visible &= ~direction;

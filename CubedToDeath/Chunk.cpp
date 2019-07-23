@@ -3,18 +3,14 @@
 #include "Block.h"
 #include "SimpleBlock.h"
 
-Chunk::Chunk(int chunk_x, int chunk_z)
+void Chunk::InitializeBuffers()
 {
-	//init
-	this->chunk_x = chunk_x;
-	this->chunk_z = chunk_z;
-
 	//generating vbo that belongs to chunk
 	glGenBuffers(2, vbo);
 	glGenVertexArrays(2, vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
-	
+
 	//generating vao that belongs to chunk
 	glBindVertexArray(vao[SIMPLE]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -38,6 +34,17 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	buffers_initialized = true;
+}
+
+Chunk::Chunk(int chunk_x, int chunk_z)
+{
+	//std::cout << "Loaded " << chunk_x << " - " << chunk_z << std::endl;
+
+	//init
+	this->chunk_x = chunk_x;
+	this->chunk_z = chunk_z;
 
 	///			TEST INITIALIZATION			///
 	for (int y = 0; y < 5; y++)
@@ -66,8 +73,8 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 				blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
 			}
 
-	ReplaceBlock(new blk::Torch(), 3, 8, 3);
-	ReplaceBlock(new SimpleBlock(blk_id::dirt_id), 0, 8, 5);
+	ReplaceBlock(3, 8, 3, new blk::Torch());
+	ReplaceBlock(0, 8, 5, new SimpleBlock(blk_id::dirt_id));
 	//ReplaceBlock(new SimpleBlock(blk_id::dirt_id), 15, 8, 5);
 
 	///											///
@@ -79,13 +86,13 @@ void Chunk::RecalculateVisibility()
 	bool visible = false;
 	//chunks in each direciton
 	auto iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x, chunk_z + 1));
-	Chunk* north_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	auto north_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
 	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x, chunk_z - 1));
-	Chunk* south_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	auto south_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
 	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x + 1, chunk_z));
-	Chunk* west_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	auto west_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
 	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x - 1, chunk_z));
-	Chunk* east_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	auto east_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
 
 	//adding faces to buffors
 	for (int y = 0; y < 127; y++)
@@ -95,7 +102,7 @@ void Chunk::RecalculateVisibility()
 				//skipping air
 				if (blocks[y][x][z]->id == blk_id::air_id)
 					continue;
-				//adding simple faces
+				//adding simple faces depending on the block position
 				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
 				{
 					if (z == 15)
@@ -183,6 +190,7 @@ void Chunk::RecalculateTrianglesCount()
 				{
 					if (blocks[y][x][z]->id == blk_id::air_id)
 						continue;
+					//2 triangles per each face
 					triangles_count[SIMPLE] += 
 						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::NORTH) + 
 						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::SOUTH) +
@@ -227,6 +235,7 @@ void Chunk::UpdateVboComplex()
 
 void Chunk::UpdateVbos()
 {
+	RecalculateVisibility();
 	RecalculateTrianglesCount();
 
 	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
@@ -261,25 +270,29 @@ void Chunk::UpdateVbos()
 	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 8 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
 
 	//deleting vertices array now that we're done
-	delete vertices_simple;
-	delete vertices_complex;
+	delete[] vertices_simple;
+	delete[] vertices_complex;
+
+	buffers_update_needed = false;
 }
 
 void Chunk::Draw()
 {
 	//binds its vao and draw itself
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[SIMPLE] * 3);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	//glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
 }
 
-void Chunk::ReplaceBlock(SimpleBlock* block, int local_x, int local_y, int local_z)
+void Chunk::ReplaceBlock(int local_x, int local_y, int local_z, SimpleBlock* block)
 {
-	delete blocks[local_y][local_x][local_z];
+	//We cannot just delete the block do we queue it for unloading
+	ChunkManager::QueueBlockForUnload(blocks[local_y][local_x][local_z]);
+	//replacing the block
 	blocks[local_y][local_x][local_z] = block;
 }
 
@@ -297,4 +310,5 @@ Chunk::~Chunk()
 				else
 					delete ((ComplexBlock*)blocks[y][x][z]);
 			}
+
 }

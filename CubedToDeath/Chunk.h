@@ -11,9 +11,7 @@ private:
 	unsigned int vbo[2];
 	unsigned int vao[2];
 	int triangles_count[2];
-	//std::vector<Block*> visible_blocks;
 	SimpleBlock* blocks[128][16][16];
-	//ComplexBlock* complex_blocks[128][16][16];
 	enum Type
 	{
 		SIMPLE = 0,
@@ -21,6 +19,10 @@ private:
 	};
 public:
 	int chunk_x, chunk_z;
+	bool buffers_initialized = false;
+	bool buffers_update_needed = false;
+	bool chunk_waiting_to_unload = false;
+	void InitializeBuffers();
 	Chunk(int chunk_x, int chunk_y);
 	~Chunk();
 	//void CountVisibleTriangles();
@@ -29,6 +31,6 @@ public:
 	void UpdateVboComplex();
 	void UpdateVbos();
 	void Draw();
-	void ReplaceBlock(SimpleBlock* block, int world_x, int world_y, int world_z);
+	void ReplaceBlock(int world_x, int world_y, int world_z, SimpleBlock* block);
 };
 

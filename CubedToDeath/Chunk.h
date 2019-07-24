@@ -12,6 +12,8 @@ private:
 	unsigned int vao[2];
 	int triangles_count[2];
 	SimpleBlock* blocks[128][16][16];
+	float* vertices_simple;
+	float* vertices_complex;
 	enum Type
 	{
 		SIMPLE = 0,

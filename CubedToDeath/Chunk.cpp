@@ -177,6 +177,26 @@ void Chunk::RecalculateVisibility()
 					triangles_count[COMPLEX] += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
 				}
 			}
+
+	vertices_simple = new float[triangles_count[SIMPLE] * 3 * 8];
+	vertices_complex = new float[triangles_count[COMPLEX] * 3 * 8];
+	//target adress that we will insert our data into
+	float* target_simple = vertices_simple;
+	float* target_complex = vertices_complex;
+
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
+			{
+				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
+				else
+				{
+					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
+			}
 }
 
 void Chunk::RecalculateTrianglesCount()
@@ -235,11 +255,11 @@ void Chunk::UpdateVboComplex()
 
 void Chunk::UpdateVbos()
 {
-	RecalculateVisibility();
-	RecalculateTrianglesCount();
+	//RecalculateVisibility();
+	//RecalculateTrianglesCount();
 
 	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
-	float* vertices_simple = new float[triangles_count[SIMPLE] * 3 * 8];
+	/*float* vertices_simple = new float[triangles_count[SIMPLE] * 3 * 8];
 	float* vertices_complex = new float[triangles_count[COMPLEX] * 3 * 8];
 	//target adress that we will insert our data into
 	float* target_simple = vertices_simple;
@@ -257,7 +277,7 @@ void Chunk::UpdateVbos()
 				{
 					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
-			}
+			}*/
 
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
@@ -310,5 +330,4 @@ Chunk::~Chunk()
 				else
 					delete ((ComplexBlock*)blocks[y][x][z]);
 			}
-
 }

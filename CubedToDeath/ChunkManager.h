@@ -2,16 +2,22 @@
 #include <list>
 #include <map>
 #include "Chunk.h"
+#include "FastNoise.h"
 
 class ChunkManager
 {
 public:
+	ChunkManager();
 	//map of shared pointers
 	//NOTE: shared pointers are used to prevent chunk from being deleted form memory while the it is used by other thread
 	static std::map<std::pair<int, int>, std::shared_ptr<Chunk>> chunk_map;
+	static FastNoise test_noise;
+	static FastNoise mountain_placement_noise;
+	static FastNoise tectonical_noise;
 	int last_chunk_x = 110, last_chunk_z = 110;
 	//updates world
 	void Update();
+	void LoadWorld(int &starting_chunk_x, int &starting_chunk_z);
 	void LoadChunk(int chunk_x, int chunk_z);
 	~ChunkManager();
 	enum ThreadId

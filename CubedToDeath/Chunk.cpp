@@ -38,6 +38,10 @@ void Chunk::InitializeBuffers()
 	buffers_initialized = true;
 }
 
+float clip(float n, float lower, float upper) {
+	return std::max(lower, std::min(n, upper));
+}
+
 Chunk::Chunk(int chunk_x, int chunk_z)
 {
 	//std::cout << "Loaded " << chunk_x << " - " << chunk_z << std::endl;
@@ -47,35 +51,29 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	this->chunk_z = chunk_z;
 
 	///			TEST INITIALIZATION			///
-	for (int y = 0; y < 5; y++)
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
-				//blk::Stone* dirt = new blk::Stone(x + chunk_x * 16, y, z + chunk_z * 16);
-				//blocks[x][y][z] = dirt;
-				blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
-			}
+				float mountain_lower_threshold = 0.2f;
+				float mountain_upper_threshold = 0.6f;
+				float mountain_placement_value = clip(ChunkManager::mountain_placement_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), mountain_lower_threshold, mountain_upper_threshold);
+				float mountain_factor = powf((mountain_placement_value - mountain_lower_threshold) / (mountain_upper_threshold - mountain_lower_threshold), 2);
 
-	for (int y = 5; y < 8; y++)
-		for (int x= 0; x < 16; x++)
-			for (int z= 0; z < 16; z++)
-			{
-				//blk::Dirt* air = new blk::Dirt(x + chunk_x * 16, y, z + chunk_z * 16);
-				//blocks[x][y][z] = air;
-				blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
-			}
-	for (int y = 8; y < 128; y++)
-		for (int x = 0; x < 16; x++)
-			for (int z = 0; z < 16; z++)
-			{
-				//blk::Air* air = new blk::Air(x + chunk_x * 16, y, z + chunk_z * 16);
-				//blocks[x][y][z] = air;
-				blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
-			}
+				float mountain_value = (ChunkManager::test_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16) + 1) * 35 * mountain_factor;
 
-	ReplaceBlock(3, 8, 3, new blk::Torch());
-	ReplaceBlock(0, 8, 5, new SimpleBlock(blk_id::dirt_id));
-	//ReplaceBlock(new SimpleBlock(blk_id::dirt_id), 15, 8, 5);
+				float tectonical_value = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), -0.5f, 1) * 10;
+
+				int ground_level = 30 + tectonical_value + mountain_value;
+				for (int y = 0; y < ground_level; y++)
+				{
+					blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
+				}
+
+				for (int y = ground_level; y < 128; y++)
+				{
+					blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
+				}
+			}
 
 	///											///
 }
@@ -292,6 +290,7 @@ void Chunk::UpdateVbos()
 	//deleting vertices array now that we're done
 	delete[] vertices_simple;
 	delete[] vertices_complex;
+	vertices_simple = vertices_complex = nullptr;
 
 	buffers_update_needed = false;
 }
@@ -320,6 +319,11 @@ Chunk::~Chunk()
 {
 	glDeleteVertexArrays(2, vao);
 	glDeleteBuffers(2, vbo);
+
+	if (vertices_simple != nullptr)
+		delete[] vertices_simple;
+	if (vertices_complex != nullptr)
+		delete[] vertices_complex;
 
 	for (int y = 0; y < 128; y++)
 		for (int x = 0; x < 16; x++)

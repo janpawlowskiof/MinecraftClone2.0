@@ -86,6 +86,9 @@
     <ClInclude Include="FastNoise.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ft2build.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\fragment.txt" />

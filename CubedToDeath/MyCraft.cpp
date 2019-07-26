@@ -1,4 +1,6 @@
 #include "MyCraft.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H  
 
 MyCraft::MyCraft()
 {
@@ -58,12 +60,13 @@ void MyCraft::Run()
 	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
 	player = new Player();
 	world_manager = std::thread(WorldManagerFunction);
+	chunk_unloader = std::thread(ChunkUnloaderFunction);
 
 	///	test  ///
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	double counter = glfwGetTime();
-	vbos_delete_queue.reserve(500);
-	vaos_delete_queue.reserve(500);
+	vbos_delete_queue.reserve(2000);
+	vaos_delete_queue.reserve(2000);
 	//main loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -127,6 +130,12 @@ void MyCraft::WorldManagerFunction()
 {
 	while (!glfwWindowShouldClose(window))
 		chunk_manager.Update();
+}
+
+void MyCraft::ChunkUnloaderFunction()
+{
+	while (!glfwWindowShouldClose(window))
+		ChunkManager::UnloadChunks();
 }
 
 void MyCraft::Update()

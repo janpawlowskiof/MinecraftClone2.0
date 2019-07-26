@@ -16,11 +16,14 @@ public:
 	static FastNoise test_noise;
 	static FastNoise mountain_placement_noise;
 	static FastNoise tectonical_noise;
+	static FastNoise ocean_noise;
 
-	//int last_chunk_x = 110, last_chunk_z = 110;
+	static int last_chunk_x, last_chunk_z;
 
 	//updates world
 	void Update();
+	//unloads chunks queued chunks to be deleted
+	static void UnloadChunks();
 	//loads the world around given chunk coordinates
 	void LoadWorld(int &starting_chunk_x, int &starting_chunk_z);
 	//loads given chunk

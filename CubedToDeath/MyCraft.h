@@ -44,6 +44,7 @@ private:
 	void LoadConfig(std::string path);
 	//function of world manager thread
 	static void WorldManagerFunction();
+	static void ChunkUnloaderFunction();
 	//draws world
 	static void Update();
 	//has mouse been updated previously
@@ -56,7 +57,7 @@ private:
 	static ChunkManager chunk_manager;
 	//thread responsible for managing world
 	std::thread world_manager;
-	std::thread complex_manager;
+	std::thread chunk_unloader;
 	static chunk_hash_map chunk_map;
 
 	static std::mutex buffers_queue_mutex;

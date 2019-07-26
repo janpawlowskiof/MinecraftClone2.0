@@ -63,6 +63,7 @@ namespace blk_id
 		dirt_id,
 		stone_id,
 
+		water_id,
 		torch_id,
 	};
 }

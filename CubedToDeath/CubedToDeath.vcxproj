@@ -182,6 +182,7 @@
     <ClInclude Include="ChunkManager.h" />
     <ClInclude Include="ComplexBlock.h" />
     <ClInclude Include="FastNoise.h" />
+    <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="MyCraft.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shader.h" />

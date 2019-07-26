@@ -19,8 +19,10 @@ ChunkManager::ChunkManager()
 	//mountain_placement_noise.SetFractalOctaves(2);
 	mountain_placement_noise.SetFrequency(0.003);
 
-	tectonical_noise.SetNoiseType(FastNoise::Simplex);
+	tectonical_noise.SetNoiseType(FastNoise::Cubic);
 	tectonical_noise.SetFrequency(0.01);
+
+	ocean_noise.SetFrequency(0.001);
 }
 
 void ChunkManager::Update()
@@ -28,7 +30,21 @@ void ChunkManager::Update()
 	int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
 	int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
 
+	//loading world around the player
+	LoadWorld(current_chunk_x, current_chunk_z);
+	//allow queues to delete blocks
+	GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
+	GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
+	//UnloadChunks();
+}
+
+void ChunkManager::UnloadChunks()
+{
+	int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
+	int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
+
 	//queuing chunks (that are too far from the player) to be unloaded
+	if(current_chunk_x != last_chunk_x || current_chunk_z != last_chunk_z)
 	{
 		//lock since we modify the map
 		std::lock_guard<std::mutex> lock(chunk_map_mutex);
@@ -41,6 +57,14 @@ void ChunkManager::Update()
 			if (std::abs(chunk->chunk_x - current_chunk_x) > MyCraft::render_distance || std::abs(chunk->chunk_z - current_chunk_z) > MyCraft::render_distance)
 			{
 				///			SAVING CHUNK HERE		///
+				/*if (iterator->second->buffers_initialized)
+				{
+					//printf("cx %d cz %d", current_chunk_x, current_chunk_z);
+					//int i= 0;
+					MyCraft::QueueBuffersToDelete(iterator->second->vbo[Chunk::SIMPLE], iterator->second->vao[Chunk::SIMPLE]);
+					MyCraft::QueueBuffersToDelete(iterator->second->vbo[Chunk::COMPLEX], iterator->second->vao[Chunk::COMPLEX]);
+					iterator->second->buffers_initialized = false;
+				}*/
 				QueueChunkToUnload(iterator->second);
 				iterator = chunk_map.erase(iterator);
 			}
@@ -49,14 +73,9 @@ void ChunkManager::Update()
 				++iterator;
 			}
 		}
-
+		last_chunk_x = current_chunk_x;
+		last_chunk_z = current_chunk_z;
 	}
-	//loading world around the player
-	LoadWorld(current_chunk_x, current_chunk_z);
-
-	//allow queues to delete blocks
-	GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
-	GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
 	//Deleting Blocks Queued for deletion if every thread declared it is ok to do so
 	{
@@ -83,14 +102,16 @@ void ChunkManager::Update()
 	//				access to chunk_unload_queue					
 
 	//list of chunks that will be deleted now
+
+	//printf("bef: %i ", chunk_unload_queue.size());
 	std::list<ItemQueuedToUnload<Chunk>> chunks_to_delete;
 	//Deleting Chunks Queued for deletion if every thread declared it is ok to do so
 	{
 		//locking the queue
-		std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
 		auto iterator = chunk_unload_queue.begin();
 		while (iterator != chunk_unload_queue.end())
 		{
+			std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
 			//deleting block if each flag is set to true
 			if ((*iterator).flags[0] && (*iterator).flags[1])
 			{
@@ -104,6 +125,8 @@ void ChunkManager::Update()
 			}
 		}
 	}
+	//printf("aft: %i\n", chunk_unload_queue.size());
+
 	//actually deleting the chunk
 	auto iterator = chunks_to_delete.begin();
 	while (iterator != chunks_to_delete.end())
@@ -116,12 +139,15 @@ void ChunkManager::Update()
 	}
 }
 
+
 void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 {
 	int current_chunk_x;
 	int current_chunk_z;
 	//wczytywanie chunk na którym znajduje siê gracz
-	auto chunk = chunk_map.find(std::make_pair(starting_chunk_x, starting_chunk_z));
+	std::map<std::pair<int, int>, Chunk*>::iterator chunk;
+
+	chunk = chunk_map.find(std::make_pair(starting_chunk_x, starting_chunk_z));
 	if (chunk == chunk_map.end())
 	{
 		LoadChunk(starting_chunk_x, starting_chunk_z);
@@ -141,6 +167,10 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 				starting_chunk_z = current_chunk_z;
 				return;
 			}
+
+			//allow queues to delete blocks
+			GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
+			GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
 			chunk = chunk_map.find(std::make_pair(chunk_x, starting_chunk_z + distance));
 			if (chunk == chunk_map.end())
@@ -167,7 +197,9 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 				starting_chunk_z = current_chunk_z;
 				return;
 			}
-
+			//allow queues to delete blocks
+			GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
+			GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
 			chunk = chunk_map.find({ starting_chunk_x - distance, chunk_z });
 			if (chunk == chunk_map.end())
@@ -245,6 +277,9 @@ chunk_hash_map ChunkManager::chunk_map;
 FastNoise ChunkManager::test_noise;
 FastNoise ChunkManager::mountain_placement_noise;
 FastNoise ChunkManager::tectonical_noise;
+FastNoise ChunkManager::ocean_noise;
 std::mutex ChunkManager::chunk_map_mutex;
 std::mutex ChunkManager::block_unload_queue_mutex;
 std::mutex ChunkManager::chunk_unload_queue_mutex;
+int ChunkManager::last_chunk_x = 10;
+int ChunkManager::last_chunk_z = 10;

@@ -56,20 +56,31 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			{
 				float mountain_lower_threshold = 0.2f;
 				float mountain_upper_threshold = 0.6f;
+				float ocean_lower_threshold = 0.4f;
+				float ocean_upper_threshold = 0.5f;
+				int ocean_level = 24;
+
 				float mountain_placement_value = clip(ChunkManager::mountain_placement_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), mountain_lower_threshold, mountain_upper_threshold);
 				float mountain_factor = powf((mountain_placement_value - mountain_lower_threshold) / (mountain_upper_threshold - mountain_lower_threshold), 2);
-
 				float mountain_value = (ChunkManager::test_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16) + 1) * 35 * mountain_factor;
 
 				float tectonical_value = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), -0.5f, 1) * 10;
 
-				int ground_level = 30 + tectonical_value + mountain_value;
+				float ocean_placement_value= clip(ChunkManager::ocean_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), ocean_lower_threshold, ocean_upper_threshold);
+				float ocean_factor = powf((ocean_placement_value - ocean_lower_threshold) / (ocean_upper_threshold - ocean_lower_threshold), 2);
+
+				int ground_level = (30 + tectonical_value) * (1 - ocean_factor) + mountain_value;
 				for (int y = 0; y < ground_level; y++)
 				{
 					blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
 				}
 
-				for (int y = ground_level; y < 128; y++)
+				for (int y = ground_level; y < ocean_level; y++)
+				{
+					blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
+				}
+
+				for (int y = std::max(ground_level, ocean_level); y < 128; y++)
 				{
 					blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
 				}
@@ -253,30 +264,6 @@ void Chunk::UpdateVboComplex()
 
 void Chunk::UpdateVbos()
 {
-	//RecalculateVisibility();
-	//RecalculateTrianglesCount();
-
-	//We declare array for all of the vertices (*3*8) because each triangle has 3 vertices, each of 8 floats
-	/*float* vertices_simple = new float[triangles_count[SIMPLE] * 3 * 8];
-	float* vertices_complex = new float[triangles_count[COMPLEX] * 3 * 8];
-	//target adress that we will insert our data into
-	float* target_simple = vertices_simple;
-	float* target_complex = vertices_complex;
-
-	for (int y = 0; y < 127; y++)
-		for (int x = 0; x < 16; x++)
-			for (int z = 0; z < 16; z++)
-			{
-				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
-				{
-					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
-				}
-				else
-				{
-					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
-				}
-			}*/
-
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);

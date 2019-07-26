@@ -9,18 +9,13 @@
 class Chunk
 {
 private:
-	unsigned int vbo[2];
-	unsigned int vao[2];
 	int triangles_count[2];
 	SimpleBlock* blocks[128][16][16];
 	float* vertices_simple = nullptr;
 	float* vertices_complex = nullptr;
-	enum Type
-	{
-		SIMPLE = 0,
-		COMPLEX = 1
-	};
 public:
+	unsigned int vbo[2];
+	unsigned int vao[2];
 	int chunk_x, chunk_z;
 	bool buffers_initialized = false;
 	bool buffers_update_needed = false;
@@ -35,5 +30,11 @@ public:
 	void UpdateVbos();
 	void Draw();
 	void ReplaceBlock(int world_x, int world_y, int world_z, SimpleBlock* block);
+
+	enum Type
+	{
+		SIMPLE = 0,
+		COMPLEX = 1
+	};
 };
 

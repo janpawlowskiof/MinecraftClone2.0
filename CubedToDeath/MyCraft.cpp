@@ -61,28 +61,47 @@ void MyCraft::Run()
 
 	///	test  ///
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	float counter = 0;
-
+	double counter = glfwGetTime();
+	vbos_delete_queue.reserve(500);
+	vaos_delete_queue.reserve(500);
 	//main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		chunk_map = ChunkManager::GetChunkMap();
 		player->Update();
 		basic_shader->Use();
 		texture_terrain->Bind();
-		Draw();
+		Update();
+
+		//zezwolenie na usuniêcie nieu¿ywanych bloków i chunków
 		ChunkManager::GiveThreadPermissionToUnloadBlocks(ChunkManager::MAIN);
+		ChunkManager::GiveThreadPermissionToUnloadChunks(ChunkManager::MAIN);
 		glfwSwapBuffers(window);
+
+		if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+		{
+			std::cout << "Break time!" << std::endl;
+		}
 	}
+
+	//³¹czenie w¹tków na koniec programu
+	world_manager.join();
+}
+
+void MyCraft::QueueBuffersToDelete(unsigned int vbo, unsigned int vao)
+{
+	std::lock_guard<std::mutex> lock(buffers_queue_mutex);
+	vbos_delete_queue.push_back(vbo);
+	vaos_delete_queue.push_back(vao);
 }
 
 //wczytuje plik konfiguracyjny do mapy
 void MyCraft::LoadConfig(std::string path)
 {
 	std::ifstream file(path);
-	
+
 	if (file.is_open())
 	{
 		std::string line;
@@ -106,36 +125,42 @@ void MyCraft::LoadConfig(std::string path)
 
 void MyCraft::WorldManagerFunction()
 {
-	while(!glfwWindowShouldClose(window))
+	while (!glfwWindowShouldClose(window))
 		chunk_manager.Update();
 }
 
-void MyCraft::Draw()
+void MyCraft::Update()
 {
-	//iterates over every loaded chunk
-	auto iterator = chunk_manager.chunk_map.begin();
-	while (iterator != chunk_manager.chunk_map.end())
 	{
-		//shared pointer to the chunk
-		auto chunk = iterator->second;
-		//deletes unneeded chunks
-		if (chunk->chunk_waiting_to_unload)
-		{
-			iterator = chunk_manager.chunk_map.erase(iterator);
-		}
-		else
-		{
-			//initializes chunks that need to be initialized
-			if (!chunk->buffers_initialized)
-				chunk->InitializeBuffers();
-			//updates vbos on chunks that reqire to do so
-			if (chunk->buffers_update_needed)
-				chunk->UpdateVbos();
-			//draws th echunk
-			chunk->Draw();
+		//blokada na bufory (vbo i vao)
+		std::lock_guard<std::mutex> lock(buffers_queue_mutex);
+		const int size = vbos_delete_queue.size();
+		
+		//usuwanie wszystkich niepotrzebnych buforów naraz
+		glDeleteVertexArrays(size, vaos_delete_queue.data());
+		glDeleteBuffers(size, vbos_delete_queue.data());
 
-			iterator++;
-		}
+		//czyszczenie list
+		vaos_delete_queue.clear();
+		vbos_delete_queue.clear();
+	}
+
+
+	//iterates over every loaded chunk
+	auto iterator = chunk_map.begin();
+	while (iterator != chunk_map.end())
+	{
+		auto chunk = iterator->second;
+		//initializing chunks that need to be initialized
+		if (!chunk->buffers_initialized)
+			chunk->InitializeBuffers();
+		//updates vbos on chunks that reqire doing so
+		if (chunk->buffers_update_needed)
+			chunk->UpdateVbos();
+		//draws th echunk
+		chunk->Draw();
+
+		iterator++;
 	}
 }
 
@@ -173,8 +198,12 @@ GLFWwindow* MyCraft::window = nullptr;
 Player* MyCraft::player = nullptr;
 ChunkManager MyCraft::chunk_manager;
 bool MyCraft::first_mouse = true;
-double MyCraft::last_x = 0; 
+double MyCraft::last_x = 0;
 double MyCraft::last_y = 0;
 int MyCraft::width = 800;
-int MyCraft::height = 600; 
+int MyCraft::height = 600;
 int MyCraft::render_distance = 6;
+chunk_hash_map MyCraft::chunk_map;
+std::mutex MyCraft::buffers_queue_mutex;
+std::vector<unsigned int> MyCraft::vaos_delete_queue;
+std::vector<unsigned int> MyCraft::vbos_delete_queue;

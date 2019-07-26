@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <map>
 #include "SimpleBlock.h"
 #include "ComplexBlock.h"
 
@@ -28,7 +29,7 @@ public:
 	Chunk(int chunk_x, int chunk_y);
 	~Chunk();
 	//void CountVisibleTriangles();
-	void RecalculateVisibility();
+	void RecalculateVisibility(std::map<std::pair<int, int>, Chunk*> chunk_map);
 	void RecalculateTrianglesCount();
 	void UpdateVboComplex();
 	void UpdateVbos();

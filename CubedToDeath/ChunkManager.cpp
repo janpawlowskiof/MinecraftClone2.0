@@ -5,6 +5,8 @@
 
 ChunkManager::ChunkManager()
 {
+	//noise map initialization
+
 	test_noise.SetNoiseType(FastNoise::Cubic);
 	test_noise.SetSeed(1337);
 	//test_noise.SetFractalOctaves(2);
@@ -26,9 +28,11 @@ void ChunkManager::Update()
 	int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
 	int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
 
-	//deloading chunks that are too far from the player
-	if (current_chunk_x != last_chunk_x || current_chunk_z != last_chunk_z)
+	//queuing chunks (that are too far from the player) to be unloaded
 	{
+		//lock since we modify the map
+		std::lock_guard<std::mutex> lock(chunk_map_mutex);
+
 		auto iterator = chunk_map.begin();
 		while (iterator != chunk_map.end())
 		{
@@ -37,29 +41,77 @@ void ChunkManager::Update()
 			if (std::abs(chunk->chunk_x - current_chunk_x) > MyCraft::render_distance || std::abs(chunk->chunk_z - current_chunk_z) > MyCraft::render_distance)
 			{
 				///			SAVING CHUNK HERE		///
-				chunk->chunk_waiting_to_unload = true;
-				//iterator = chunk_map.erase(iterator);
+				QueueChunkToUnload(iterator->second);
+				iterator = chunk_map.erase(iterator);
 			}
-			++iterator;
+			else
+			{
+				++iterator;
+			}
 		}
-		
-		LoadWorld(current_chunk_x, current_chunk_z);
+
 	}
+	//loading world around the player
+	LoadWorld(current_chunk_x, current_chunk_z);
+
+	//allow queues to delete blocks
 	GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
+	GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
 	//Deleting Blocks Queued for deletion if every thread declared it is ok to do so
-	auto iterator = blocks_waiting_to_unload.begin();
-	while (iterator != blocks_waiting_to_unload.end())
+	{
+		auto iterator = block_unload_queue.begin();
+		while (iterator != block_unload_queue.end())
+		{
+			std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
+			//deleting block if each flag is set to true
+			if ((*iterator).flags[0] && (*iterator).flags[1])
+			{
+				delete (*iterator).item;
+				iterator = block_unload_queue.erase(iterator);
+			}
+			else
+			{
+				iterator++;
+			}
+		}
+	}
+
+	//NOTE:			since deleting a chunk takes A LOOOOOOOOT of time, 
+	//				we copy chunks that we need to delete to second list 
+	//				and then delete them in order not to block			
+	//				access to chunk_unload_queue					
+
+	//list of chunks that will be deleted now
+	std::list<ItemQueuedToUnload<Chunk>> chunks_to_delete;
+	//Deleting Chunks Queued for deletion if every thread declared it is ok to do so
+	{
+		//locking the queue
+		std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
+		auto iterator = chunk_unload_queue.begin();
+		while (iterator != chunk_unload_queue.end())
+		{
+			//deleting block if each flag is set to true
+			if ((*iterator).flags[0] && (*iterator).flags[1])
+			{
+				//removing element form original queue and pasting it into the new one
+				chunks_to_delete.push_back(iterator->item);
+				iterator = chunk_unload_queue.erase(iterator);
+			}
+			else
+			{
+				iterator++;
+			}
+		}
+	}
+	//actually deleting the chunk
+	auto iterator = chunks_to_delete.begin();
+	while (iterator != chunks_to_delete.end())
 	{
 		//deleting block if each flag is set to true
-		if ((*iterator).flags[0] && (*iterator).flags[1])
 		{
-			delete (*iterator).block;
-			iterator = blocks_waiting_to_unload.erase(iterator);
-		}
-		else
-		{
-			iterator++;
+			delete iterator->item;
+			iterator = chunks_to_delete.erase(iterator);
 		}
 	}
 }
@@ -82,6 +134,7 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 			int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
 			int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
 
+			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
 			if (current_chunk_x != starting_chunk_x || current_chunk_z != starting_chunk_z)
 			{
 				starting_chunk_x = current_chunk_x;
@@ -107,6 +160,7 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 			int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
 			int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
 
+			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
 			if (current_chunk_x != starting_chunk_x || current_chunk_z != starting_chunk_z)
 			{
 				starting_chunk_x = current_chunk_x;
@@ -129,43 +183,68 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 			}
 		}
 	}
-
-	//updating last posiotion;
-	last_chunk_x = starting_chunk_x;
-	last_chunk_z = starting_chunk_z;
 }
 
 void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 {
 	//Generacja lub Wczytanie czunka
 	Chunk* chunk = new Chunk(chunk_x, chunk_z);
-	chunk->RecalculateVisibility();
+	chunk->RecalculateVisibility(chunk_map);
 	chunk->buffers_update_needed = true;
+
+	//blokada i umieszczenie nowego chunka w mapie
+	std::lock_guard<std::mutex> lock(chunk_map_mutex);
 	chunk_map.emplace(std::make_pair(chunk_x, chunk_z), chunk);
+}
+
+chunk_hash_map ChunkManager::GetChunkMap()
+{
+	std::lock_guard<std::mutex> lock(chunk_map_mutex);
+	return chunk_hash_map(chunk_map);
 }
 
 ChunkManager::~ChunkManager()
 {
 }
 
-void ChunkManager::GiveThreadPermissionToUnloadBlocks(ThreadId thread_id)
+void ChunkManager::GiveThreadPermissionToUnloadBlocks(ThreadId thread)
 {
+	std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
 	//sets flag for each block
-	for (auto &element : blocks_waiting_to_unload)
+	for (auto& element : block_unload_queue)
 	{
-		element.flags[thread_id] = true;
+		element.flags[thread] = true;
 	}
 }
 
-void ChunkManager::QueueBlockForUnload(SimpleBlock* block)
+void ChunkManager::GiveThreadPermissionToUnloadChunks(ThreadId thread)
 {
-	//each flag is false by default
-	bool flags[2] = { false, false };
-	blocks_waiting_to_unload.push_back(ChunkManager::BlockWaitingToUnload(block, flags));
+	std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
+	//sets flag for each block
+	for (auto& element : chunk_unload_queue)
+	{
+		element.flags[thread] = true;
+	}
 }
 
-std::list<ChunkManager::BlockWaitingToUnload> ChunkManager::blocks_waiting_to_unload;
-std::map<std::pair<int, int>, std::shared_ptr<Chunk>> ChunkManager::chunk_map;
+void ChunkManager::QueueBlockToUnload(SimpleBlock* block)
+{
+	std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
+	block_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<SimpleBlock>(block));
+}
+
+void ChunkManager::QueueChunkToUnload(Chunk* block)
+{
+	std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
+	chunk_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<Chunk>(block));
+}
+
+std::list<ChunkManager::ItemQueuedToUnload<SimpleBlock>> ChunkManager::block_unload_queue;
+std::list<ChunkManager::ItemQueuedToUnload<Chunk>> ChunkManager::chunk_unload_queue;
+chunk_hash_map ChunkManager::chunk_map;
 FastNoise ChunkManager::test_noise;
-FastNoise ChunkManager::mountain_placement_noise; 
+FastNoise ChunkManager::mountain_placement_noise;
 FastNoise ChunkManager::tectonical_noise;
+std::mutex ChunkManager::chunk_map_mutex;
+std::mutex ChunkManager::block_unload_queue_mutex;
+std::mutex ChunkManager::chunk_unload_queue_mutex;

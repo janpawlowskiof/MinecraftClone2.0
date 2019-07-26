@@ -13,6 +13,7 @@
 #include "Block.h"
 #include "Texture.h"
 #include "ChunkManager.h"
+#include <mutex>
 
 class MyCraft
 {
@@ -21,6 +22,8 @@ public:
 	~MyCraft();
 	//Starts minecraft
 	void Run();
+	//Adds vbo and vao to delete queue
+	static void QueueBuffersToDelete(unsigned int vbo, unsigned int vao);
 	//mouse callback
 	static void mouse_callback(GLFWwindow* window, double x, double y);
 	//podstawowy shader
@@ -42,7 +45,7 @@ private:
 	//function of world manager thread
 	static void WorldManagerFunction();
 	//draws world
-	static void Draw();
+	static void Update();
 	//has mouse been updated previously
 	static bool first_mouse;
 	//last mouse coordinates
@@ -53,6 +56,10 @@ private:
 	static ChunkManager chunk_manager;
 	//thread responsible for managing world
 	std::thread world_manager;
-
 	std::thread complex_manager;
+	static chunk_hash_map chunk_map;
+
+	static std::mutex buffers_queue_mutex;
+	static std::vector<unsigned int> vbos_delete_queue;
+	static std::vector<unsigned int> vaos_delete_queue;
 };

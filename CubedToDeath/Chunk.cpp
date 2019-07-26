@@ -78,19 +78,19 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	///											///
 }
 
-void Chunk::RecalculateVisibility()
+void Chunk::RecalculateVisibility(std::map<std::pair<int, int>, Chunk*> chunk_map)
 {
 	triangles_count[SIMPLE] = triangles_count[COMPLEX] = 0;
 	bool visible = false;
 	//chunks in each direciton
-	auto iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x, chunk_z + 1));
-	auto north_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
-	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x, chunk_z - 1));
-	auto south_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
-	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x + 1, chunk_z));
-	auto west_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
-	iterator = ChunkManager::chunk_map.find(std::make_pair(chunk_x - 1, chunk_z));
-	auto east_chunk = (iterator != ChunkManager::chunk_map.end()) ? iterator->second : nullptr;
+	auto iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z + 1));
+	auto north_chunk = (iterator != chunk_map.end()) ? iterator->second : nullptr;
+	iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z - 1));
+	auto south_chunk = (iterator != chunk_map.end()) ? iterator->second : nullptr;
+	iterator = chunk_map.find(std::make_pair(chunk_x + 1, chunk_z));
+	auto west_chunk = (iterator != chunk_map.end()) ? iterator->second : nullptr;
+	iterator = chunk_map.find(std::make_pair(chunk_x - 1, chunk_z));
+	auto east_chunk = (iterator != chunk_map.end()) ? iterator->second : nullptr;
 
 	//adding faces to buffors
 	for (int y = 0; y < 127; y++)
@@ -310,15 +310,19 @@ void Chunk::Draw()
 void Chunk::ReplaceBlock(int local_x, int local_y, int local_z, SimpleBlock* block)
 {
 	//We cannot just delete the block do we queue it for unloading
-	ChunkManager::QueueBlockForUnload(blocks[local_y][local_x][local_z]);
+	ChunkManager::QueueBlockToUnload(blocks[local_y][local_x][local_z]);
 	//replacing the block
 	blocks[local_y][local_x][local_z] = block;
 }
 
 Chunk::~Chunk()
 {
-	glDeleteVertexArrays(2, vao);
-	glDeleteBuffers(2, vbo);
+	//Chunk wysy³a dane o swoich buforach do kolejki aby zosta³y poprawnie usuniête
+	if (buffers_initialized)
+	{
+		MyCraft::QueueBuffersToDelete(vbo[SIMPLE], vao[SIMPLE]);
+		MyCraft::QueueBuffersToDelete(vbo[COMPLEX], vao[COMPLEX]);
+	}
 
 	if (vertices_simple != nullptr)
 		delete[] vertices_simple;

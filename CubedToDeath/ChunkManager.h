@@ -53,7 +53,7 @@ public:
 	static void QueueBlockToUnload(SimpleBlock* block);
 	//queues a chunk to be unloaded once it is certaint that no thread uses this chunk
 	static void QueueChunkToUnload(Chunk* block);
-private:
+	///should be private
 	//helper struct
 	template <typename T>
 	struct ItemQueuedToUnload
@@ -69,11 +69,13 @@ private:
 		//permission from each thread
 		bool flags[2];
 	};
+	static std::list<ItemQueuedToUnload<Chunk>> chunk_unload_queue;
+private:
 
 	//list of blocks to bo be unloaded once it is certaint that no thread uses this block
 	static std::list<ItemQueuedToUnload<SimpleBlock>> block_unload_queue;
 	//list of chunks to bo be unloaded once it is certaint that no thread uses this block
-	static std::list<ItemQueuedToUnload<Chunk>> chunk_unload_queue;
+
 	//map of chunk pointers
 	static chunk_hash_map chunk_map;
 };

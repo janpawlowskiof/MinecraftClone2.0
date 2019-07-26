@@ -28,7 +28,7 @@ void Player::UpdateMouse(float delta_yaw, float delta_pitch)
 	if (pitch < -89) pitch = -89.0f;
 }
 
-void Player::Update()
+void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 {
 	//time form prev update
 	double delta_time = glfwGetTime() - last_time;
@@ -46,9 +46,12 @@ void Player::Update()
 	glm::vec3 forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);
 	glm::vec3 right_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(1, 0, 0);
 	//camera real forward
-	glm::vec3 forward =  glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::angleAxis(glm::radians(pitch), glm::vec3(-1, 0, 0)) * glm::vec3(0, 0, -1);
+	glm::vec3 forward = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::angleAxis(glm::radians(pitch), glm::vec3(-1, 0, 0)) * glm::vec3(0, 0, -1);
 	//pos update
 	position += forward_flat * delta_forward + right_flat * delta_right + glm::vec3(0, 1, 0) * delta_up;
+
+	current_chunk_x = floor(position.x / 16.0);
+	current_chunk_z = floor(position.z / 16.0);
 
 	//calculating view matrix
 	glm::mat4 view = glm::lookAt(position, position + forward, glm::vec3(0, 1, 0));
@@ -56,7 +59,21 @@ void Player::Update()
 	//updating projection matrix
 	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
 
+
+	if (glfwGetKey(MyCraft::window, GLFW_KEY_Q) == GLFW_PRESS)
+	{
+		auto iterator = chunk_map.find(std::make_pair(current_chunk_x, current_chunk_z));
+		if (iterator != chunk_map.end())
+		{
+			auto chunk = iterator->second;
+			chunk->ReplaceBlock(floor(position.x), floor(position.y), floor(position.z), new SimpleBlock(blk_id::air_id));
+			chunk->RecalculateVisibility(chunk_map);
+		}
+	}
 	//std::cout << forward.x << " " << forward.y << " " << forward.z << std::endl;
 }
 
 glm::vec3 Player::position = glm::vec3(10, 10, 10);
+int Player::current_chunk_x, Player::current_chunk_z;
+float Player::pitch = 0;
+float Player::yaw = 0;

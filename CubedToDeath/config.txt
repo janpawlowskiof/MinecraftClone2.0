@@ -3,5 +3,5 @@ height = 720
 mouse_sensitivity = 0.1
 player_speed = 20
 fov = 90.0
-render_distance = 30
+render_distance = 10
 texture_terrain_path = res/terrain.png

@@ -70,7 +70,7 @@ static float* CreateBottomFace(float* target, int world_x, int world_y, int worl
 		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1)*m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
 		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (texture_x)*m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
 
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, 1, 0,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, texture_x*m_unit, (texture_y)*m_unit, 0, -1, 0,
 		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (texture_x + 1)*m_unit, texture_y*m_unit, 0, -1, 0,
 		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (texture_x + 1) *m_unit, (texture_y + 1)*m_unit, 0, -1, 0,
 	};

@@ -32,6 +32,8 @@ public:
 
 	SimpleBlock(unsigned char id = 255);
 	~SimpleBlock();
+
+
 	float* CreateModel(float* target, int world_x, int world_y, int world_z);
 	//returns if given face is currently visible
 	bool GetFaceVisible(Direction direction)

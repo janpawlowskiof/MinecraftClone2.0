@@ -80,7 +80,7 @@ void MyCraft::Run()
 		chunk_map = ChunkManager::GetChunkMap();
 		basic_shader->Use();
 		texture_terrain->Bind();
-		player->Update();
+		player->Update(chunk_map);
 		Update();
 
 		//zezwolenie na usuniêcie nieu¿ywanych bloków i chunków
@@ -88,8 +88,11 @@ void MyCraft::Run()
 		ChunkManager::GiveThreadPermissionToUnloadChunks(ChunkManager::MAIN);
 
 		double current_time = glfwGetTime();
+		glClear(GL_DEPTH_BUFFER_BIT);
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0/(current_time - last_time))), 25.0f, height - 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		text->RenderText(text_shader, "Yaw: " + std::to_string(Player::yaw), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		text->RenderText(text_shader, "Pitch: " + std::to_string(Player::pitch), 25.0f, height - 75.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		last_time = current_time;
 		glfwSwapBuffers(window);
 

@@ -206,6 +206,7 @@ void Chunk::RecalculateVisibility(std::map<std::pair<int, int>, Chunk*> chunk_ma
 					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
 			}
+	buffers_update_needed = true;
 }
 
 void Chunk::RecalculateTrianglesCount()
@@ -294,12 +295,16 @@ void Chunk::Draw()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
 }
 
-void Chunk::ReplaceBlock(int local_x, int local_y, int local_z, SimpleBlock* block)
+void Chunk::ReplaceBlock(int world_x, int world_y, int world_z, SimpleBlock* block)
 {
 	//We cannot just delete the block do we queue it for unloading
-	ChunkManager::QueueBlockToUnload(blocks[local_y][local_x][local_z]);
 	//replacing the block
-	blocks[local_y][local_x][local_z] = block;
+	int local_x = world_x - 16 * chunk_x;
+	int local_z = world_z - 16 * chunk_z;
+	assert(local_x >= 0 && local_x < 16);
+	assert(local_z >= 0 && local_z < 16);
+	ChunkManager::QueueBlockToUnload(blocks[world_y][local_x][local_z]);
+	blocks[world_y][local_x][local_z] = block;
 }
 
 Chunk::~Chunk()

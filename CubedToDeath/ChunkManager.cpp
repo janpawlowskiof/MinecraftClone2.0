@@ -27,11 +27,8 @@ ChunkManager::ChunkManager()
 
 void ChunkManager::Update()
 {
-	int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
-	int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
-
 	//loading world around the player
-	LoadWorld(current_chunk_x, current_chunk_z);
+	LoadWorld(Player::current_chunk_x, Player::current_chunk_z);
 	//allow queues to delete blocks
 	GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
 	GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
@@ -40,11 +37,8 @@ void ChunkManager::Update()
 
 void ChunkManager::UnloadChunks()
 {
-	int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
-	int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
-
 	//queuing chunks (that are too far from the player) to be unloaded
-	if(current_chunk_x != last_chunk_x || current_chunk_z != last_chunk_z)
+	if (Player::current_chunk_x != last_chunk_x || Player::current_chunk_z != last_chunk_z)
 	{
 		//lock since we modify the map
 		std::lock_guard<std::mutex> lock(chunk_map_mutex);
@@ -54,17 +48,9 @@ void ChunkManager::UnloadChunks()
 		{
 			//NOTE: chunks are unloaded at distance greater than render_distance and loader at distance lower than render_distance to prevent constant loads and deletes of chunks
 			const auto chunk = iterator->second;
-			if (std::abs(chunk->chunk_x - current_chunk_x) > MyCraft::render_distance || std::abs(chunk->chunk_z - current_chunk_z) > MyCraft::render_distance)
+			if (std::abs(chunk->chunk_x - Player::current_chunk_x) > MyCraft::render_distance || std::abs(chunk->chunk_z - Player::current_chunk_z) > MyCraft::render_distance)
 			{
 				///			SAVING CHUNK HERE		///
-				/*if (iterator->second->buffers_initialized)
-				{
-					//printf("cx %d cz %d", current_chunk_x, current_chunk_z);
-					//int i= 0;
-					MyCraft::QueueBuffersToDelete(iterator->second->vbo[Chunk::SIMPLE], iterator->second->vao[Chunk::SIMPLE]);
-					MyCraft::QueueBuffersToDelete(iterator->second->vbo[Chunk::COMPLEX], iterator->second->vao[Chunk::COMPLEX]);
-					iterator->second->buffers_initialized = false;
-				}*/
 				QueueChunkToUnload(iterator->second);
 				iterator = chunk_map.erase(iterator);
 			}
@@ -73,20 +59,20 @@ void ChunkManager::UnloadChunks()
 				++iterator;
 			}
 		}
-		last_chunk_x = current_chunk_x;
-		last_chunk_z = current_chunk_z;
+		last_chunk_x = Player::current_chunk_x;
+		last_chunk_z = Player::current_chunk_z;
 	}
 
 	//Deleting Blocks Queued for deletion if every thread declared it is ok to do so
 	{
+		std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
 		auto iterator = block_unload_queue.begin();
 		while (iterator != block_unload_queue.end())
 		{
-			std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
 			//deleting block if each flag is set to true
 			if ((*iterator).flags[0] && (*iterator).flags[1])
 			{
-				delete (*iterator).item;
+				delete (iterator->item);
 				iterator = block_unload_queue.erase(iterator);
 			}
 			else
@@ -108,10 +94,10 @@ void ChunkManager::UnloadChunks()
 	//Deleting Chunks Queued for deletion if every thread declared it is ok to do so
 	{
 		//locking the queue
+		std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
 		auto iterator = chunk_unload_queue.begin();
 		while (iterator != chunk_unload_queue.end())
 		{
-			std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
 			//deleting block if each flag is set to true
 			if ((*iterator).flags[0] && (*iterator).flags[1])
 			{
@@ -142,29 +128,17 @@ void ChunkManager::UnloadChunks()
 
 void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 {
-	int current_chunk_x;
-	int current_chunk_z;
-	//wczytywanie chunk na którym znajduje siê gracz
-	std::map<std::pair<int, int>, Chunk*>::iterator chunk;
-
-	chunk = chunk_map.find(std::make_pair(starting_chunk_x, starting_chunk_z));
-	if (chunk == chunk_map.end())
-	{
-		LoadChunk(starting_chunk_x, starting_chunk_z);
-	}
+	LoadChunk(starting_chunk_x, starting_chunk_z);
 	//pêtla wczytuj¹ca chunki dooko³a gracza zaczynaj¹c od najbli¿szych
 	for (int distance = 1; distance < MyCraft::render_distance; distance++)
 	{
 		for (int chunk_x = starting_chunk_x - distance; chunk_x <= starting_chunk_x + distance; chunk_x++)
 		{
-			int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
-			int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
-
 			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
-			if (current_chunk_x != starting_chunk_x || current_chunk_z != starting_chunk_z)
+			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
-				starting_chunk_x = current_chunk_x;
-				starting_chunk_z = current_chunk_z;
+				starting_chunk_x = Player::current_chunk_x;
+				starting_chunk_z = Player::current_chunk_z;
 				return;
 			}
 
@@ -172,55 +146,40 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 			GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
 			GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
-			chunk = chunk_map.find(std::make_pair(chunk_x, starting_chunk_z + distance));
-			if (chunk == chunk_map.end())
-			{
-				//trzeba wczytaæ chunk
-				LoadChunk(chunk_x, starting_chunk_z + distance);
-			}
-			chunk = chunk_map.find(std::make_pair(chunk_x, starting_chunk_z - distance));
-			if (chunk == chunk_map.end())
-			{
-				//trzeba wczytaæ chunk
-				LoadChunk(chunk_x, starting_chunk_z - distance);
-			}
+			LoadChunk(chunk_x, starting_chunk_z + distance);
+			LoadChunk(chunk_x, starting_chunk_z - distance);
 		}
 		for (int chunk_z = starting_chunk_z - distance + 1; chunk_z <= starting_chunk_z + distance - 1; chunk_z++)
 		{
-			int current_chunk_x = Player::position.x / 16 + (Player::position.x < 0 ? -1 : 0);
-			int current_chunk_z = Player::position.z / 16 + (Player::position.z < 0 ? -1 : 0);
-
 			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
-			if (current_chunk_x != starting_chunk_x || current_chunk_z != starting_chunk_z)
+			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
-				starting_chunk_x = current_chunk_x;
-				starting_chunk_z = current_chunk_z;
+				starting_chunk_x = Player::current_chunk_x;
+				starting_chunk_z = Player::current_chunk_z;
 				return;
 			}
 			//allow queues to delete blocks
 			GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
 			GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
-			chunk = chunk_map.find({ starting_chunk_x - distance, chunk_z });
-			if (chunk == chunk_map.end())
-			{
-				//trzeba wczytaæ chunk
-				LoadChunk(starting_chunk_x - distance, chunk_z);
-			}
-			chunk = chunk_map.find({ starting_chunk_x + distance, chunk_z });
-			if (chunk == chunk_map.end())
-			{
-				//trzeba wczytaæ chunk
-				LoadChunk(starting_chunk_x + distance, chunk_z);
-			}
+			LoadChunk(starting_chunk_x - distance, chunk_z);
+			LoadChunk(starting_chunk_x + distance, chunk_z);
 		}
 	}
 }
 
 void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 {
-	//Generacja lub Wczytanie czunka
+	{
+		std::lock_guard<std::mutex> lock(chunk_map_mutex);
+		auto iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z));
+		if (iterator != chunk_map.end())
+			return;
+	}
+
+	//generowanie lub wczytywanie
 	Chunk* chunk = new Chunk(chunk_x, chunk_z);
+	//Generacja lub Wczytanie czunka
 	chunk->RecalculateVisibility(chunk_map);
 	chunk->buffers_update_needed = true;
 

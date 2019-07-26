@@ -51,6 +51,9 @@
     <ClCompile Include="FastNoise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Text.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -89,15 +92,24 @@
     <ClInclude Include="include\ft2build.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="res\fragment.txt" />
-    <Text Include="res\vertex.txt" />
     <Text Include="config.txt" />
+    <Text Include="res\basic.frag" />
+    <Text Include="res\basic.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\terrain.png">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\text.frag" />
+    <None Include="res\text.vert" />
+    <None Include="res\background.frag" />
+    <None Include="res\background.vert" />
   </ItemGroup>
 </Project>

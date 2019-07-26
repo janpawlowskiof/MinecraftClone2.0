@@ -1,6 +1,5 @@
 #include "MyCraft.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H  
+
 
 MyCraft::MyCraft()
 {
@@ -39,6 +38,8 @@ void MyCraft::InitializeOpenGL()
 	glCullFace(GL_BACK);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 //inicjalizuje i odpala grê
@@ -57,30 +58,39 @@ void MyCraft::Run()
 	//std::cout << glGetString(GL_VENDOR) << std::endl;
 
 	texture_terrain = new Texture(config_map["texture_terrain_path"]);
-	basic_shader = new Shader("res/vertex.txt", "res/fragment.txt");
+	basic_shader = new Shader("res/basic.vert", "res/basic.frag");
+	text_shader = new Shader("res/text.vert", "res/text.frag");
+	sprite_shader = new Shader("res/background.vert", "res/background.frag");
 	player = new Player();
+	text = new Text("fonts/clacon.ttf");
 	world_manager = std::thread(WorldManagerFunction);
 	chunk_unloader = std::thread(ChunkUnloaderFunction);
 
 	///	test  ///
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	double counter = glfwGetTime();
-	vbos_delete_queue.reserve(2000);
-	vaos_delete_queue.reserve(2000);
+	double last_time = glfwGetTime();
+	double current_time;
+	vbos_delete_queue.reserve(3000);
+	vaos_delete_queue.reserve(3000);
 	//main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		chunk_map = ChunkManager::GetChunkMap();
-		player->Update();
 		basic_shader->Use();
 		texture_terrain->Bind();
+		player->Update();
 		Update();
 
 		//zezwolenie na usuniêcie nieu¿ywanych bloków i chunków
 		ChunkManager::GiveThreadPermissionToUnloadBlocks(ChunkManager::MAIN);
 		ChunkManager::GiveThreadPermissionToUnloadChunks(ChunkManager::MAIN);
+
+		double current_time = glfwGetTime();
+		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0/(current_time - last_time))), 25.0f, height - 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		last_time = current_time;
 		glfwSwapBuffers(window);
 
 		if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
@@ -195,14 +205,19 @@ MyCraft::~MyCraft()
 {
 	glfwTerminate();
 	delete basic_shader;
+	delete text_shader;
+	delete sprite_shader;
 	delete player;
 	delete window;
 	delete texture_terrain;
+	delete text;
 }
 
 //inicjalizacja statycznych zmiennych
 std::map<std::string, std::string> MyCraft::config_map;
 Shader* MyCraft::basic_shader = nullptr;
+Shader* MyCraft::text_shader = nullptr;
+Shader* MyCraft::sprite_shader = nullptr;
 GLFWwindow* MyCraft::window = nullptr;
 Player* MyCraft::player = nullptr;
 ChunkManager MyCraft::chunk_manager;
@@ -216,3 +231,4 @@ chunk_hash_map MyCraft::chunk_map;
 std::mutex MyCraft::buffers_queue_mutex;
 std::vector<unsigned int> MyCraft::vaos_delete_queue;
 std::vector<unsigned int> MyCraft::vbos_delete_queue;
+Text* MyCraft::text = nullptr;

@@ -14,6 +14,7 @@
 #include "Texture.h"
 #include "ChunkManager.h"
 #include <mutex>
+#include "Text.h"
 
 class MyCraft
 {
@@ -28,6 +29,9 @@ public:
 	static void mouse_callback(GLFWwindow* window, double x, double y);
 	//podstawowy shader
 	static Shader* basic_shader;
+	//text shader
+	static Shader* text_shader;
+	static Shader* sprite_shader;
 	//mapa konfiguracyjna
 	static std::map<std::string, std::string> config_map;
 	//okienko
@@ -37,6 +41,7 @@ public:
 	//display dimencions
 	static int height, width;
 	static int render_distance;
+	static Text* text;
 private:
 	//initializes opengl
 	void InitializeOpenGL();

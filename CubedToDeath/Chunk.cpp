@@ -85,8 +85,12 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 					blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
 				}
 			}
-
 	///											///
+		if (chunk_x == 0 && chunk_z == 0)
+		{
+			delete blocks[40][1][1];
+			blocks[40][1][1] = new SimpleBlock(blk_id::dirt_id);
+		}
 }
 
 void Chunk::RecalculateVisibility(std::map<std::pair<int, int>, Chunk*> chunk_map)

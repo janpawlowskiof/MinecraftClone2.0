@@ -154,3 +154,31 @@ float * SimpleBlock::CreateModel(float* target, int world_x, int world_y, int wo
 	}
 	return target;
 }
+
+bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z)
+{
+	//east - west check
+	if (origin.x <= block_x)
+	{
+		if(glm::dot(direction, glm::vec3(1, 0, 0)) == 0)
+			return false;
+
+		float hit_y = direction.y / direction.x * (block_x - origin.x) + origin.y;
+		float hit_z = direction.z / direction.x * (block_x - origin.x) + origin.z;
+
+		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_z >= block_z && hit_z <= block_z + 1)
+			return true;
+	}
+	else if (origin.x >= block_x + 1)
+	{
+		if (glm::dot(direction, glm::vec3(-1, 0, 0)) == 0)
+			return false;
+
+		float hit_y = direction.y / direction.x * (block_x + 1 - origin.x) + origin.y;
+		float hit_z = direction.z / direction.x * (block_x + 1 - origin.x) + origin.z;
+
+		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_z >= block_z && hit_z <= block_z + 1)
+			return true;
+	}
+	return false;
+}

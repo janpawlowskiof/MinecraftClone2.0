@@ -4,6 +4,7 @@
 #include <mutex>
 #include "Chunk.h"
 #include "FastNoise.h"
+#include <thread>
 
 typedef std::map<std::pair<int, int>, Chunk*> chunk_hash_map;
 
@@ -25,9 +26,9 @@ public:
 	//unloads chunks queued chunks to be deleted
 	static void UnloadChunks();
 	//loads the world around given chunk coordinates
-	void LoadWorld(int &starting_chunk_x, int &starting_chunk_z);
+	void LoadWorld(int starting_chunk_x, int starting_chunk_z);
 	//loads given chunk
-	void LoadChunk(int chunk_x, int chunk_z);
+	static void LoadChunk(int chunk_x, int chunk_z);
 	//mutex for the chunk map
 	static std::mutex chunk_map_mutex;
 	//return a copy of a current version of chunk_map

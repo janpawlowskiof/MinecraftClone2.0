@@ -46,7 +46,7 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	glm::vec3 forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);
 	glm::vec3 right_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(1, 0, 0);
 	//camera real forward
-	glm::vec3 forward = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::angleAxis(glm::radians(pitch), glm::vec3(-1, 0, 0)) * glm::vec3(0, 0, -1);
+	forward = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::angleAxis(glm::radians(pitch), glm::vec3(-1, 0, 0)) * glm::vec3(0, 0, -1);
 	//pos update
 	position += forward_flat * delta_forward + right_flat * delta_right + glm::vec3(0, 1, 0) * delta_up;
 
@@ -74,6 +74,7 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 }
 
 glm::vec3 Player::position = glm::vec3(10, 10, 10);
+glm::vec3 Player::forward = glm::vec3(0, 0, 1);
 int Player::current_chunk_x, Player::current_chunk_z;
 float Player::pitch = 0;
 float Player::yaw = 0;

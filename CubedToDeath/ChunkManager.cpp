@@ -126,7 +126,7 @@ void ChunkManager::UnloadChunks()
 }
 
 
-void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
+void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 {
 	LoadChunk(starting_chunk_x, starting_chunk_z);
 	//pêtla wczytuj¹ca chunki dooko³a gracza zaczynaj¹c od najbli¿szych
@@ -137,8 +137,6 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
 			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
-				starting_chunk_x = Player::current_chunk_x;
-				starting_chunk_z = Player::current_chunk_z;
 				return;
 			}
 
@@ -154,8 +152,6 @@ void ChunkManager::LoadWorld(int& starting_chunk_x, int& starting_chunk_z)
 			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
 			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
-				starting_chunk_x = Player::current_chunk_x;
-				starting_chunk_z = Player::current_chunk_z;
 				return;
 			}
 			//allow queues to delete blocks

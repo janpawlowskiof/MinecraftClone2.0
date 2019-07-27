@@ -93,6 +93,8 @@ void MyCraft::Run()
 		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		text->RenderText(text_shader, "Yaw: " + std::to_string(Player::yaw), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		text->RenderText(text_shader, "Pitch: " + std::to_string(Player::pitch), 25.0f, height - 75.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		bool hit = SimpleBlock::CheckRayCollision(Player::position, Player::forward, 1, 40, 1);
+		text->RenderText(text_shader, "Hit: " + std::to_string(hit), 25.0f, height - 100.0f, 0.5f, hit ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0));
 		last_time = current_time;
 		glfwSwapBuffers(window);
 

@@ -124,6 +124,18 @@ float * SimpleBlock::CreateModel(float* target, int world_x, int world_y, int wo
 		side_x = top_x = bottom_x = 1;
 		side_y = top_y = bottom_y = 0;
 		break;
+	case blk_id::wood_id:
+		side_x = 4;
+		side_y = 1;
+		top_x = bottom_x = 5;
+		top_y = bottom_y = 1;
+		break;
+	case blk_id::grass_id:
+		side_x = 3;
+		side_y = 0;
+		top_x = bottom_x = 8;
+		top_y = bottom_y = 2;
+		break;
 	case blk_id::air_id:
 	default:
 		return target;
@@ -169,7 +181,7 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_z >= block_z && hit_z <= block_z + 1)
 			return true;
 	}
-	else if (origin.x >= block_x + 1)
+	if (origin.x >= block_x + 1)
 	{
 		if (glm::dot(direction, glm::vec3(-1, 0, 0)) == 0)
 			return false;
@@ -178,6 +190,50 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 		float hit_z = direction.z / direction.x * (block_x + 1 - origin.x) + origin.z;
 
 		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_z >= block_z && hit_z <= block_z + 1)
+			return true;
+	}
+	if (origin.z <= block_z)
+	{
+		if (glm::dot(direction, glm::vec3(0, 0, 1)) == 0)
+			return false;
+
+		float hit_x = direction.x / direction.z * (block_z - origin.z) + origin.x;
+		float hit_y = direction.y / direction.z * (block_z - origin.z) + origin.y;
+
+		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_x >= block_x && hit_x <= block_x + 1)
+			return true;
+	}
+	if (origin.z >= block_z + 1)
+	{
+		if (glm::dot(direction, glm::vec3(0, 0, -1)) == 0)
+			return false;
+
+		float hit_x = direction.x / direction.z * (block_z + 1 - origin.z) + origin.x;
+		float hit_y = direction.y / direction.z * (block_z + 1 - origin.z) + origin.y;
+
+		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_x >= block_x && hit_x <= block_x + 1)
+			return true;
+	}
+	if (origin.y <= block_y)
+	{
+		if (glm::dot(direction, glm::vec3(0, 1, 0)) == 0)
+			return false;
+
+		float hit_x = direction.x / direction.y * (block_y - origin.y) + origin.x;
+		float hit_z = direction.z / direction.y * (block_y - origin.y) + origin.z;
+
+		if (hit_z >= block_z && hit_z <= block_z + 1 && hit_x >= block_x && hit_x <= block_x + 1)
+			return true;
+	}
+	if (origin.y >= block_y + 1)
+	{
+		if (glm::dot(direction, glm::vec3(0, -1, 0)) == 0)
+			return false;
+
+		float hit_x = direction.x / direction.y * (block_y + 1 - origin.y) + origin.x;
+		float hit_z = direction.z / direction.y * (block_y + 1 - origin.y) + origin.z;
+
+		if (hit_z >= block_z && hit_z <= block_z + 1 && hit_x >= block_x && hit_x <= block_x + 1)
 			return true;
 	}
 	return false;

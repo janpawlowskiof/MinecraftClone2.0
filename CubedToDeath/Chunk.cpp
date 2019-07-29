@@ -54,7 +54,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
-				float mountain_lower_threshold = 0.2f;
+				float mountain_lower_threshold = 0.1f;
 				float mountain_upper_threshold = 0.6f;
 				float ocean_lower_threshold = 0.4f;
 				float ocean_upper_threshold = 0.5f;
@@ -70,10 +70,13 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 				float ocean_factor = powf((ocean_placement_value - ocean_lower_threshold) / (ocean_upper_threshold - ocean_lower_threshold), 2);
 
 				int ground_level = (30 + tectonical_value) * (1 - ocean_factor) + mountain_value;
-				for (int y = 0; y < ground_level; y++)
+				height_values[x][z] = ground_level;
+				for (int y = 0; y < ground_level - 1; y++)
 				{
 					blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
 				}
+
+				blocks[ground_level - 1][x][z] = new SimpleBlock(blk_id::grass_id);
 
 				for (int y = ground_level; y < ocean_level; y++)
 				{
@@ -299,16 +302,26 @@ void Chunk::Draw()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
 }
 
-void Chunk::ReplaceBlock(int world_x, int world_y, int world_z, SimpleBlock* block)
+void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates)
 {
 	//We cannot just delete the block do we queue it for unloading
 	//replacing the block
-	int local_x = world_x - 16 * chunk_x;
-	int local_z = world_z - 16 * chunk_z;
+	int local_x;
+	int local_z;
+	if (world_coordinates)
+	{
+		local_x = block_x - 16 * chunk_x;
+		local_z = block_z - 16 * chunk_z;
+	}
+	else
+	{
+		local_x = block_x;
+		local_z = block_z;
+	}
 	assert(local_x >= 0 && local_x < 16);
 	assert(local_z >= 0 && local_z < 16);
-	ChunkManager::QueueBlockToUnload(blocks[world_y][local_x][local_z]);
-	blocks[world_y][local_x][local_z] = block;
+	ChunkManager::QueueBlockToUnload(blocks[block_y][local_x][local_z]);
+	blocks[block_y][local_x][local_z] = block;
 }
 
 Chunk::~Chunk()

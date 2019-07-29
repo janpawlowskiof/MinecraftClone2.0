@@ -67,6 +67,8 @@ namespace blk_id
 		air_id,
 		dirt_id,
 		stone_id,
+		wood_id,
+		grass_id,
 
 		water_id,
 		torch_id,

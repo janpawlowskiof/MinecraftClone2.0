@@ -19,20 +19,31 @@ public:
 	static FastNoise tectonical_noise;
 	static FastNoise ocean_noise;
 
+	static FastNoise tree_noise;
+
 	static int last_chunk_x, last_chunk_z;
 
 	//updates world
 	void Update();
 	//unloads chunks queued chunks to be deleted
 	static void UnloadChunks();
+	static void UnloadBlocks();
+
 	//loads the world around given chunk coordinates
 	void LoadWorld(int starting_chunk_x, int starting_chunk_z);
+
+	static void GenerateStructures();
 	//loads given chunk
 	static void LoadChunk(int chunk_x, int chunk_z);
 	//mutex for the chunk map
 	static std::mutex chunk_map_mutex;
 	//return a copy of a current version of chunk_map
 	static chunk_hash_map GetChunkMap();
+	static Chunk* GetChunk(int chunk_x, int chunk_z)
+	{
+		auto iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z));
+		return (iterator != chunk_map.end()) ? iterator->second : nullptr;
+	}
 	~ChunkManager();
 	
 	//ids of threads in program

@@ -43,7 +43,7 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 		((glfwGetKey(MyCraft::window, GLFW_KEY_SPACE) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)) * player_speed * delta_time;
 
 	//forward but aligned to the ground
-	glm::vec3 forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);
+	forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);
 	glm::vec3 right_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(1, 0, 0);
 	//camera real forward
 	forward = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::angleAxis(glm::radians(pitch), glm::vec3(-1, 0, 0)) * glm::vec3(0, 0, -1);
@@ -67,14 +67,15 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 		{
 			auto chunk = iterator->second;
 			chunk->ReplaceBlock(floor(position.x), floor(position.y), floor(position.z), new SimpleBlock(blk_id::air_id));
-			chunk->RecalculateVisibility(chunk_map);
+			chunk->RecalculateVisibility();
 		}
 	}
 	//std::cout << forward.x << " " << forward.y << " " << forward.z << std::endl;
 }
 
-glm::vec3 Player::position = glm::vec3(10, 10, 10);
+glm::vec3 Player::position = glm::vec3(10, 60, 10);
 glm::vec3 Player::forward = glm::vec3(0, 0, 1);
+glm::vec3 Player::forward_flat = glm::vec3(0, 0, 1);
 int Player::current_chunk_x, Player::current_chunk_z;
 float Player::pitch = 0;
 float Player::yaw = 0;

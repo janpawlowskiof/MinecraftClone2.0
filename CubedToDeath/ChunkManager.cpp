@@ -6,7 +6,6 @@
 ChunkManager::ChunkManager()
 {
 	//noise map initialization
-
 	test_noise.SetNoiseType(FastNoise::Cubic);
 	test_noise.SetSeed(1337);
 	//test_noise.SetFractalOctaves(2);
@@ -15,8 +14,13 @@ ChunkManager::ChunkManager()
 	test_noise.SetFrequency(0.015);
 	test_noise.SetGradientPerturbAmp(2.0);
 
+	tree_noise.SetNoiseType(FastNoise::Value);
 	tree_noise.SetFrequency(0.2);
 	tree_noise.SetSeed(42319);
+
+	tree_placement_noise.SetNoiseType(FastNoise::Simplex);
+	tree_placement_noise.SetFrequency(0.005);
+	tree_placement_noise.SetSeed(427);
 
 	mountain_placement_noise.SetNoiseType(FastNoise::Cubic);
 	//mountain_placement_noise.SetFractalOctaves(2);
@@ -35,18 +39,31 @@ void ChunkManager::Update()
 {
 	//loading world around the player
 	LoadWorld(Player::current_chunk_x, Player::current_chunk_z);
-
-	GenerateStructures();
 	//allow queues to delete blocks
 	GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
 	GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
-	UnloadChunks();
+	//UpdateVisibility();
 	UnloadBlocks();
 }
 
+///				obsolete			///
+/*void ChunkManager::UpdateVisibility()
+{
+	std::lock_guard<std::mutex> lock(chunk_map_mutex);
+	auto iterator = chunk_map.begin();
+	while (iterator != chunk_map.end())
+	{
+		if (iterator->second->visibility_update_needed)
+		{
+			iterator->second->RecalculateVisibility();
+		}
+		iterator++;
+	}
+}*/
+
 void ChunkManager::UnloadBlocks()
 {
-	//Deleting Blocks Queued for deletion if every thread declared it is ok to do so
+	//Deleting Queued Blocks if every thread declared it is ok to do so
 	{
 		std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
 		auto iterator = block_unload_queue.begin();
@@ -79,7 +96,7 @@ void ChunkManager::UnloadChunks()
 		{
 			//NOTE: chunks are unloaded at distance greater than render_distance and loader at distance lower than render_distance to prevent constant loads and deletes of chunks
 			const auto chunk = iterator->second;
-			if ((chunk->chunk_x - Player::current_chunk_x)*(chunk->chunk_x - Player::current_chunk_x) + (chunk->chunk_z - Player::current_chunk_z) * (chunk->chunk_z - Player::current_chunk_z) > MyCraft::render_distance * MyCraft::render_distance)
+			if ((chunk->chunk_x - Player::current_chunk_x) * (chunk->chunk_x - Player::current_chunk_x) + (chunk->chunk_z - Player::current_chunk_z) * (chunk->chunk_z - Player::current_chunk_z) >= (MyCraft::render_distance + 1) * (MyCraft::render_distance + 1))
 			{
 				///			SAVING CHUNK HERE		///
 				QueueChunkToUnload(iterator->second);
@@ -140,15 +157,16 @@ void ChunkManager::UnloadChunks()
 
 void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 {
+	//loading chunk player is standing on
 	LoadChunk(starting_chunk_x, starting_chunk_z);
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
 	for (int distance = 1; distance < MyCraft::render_distance; distance++)
 	{
-		for (int chunk_x = - distance; chunk_x <= distance; chunk_x++)
+		//wczytywanie chunków
+		for (int chunk_x = -distance; chunk_x <= distance; chunk_x++)
 		{
 			if (chunk_x * chunk_x + distance * distance >= MyCraft::render_distance * MyCraft::render_distance)
 				continue;
-			if(chunk_x)
 			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
 			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
@@ -162,7 +180,7 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 			LoadChunk(starting_chunk_x + chunk_x, starting_chunk_z + distance);
 			LoadChunk(starting_chunk_x + chunk_x, starting_chunk_z - distance);
 		}
-		for (int chunk_z = - distance + 1; chunk_z <= distance - 1; chunk_z++)
+		for (int chunk_z = -distance + 1; chunk_z <= distance - 1; chunk_z++)
 		{
 			if (chunk_z * chunk_z + distance * distance >= MyCraft::render_distance * MyCraft::render_distance)
 				continue;
@@ -178,98 +196,119 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 			LoadChunk(starting_chunk_x - distance, starting_chunk_z + chunk_z);
 			LoadChunk(starting_chunk_x + distance, starting_chunk_z + chunk_z);
 		}
-	}
 
-	//for (int distance = 1; distance < MyCraft::render_distance; distance++)
-	//{
-		/*for (int chunk_offset_x = 0; chunk_offset_x < MyCraft::render_distance; chunk_offset_x++)
+		
+		//Generating stuctures on chunks one close than what is generated
+		if (distance < 1)
+			continue;
+		int structure_distance = distance - 1;
+		for (int chunk_x = -structure_distance; chunk_x <= structure_distance; chunk_x++)
 		{
-			for (int chunk_offset_z = 0; chunk_offset_z * chunk_offset_z < MyCraft::render_distance * MyCraft::render_distance - chunk_offset_x * chunk_offset_x; chunk_offset_z++)
-			{
-				//allow queues to delete blocks
-				GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
-				GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
-
-			//funkcja kończy się gdy gracz zmienił chunk aby nie wczytywać terenu dookoła miejsca gdzie gracza już nie ma
+			if (chunk_x * chunk_x + structure_distance  * structure_distance  >= MyCraft::render_distance  * MyCraft::render_distance )
+				continue;
+			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
 			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
 				return;
 			}
-				//allow queues to delete blocks
-				GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
-				GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
 
-
-				LoadChunk(Player::current_chunk_x + chunk_offset_x, Player::current_chunk_z + chunk_offset_z);
-				if (chunk_offset_x != 0)
-				{
-					LoadChunk(Player::current_chunk_x - chunk_offset_x, Player::current_chunk_z + chunk_offset_z);
-				}
-				if (chunk_offset_z != 0)
-				{
-					LoadChunk(Player::current_chunk_x + chunk_offset_x, Player::current_chunk_z - chunk_offset_z);
-					if (chunk_offset_x != 0)
-					{
-						LoadChunk(Player::current_chunk_x - chunk_offset_x, Player::current_chunk_z - chunk_offset_z);
-					}
-				}
-				//LoadChunk(chunk_x, chunk_z);
-			}
-
-		}*/
-	
-	//}
-}
-
-void ChunkManager::GenerateStructures()
-{
-	auto iterator = chunk_map.begin();
-	while (iterator != chunk_map.end())
-	{
-		Chunk* chunk = iterator->second;
-		if (!chunk->structures_generated)
+			if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z + structure_distance))
+				if (!chunk->structures_generated)
+					chunk->GenerateStructures();
+			if (Chunk* chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z - structure_distance))
+				if (!chunk->structures_generated)
+					chunk->GenerateStructures();
+		}
+		for (int chunk_z = -structure_distance  + 1; chunk_z <= structure_distance  - 1; chunk_z++)
 		{
-			Chunk* north_chunk, * south_chunk, * east_chunk, * west_chunk;
-			if ((north_chunk = GetChunk(chunk->chunk_x, chunk->chunk_z + 1)) != nullptr
-				&& (south_chunk = GetChunk(chunk->chunk_x, chunk->chunk_z - 1)) != nullptr
-				&& (east_chunk = GetChunk(chunk->chunk_x - 1, chunk->chunk_z)) != nullptr
-				&& (west_chunk = GetChunk(chunk->chunk_x + 1, chunk->chunk_z)) != nullptr)
+			if (chunk_z * chunk_z + structure_distance  * structure_distance  >= MyCraft::render_distance  * MyCraft::render_distance )
+				continue;
+			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
 			{
-				//GENERATING STRUCTURES HERE
-				float tree_values[18][18];
-				for(int x = -1; x < 17; x++)
-					for (int z = -1; z < 17; z++)
-					{
-						tree_values[x + 1][z + 1] = tree_noise.GetValue(chunk->chunk_x * 16 + x, chunk->chunk_z * 16 + z);
-					}
-
-				for (int x = 0; x < 16; x++)
-					for (int z = 0; z < 16; z++)
-					{
-						if (tree_values[x + 1][z + 1] > tree_values[x][z + 1] &&
-							tree_values[x + 1][z + 1] > tree_values[x + 2][z + 1] &&
-							tree_values[x + 1][z + 1] > tree_values[x + 1][z + 2] &&
-							tree_values[x + 1][z + 1] > tree_values[x + 1][z])
-						{
-							int ground_level = chunk->height_values[x][z];
-
-							chunk->ReplaceBlock(x, ground_level, z, new SimpleBlock(blk_id::wood_id), false);
-							chunk->ReplaceBlock(x, ground_level + 1, z, new SimpleBlock(blk_id::wood_id), false);
-							chunk->ReplaceBlock(x, ground_level + 2, z, new SimpleBlock(blk_id::wood_id), false);
-							chunk->ReplaceBlock(x, ground_level + 3, z, new SimpleBlock(blk_id::wood_id), false);
-							chunk->ReplaceBlock(x, ground_level + 4, z, new SimpleBlock(blk_id::wood_id), false);
-						}
-					}
-				chunk->RecalculateVisibility(chunk_map);
-				chunk->structures_generated = true;
+				return;
 			}
+
+			if (Chunk * chunk = GetChunk(starting_chunk_x - structure_distance, starting_chunk_z + chunk_z))
+				if (!chunk->structures_generated)
+					chunk->GenerateStructures();
+			if (Chunk * chunk = GetChunk(starting_chunk_x + structure_distance, starting_chunk_z + chunk_z))
+				if (!chunk->structures_generated)
+					chunk->GenerateStructures();
 		}
 
-		GiveThreadPermissionToUnloadBlocks(WORLD_MANAGER);
-		GiveThreadPermissionToUnloadChunks(WORLD_MANAGER);
-		UnloadBlocks();
+		//updating visibility on chunks on closer than where structures are generated
+		if (distance < 2)
+			continue;
+		int visibility_distance = distance - 2;
+		for (int chunk_x = -visibility_distance; chunk_x <= visibility_distance; chunk_x++)
+		{
+			if (chunk_x * chunk_x + visibility_distance * visibility_distance >= MyCraft::render_distance * MyCraft::render_distance)
+				continue;
+			//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
+			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
+			{
+				return;
+			}
 
-		iterator++;
+			if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z + visibility_distance))
+				if (chunk->visibility_update_needed)
+					chunk->RecalculateVisibility();
+			if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z - visibility_distance))
+				if (chunk->visibility_update_needed)
+					chunk->RecalculateVisibility();
+		}
+		for (int chunk_z = -visibility_distance + 1; chunk_z <= visibility_distance - 1; chunk_z++)
+		{
+			if (chunk_z * chunk_z + visibility_distance * visibility_distance >= MyCraft::render_distance * MyCraft::render_distance)
+				continue;
+			if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
+			{
+				return;
+			}
+
+			if (Chunk * chunk = GetChunk(starting_chunk_x - visibility_distance, starting_chunk_z + chunk_z))
+				if (chunk->visibility_update_needed)
+					chunk->RecalculateVisibility();
+			if (Chunk * chunk = GetChunk(starting_chunk_x + visibility_distance, starting_chunk_z + chunk_z))
+				if (chunk->visibility_update_needed)
+					chunk->RecalculateVisibility();
+		}
+	}
+
+	//updating visibility on the pre last ring visible
+	int visibility_distance = MyCraft::render_distance - 2;
+	for (int chunk_x = -visibility_distance; chunk_x <= visibility_distance; chunk_x++)
+	{
+		if (chunk_x * chunk_x + visibility_distance * visibility_distance >= MyCraft::render_distance * MyCraft::render_distance)
+			continue;
+		//funkcja koñczy siê gdy gracz zmieni³ chunk aby nie wczytywaæ terenu dooko³a miejsca gdzie gracza ju¿ nie ma
+		if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
+		{
+			return;
+		}
+
+		if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z + visibility_distance))
+			if (chunk->visibility_update_needed)
+				chunk->RecalculateVisibility();
+		if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z - visibility_distance))
+			if (chunk->visibility_update_needed)
+				chunk->RecalculateVisibility();
+	}
+	for (int chunk_z = -visibility_distance + 1; chunk_z <= visibility_distance - 1; chunk_z++)
+	{
+		if (chunk_z * chunk_z + visibility_distance * visibility_distance >= MyCraft::render_distance * MyCraft::render_distance)
+			continue;
+		if (Player::current_chunk_x != starting_chunk_x || Player::current_chunk_z != starting_chunk_z)
+		{
+			return;
+		}
+
+		if (Chunk * chunk = GetChunk(starting_chunk_x - visibility_distance, starting_chunk_z + chunk_z))
+			if (chunk->visibility_update_needed)
+				chunk->RecalculateVisibility();
+		if (Chunk * chunk = GetChunk(starting_chunk_x + visibility_distance, starting_chunk_z + chunk_z))
+			if (chunk->visibility_update_needed)
+				chunk->RecalculateVisibility();
 	}
 }
 
@@ -279,13 +318,17 @@ void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 		std::lock_guard<std::mutex> lock(chunk_map_mutex);
 		auto iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z));
 		if (iterator != chunk_map.end())
+		{
+			if (!iterator->second->structures_generated)
+			{
+				iterator->second->GenerateStructures();
+			}
 			return;
+		}
 	}
 
 	//generowanie lub wczytywanie
 	Chunk* chunk = new Chunk(chunk_x, chunk_z);
-	//Generacja lub Wczytanie czunka
-	chunk->RecalculateVisibility(chunk_map);
 	chunk->buffers_update_needed = true;
 
 	//blokada i umieszczenie nowego chunka w mapie
@@ -329,10 +372,19 @@ void ChunkManager::QueueBlockToUnload(SimpleBlock* block)
 	block_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<SimpleBlock>(block));
 }
 
-void ChunkManager::QueueChunkToUnload(Chunk* block)
+void ChunkManager::QueueChunkToUnload(Chunk* chunk)
 {
 	std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);
-	chunk_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<Chunk>(block));
+	chunk_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<Chunk>(chunk));
+
+	if (chunk->south_chunk)
+		chunk->south_chunk->north_chunk = nullptr;
+	if (chunk->north_chunk)
+		chunk->north_chunk->south_chunk = nullptr;
+	if (chunk->east_chunk)
+		chunk->east_chunk->west_chunk = nullptr;
+	if (chunk->west_chunk)
+		chunk->west_chunk->east_chunk = nullptr;
 }
 
 std::list<ChunkManager::ItemQueuedToUnload<SimpleBlock>> ChunkManager::block_unload_queue;
@@ -340,6 +392,7 @@ std::list<ChunkManager::ItemQueuedToUnload<Chunk>> ChunkManager::chunk_unload_qu
 chunk_hash_map ChunkManager::chunk_map;
 FastNoise ChunkManager::test_noise;
 FastNoise ChunkManager::tree_noise;
+FastNoise ChunkManager::tree_placement_noise;
 FastNoise ChunkManager::mountain_placement_noise;
 FastNoise ChunkManager::tectonical_noise;
 FastNoise ChunkManager::ocean_noise;

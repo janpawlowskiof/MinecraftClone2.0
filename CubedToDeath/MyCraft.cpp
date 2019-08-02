@@ -5,6 +5,8 @@ MyCraft::MyCraft()
 {
 }
 
+bool program_should_close = false;
+
 void MyCraft::InitializeOpenGL()
 {
 	//standardowa inicjalizacja
@@ -73,7 +75,7 @@ void MyCraft::Run()
 	vbos_delete_queue.reserve(3000);
 	vaos_delete_queue.reserve(3000);
 	//main loop
-	while (!glfwWindowShouldClose(window))
+	while (!(program_should_close = glfwWindowShouldClose(window)))
 	{
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -143,13 +145,13 @@ void MyCraft::LoadConfig(std::string path)
 
 void MyCraft::WorldManagerFunction()
 {
-	while (!glfwWindowShouldClose(window))
+	while (!program_should_close)
 		chunk_manager.Update();
 }
 
 void MyCraft::ChunkUnloaderFunction()
 {
-	while (!glfwWindowShouldClose(window))
+	while (!program_should_close)
 		ChunkManager::UnloadChunks();
 }
 
@@ -175,9 +177,22 @@ void MyCraft::Update()
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
+
+		/*float angle = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 8, 0, chunk->chunk_z * 16 + 8) - glm::vec3(Player::position.x, 0, Player::position.z) + Player::forward_flat * 16.0f),
+			Player::forward_flat));
+		if (angle > glm::radians(65.0f))
+		{
+			iterator++;
+			continue;
+		}*/
+
+
 		//initializing chunks that need to be initialized
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
+		//if (chunk->visibility_update_needed)
+		//	chunk->RecalculateVisibility();
 		//updates vbos on chunks that reqire doing so
 		if (chunk->buffers_update_needed)
 			chunk->UpdateVbos();

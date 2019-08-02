@@ -69,6 +69,7 @@ namespace blk_id
 		stone_id,
 		wood_id,
 		grass_id,
+		leaves_id,
 
 		water_id,
 		torch_id,

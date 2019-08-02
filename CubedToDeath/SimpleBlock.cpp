@@ -136,6 +136,10 @@ float * SimpleBlock::CreateModel(float* target, int world_x, int world_y, int wo
 		top_x = bottom_x = 8;
 		top_y = bottom_y = 2;
 		break;
+	case blk_id::leaves_id:
+		top_x = bottom_x = side_x = 5;
+		top_y = bottom_y = side_y = 3;
+		break;
 	case blk_id::air_id:
 	default:
 		return target;

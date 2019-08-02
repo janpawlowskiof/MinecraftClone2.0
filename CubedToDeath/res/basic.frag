@@ -12,5 +12,5 @@ void main()
 	vec4 color = texture(texture_terrain, TexCoords);
 	if(color.a < 0.5) discard;
     //FragColor = (max(dot(Normal, light_dir), 0.0) * vec4(1,1,1,1) + vec4(0.2, 0.2, 0.2, 1)) * mix(vec4(abs(Normal.x), abs(Normal.y), abs(Normal.z), 1), texture2D(texture_terrain, TexCoords), 0.5);
-    FragColor = (max(dot(Normal, light_dir), 0.0) * vec4(1,1,1,1) + vec4(0.2, 0.2, 0.2, 1)) * texture2D(texture_terrain, TexCoords);
+    FragColor = (max(dot(Normal, light_dir), 0.0) * vec4(1,1,1,1) + vec4(0.4, 0.4, 0.4, 1)) * texture2D(texture_terrain, TexCoords);
 }

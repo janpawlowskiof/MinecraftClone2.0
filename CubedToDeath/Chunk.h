@@ -5,6 +5,7 @@
 #include <map>
 #include "SimpleBlock.h"
 #include "ComplexBlock.h"
+#include <mutex>
 
 class Chunk
 {
@@ -12,6 +13,7 @@ private:
 	int triangles_count[2];
 	float* vertices_simple = nullptr;
 	float* vertices_complex = nullptr;
+	std::mutex blocks_mutex;
 public:
 	SimpleBlock* blocks[128][16][16];
 	int height_values[16][16];
@@ -25,6 +27,7 @@ public:
 	bool structures_generated = false;
 	void InitializeBuffers();
 	void GenerateStructures();
+	SimpleBlock* GetBlockInArea(int &local_x, int &local_y, int& local_z, Chunk*&chunk);
 	Chunk(int chunk_x, int chunk_y);
 	~Chunk();
 	//void CountVisibleTriangles();
@@ -33,6 +36,7 @@ public:
 	//void UpdateVboComplex();
 	void UpdateVbos();
 	void Draw();
+	bool InView();
 	void ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates = true);
 	enum Type
 	{

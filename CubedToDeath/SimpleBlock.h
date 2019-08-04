@@ -1,5 +1,9 @@
 #pragma once
 #include <glm\glm.hpp>
+//#include "HitInfo.h"
+
+class HitInfo;
+
 class SimpleBlock
 {
 public:
@@ -55,7 +59,7 @@ public:
 		if (value) flags |= flag; else flags &= ~flag;
 	}
 
-	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z);
+	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info);
 
 	//static float* CreateModel(
 };

@@ -42,6 +42,7 @@ public:
 	static int height, width;
 	static int render_distance;
 	static Text* text;
+	static chunk_hash_map chunk_map;
 private:
 	//initializes opengl
 	void InitializeOpenGL();
@@ -63,7 +64,6 @@ private:
 	//thread responsible for managing world
 	std::thread world_manager;
 	std::thread chunk_unloader;
-	static chunk_hash_map chunk_map;
 
 	static std::mutex buffers_queue_mutex;
 	static std::vector<unsigned int> vbos_delete_queue;

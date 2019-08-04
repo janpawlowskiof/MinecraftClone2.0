@@ -4,6 +4,79 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+bool Player::GetHitInfo(HitInfo& hit_info)
+{
+	//return SimpleBlock::CheckRayCollision(Player::position, Player::forward, 1, 60, 1, hi);
+
+	const int check_distance = 5;
+	const int min_check_x = (Player::forward.x < 0) ? -check_distance : 0;
+	const int max_check_x = (Player::forward.x < 0) ? 0 : check_distance;
+
+	const int min_check_y = (Player::forward.y < 0) ? -check_distance : 0;
+	const int max_check_y = (Player::forward.y < 0) ? 0 : check_distance;
+
+	const int min_check_z = (Player::forward.z < 0) ? -check_distance : 0;
+	const int max_check_z = (Player::forward.z < 0) ? 0 : check_distance;
+
+	auto iterator = MyCraft::chunk_map.find(std::make_pair(current_chunk_x, current_chunk_z));
+	if (iterator == MyCraft::chunk_map.end())
+		return false;
+
+	Chunk* current_chunk = iterator->second;
+	HitInfo hi;
+	int player_local_x = std::floor(position.x) - 16 * current_chunk->chunk_x;
+	int player_local_z = std::floor(position.z) - 16 * current_chunk->chunk_z;
+
+	bool block_hit = false;
+	for (int x = -check_distance; x <= check_distance; x++)
+		for (int z = -check_distance; z <= check_distance; z++)
+			for (int y = -check_distance; y <= check_distance; y++)
+			{
+				int local_x = player_local_x + x;
+				int local_z = player_local_z + z;
+				int local_y = std::min(std::max((int)std::floor(position.y) + y, 0), 127);
+
+				Chunk* hit_chunk = current_chunk;
+				SimpleBlock* hit_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, hit_chunk);
+				//Chunk* place_chunk = current_chunk;
+				//SimpleBlock* place_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, place_chunk);
+				if (hit_block->id == blk_id::air_id)
+					continue;
+
+				if (!hit_block->GetFlag(SimpleBlock::COMPLEX))
+				{
+					if (SimpleBlock::CheckRayCollision(position, forward, std::floor(position.x + x), std::floor(position.y + y), std::floor(position.z + z), hi))
+					{
+						if (hi.distance < hit_info.distance)
+						{
+							hit_info = hi;
+							//Chunk* place_chunk = current_chunk;
+							//SimpleBlock* place_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, place_chunk);
+							//hit_info.Update(hit_chunk, hit_block);
+							hit_info.hit_block = hit_block;
+							hit_info.hit_chunk = hit_chunk;
+							block_hit = true;
+						}
+					}
+				}
+				else
+				{
+					///				complex block detection				///
+				}
+			}
+	if (!block_hit)
+		return false;
+	int local_place_x = hit_info.place_x - 16 * hit_info.hit_chunk->chunk_x;
+	int local_place_z = hit_info.place_z - 16 * hit_info.hit_chunk->chunk_z;
+	Chunk* place_chunk = nullptr;
+	SimpleBlock* place_block = hit_info.hit_chunk->GetBlockInArea(local_place_x, hit_info.place_y, local_place_z, place_chunk);
+
+	hit_info.place_block = place_block;
+	hit_info.place_chunk = place_chunk;
+	//hit_info.Update(hit_chunk, hit_block, place_chunk, place_block);
+	return true;
+}
+
 Player::Player()
 {
 	//config settings
@@ -32,6 +105,8 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 {
 	//time form prev update
 	double delta_time = glfwGetTime() - last_time;
+	if (delta_time > 0.5)
+		delta_time = 0.01;
 	last_time = glfwGetTime();
 
 	//movement delta in every given LOCAL direction
@@ -60,15 +135,65 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
 
 
-	if (glfwGetKey(MyCraft::window, GLFW_KEY_Q) == GLFW_PRESS)
+	if (glfwGetMouseButton(MyCraft::window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
-		auto iterator = chunk_map.find(std::make_pair(current_chunk_x, current_chunk_z));
-		if (iterator != chunk_map.end())
+		if (!lmb_down)
 		{
-			auto chunk = iterator->second;
-			chunk->ReplaceBlock(floor(position.x), floor(position.y), floor(position.z), new SimpleBlock(blk_id::air_id));
-			chunk->RecalculateVisibility();
+			lmb_down = true;
+			HitInfo hit_info;
+			if (GetHitInfo(hit_info))
+			{
+				hit_info.hit_chunk->ReplaceBlock(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z, new SimpleBlock(blk_id::air_id), true);
+				//hit_info.chunk->visibility_update_needed;
+				hit_info.hit_chunk->RecalculateVisibility();
+
+				if (hit_info.hit_x%16 == 0 && hit_info.hit_chunk->east_chunk)
+					hit_info.hit_chunk->east_chunk->RecalculateVisibility();
+
+				if (hit_info.hit_x%16 == 15 && hit_info.hit_chunk->west_chunk)
+					hit_info.hit_chunk->west_chunk->RecalculateVisibility();
+
+				if (hit_info.hit_z%16 == 0 && hit_info.hit_chunk->south_chunk)
+					hit_info.hit_chunk->south_chunk->RecalculateVisibility();
+
+				if (hit_info.hit_z%16 == 15 && hit_info.hit_chunk->north_chunk)
+					hit_info.hit_chunk->north_chunk->RecalculateVisibility();
+			}
 		}
+	}
+	else
+	{
+		lmb_down = false;
+	}
+	if (glfwGetMouseButton(MyCraft::window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+	{
+		if (!rmb_down)
+		{
+			rmb_down = true;
+			HitInfo hit_info;
+			if (GetHitInfo(hit_info))
+			{
+				hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, new SimpleBlock(blk_id::stone_id), true);
+				//hit_info.chunk->visibility_update_needed;
+				hit_info.place_chunk->RecalculateVisibility();
+
+				if (hit_info.place_x == 0 && hit_info.place_chunk->east_chunk)
+					hit_info.place_chunk->east_chunk->RecalculateVisibility();
+
+				if (hit_info.place_x == 15 && hit_info.place_chunk->west_chunk)
+					hit_info.place_chunk->west_chunk->RecalculateVisibility();
+
+				if (hit_info.place_z == 0 && hit_info.place_chunk->south_chunk)
+					hit_info.place_chunk->south_chunk->RecalculateVisibility();
+
+				if (hit_info.place_z == 15 && hit_info.place_chunk->north_chunk)
+					hit_info.place_chunk->north_chunk->RecalculateVisibility();
+			}
+		}
+	}
+	else
+	{
+		rmb_down = false;
 	}
 	//std::cout << forward.x << " " << forward.y << " " << forward.z << std::endl;
 }

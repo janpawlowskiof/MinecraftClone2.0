@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <map>
 #include "Chunk.h"
+#include "HitInfo.h"
 
 class Player
 {
@@ -16,6 +17,8 @@ private:
 	//time of previous update
 	double last_time;
 	glm::mat4 projection;
+	bool lmb_down = false;
+	bool rmb_down = false;
 public:
 	//camera pitch
 	static float pitch;
@@ -24,6 +27,7 @@ public:
 	static glm::vec3 position;
 	static glm::vec3 forward;
 	static glm::vec3 forward_flat;
+	static bool GetHitInfo(HitInfo& hit_info);
 	static int current_chunk_x, current_chunk_z;
 	Player();
 	//Updates player position

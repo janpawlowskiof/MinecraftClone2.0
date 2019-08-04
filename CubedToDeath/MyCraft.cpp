@@ -1,6 +1,5 @@
 #include "MyCraft.h"
 
-
 MyCraft::MyCraft()
 {
 }
@@ -42,6 +41,17 @@ void MyCraft::InitializeOpenGL()
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+bool LineInView(glm::vec2 p1, glm::vec2 p2)
+{
+	if ((p1.x >= -1 && p1.x <= 1 && p1.y >= -1 && p1.y <= 1) ||
+		(p2.x >= -1 && p2.x <= 1 && p2.y >= -1 && p2.y <= 1))
+		return true;
+
+	return false;
 }
 
 //inicjalizuje i odpala grê
@@ -92,10 +102,11 @@ void MyCraft::Run()
 		double current_time = glfwGetTime();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-		text->RenderText(text_shader, "Yaw: " + std::to_string(Player::yaw), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-		text->RenderText(text_shader, "Pitch: " + std::to_string(Player::pitch), 25.0f, height - 75.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-		bool hit = SimpleBlock::CheckRayCollision(Player::position, Player::forward, 1, 40, 1);
+		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		//text->RenderText(text_shader, "Yaw: " + std::to_string(Player::yaw), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		//text->RenderText(text_shader, "Pitch: " + std::to_string(Player::pitch), 25.0f, height - 75.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		HitInfo hi;
+		bool hit = SimpleBlock::CheckRayCollision(Player::position, Player::forward, -5, 54, -58, hi);
 		text->RenderText(text_shader, "Hit: " + std::to_string(hit), 25.0f, height - 100.0f, 0.5f, hit ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0));
 		last_time = current_time;
 		glfwSwapBuffers(window);
@@ -178,10 +189,26 @@ void MyCraft::Update()
 	{
 		auto chunk = iterator->second;
 
-		/*float angle = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 8, 0, chunk->chunk_z * 16 + 8) - glm::vec3(Player::position.x, 0, Player::position.z) + Player::forward_flat * 16.0f),
-			Player::forward_flat));
-		if (angle > glm::radians(65.0f))
+		/*float angleA = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleB = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleC = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleD = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleE = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16, 127, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleF = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 127, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleG = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 127, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
+		float angleH = glm::acos(glm::dot(
+			glm::normalize(glm::vec3(chunk->chunk_x * 16, 127, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
+
+		float max_angle = glm::radians(55.0f);
+		if (!(angleA <= max_angle || angleB <= max_angle || angleC <= max_angle || angleD <= max_angle ||
+			angleE <= max_angle || angleF <= max_angle || angleG <= max_angle || angleH <= max_angle))
 		{
 			iterator++;
 			continue;

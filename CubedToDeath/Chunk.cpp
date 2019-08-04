@@ -44,8 +44,6 @@ float clip(float n, float lower, float upper) {
 
 void Chunk::GenerateStructures()
 {
-	//float forest_threshold = 0.5;
-
 	if (north_chunk && south_chunk && west_chunk && east_chunk &&
 		north_chunk->west_chunk && west_chunk->south_chunk && south_chunk->east_chunk && east_chunk->north_chunk)
 	{
@@ -95,6 +93,87 @@ void Chunk::GenerateStructures()
 	}
 }
 
+SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chunk*& chunk)
+{
+	std::lock_guard<std::mutex> lock(blocks_mutex);
+
+	if (local_z < 0)
+	{
+		if (local_x < 0)
+		{
+			chunk = south_chunk->east_chunk;
+			local_x = (local_x % 16 + 16)%16;
+			local_z = (local_z % 16 + 16)%16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+		else if (local_x >= 16)
+		{
+			chunk = south_chunk->west_chunk;
+			local_x = local_x % 16;
+			local_z = (local_z % 16 + 16) % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+		else
+		{
+			chunk = south_chunk;
+			local_x = local_x % 16;
+			local_z = (local_z % 16 + 16) % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+	}
+	else if (local_z >= 16)
+	{
+		if (local_x < 0)
+		{
+			chunk = north_chunk->east_chunk;
+			local_x = (local_x % 16 + 16) % 16;
+			local_z = local_z % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+			//north_chunk->east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z % 16, block, false);
+		else if (local_x >= 16)
+		{
+			chunk = north_chunk->west_chunk;
+			local_x = local_x % 16;
+			local_z = local_z % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+			//north_chunk->west_chunk->ReplaceBlock(local_x % 16, block_y, local_z % 16, block, false);
+		else
+		{
+			chunk = north_chunk;
+			local_x = local_x % 16;
+			local_z = local_z % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+			//north_chunk->ReplaceBlock(local_x, block_y, local_z % 16, block, false);
+	}
+	else
+	{
+		if (local_x < 0)
+		{
+			chunk = east_chunk;
+			local_x = (local_x % 16 + 16) % 16;
+			local_z = local_z % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+			//east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z, block, false);
+		else if (local_x >= 16)
+		{
+			chunk = west_chunk;
+			local_x = local_x % 16;
+			local_z = local_z % 16;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+			//west_chunk->ReplaceBlock(local_x % 16, block_y, local_z, block, false);
+		else
+		{
+			chunk = this;
+			return chunk->blocks[local_y][local_x][local_z];
+		}
+	}
+}
+
 Chunk::Chunk(int chunk_x, int chunk_z)
 {
 	//std::cout << "scon" << chunk_x << " " << chunk_z << std::endl;
@@ -122,7 +201,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			float ocean_placement_value = clip(ChunkManager::ocean_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), ocean_lower_threshold, ocean_upper_threshold);
 			float ocean_factor = powf((ocean_placement_value - ocean_lower_threshold) / (ocean_upper_threshold - ocean_lower_threshold), 2);
 
-			int ground_level = 20 + (30 + tectonical_value) * (1 - ocean_factor) + mountain_value;
+			int ground_level = clip(20 + (30 + tectonical_value) * (1 - ocean_factor) + mountain_value, 0, 127);
 			height_values[x][z] = ground_level;
 			for (int y = 0; y <= ground_level; y++)
 			{
@@ -142,10 +221,10 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			}
 		}
 	///											///
-	if (chunk_x == 0 && chunk_z == 0)
+	if (chunk_x == -1 && chunk_z == -4)
 	{
-		delete blocks[40][1][1];
-		blocks[40][1][1] = new SimpleBlock(blk_id::dirt_id);
+		delete blocks[54][11][6];
+		blocks[54][11][6] = new SimpleBlock(blk_id::dirt_id);
 	}
 
 	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
@@ -179,6 +258,8 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 
 void Chunk::RecalculateVisibility()
 {
+	std::lock_guard<std::mutex> lock(blocks_mutex);
+
 	int triangles_count_simple = 0, triangles_count_complex = 0;
 	bool visible = false;
 	//chunks in each direciton
@@ -238,7 +319,7 @@ void Chunk::RecalculateVisibility()
 					blocks[y][x][z]->SetFaceVisible(SimpleBlock::EAST, visible);
 					triangles_count_simple += 2 * visible;
 
-					if (y == 128)
+					if (y >= 127)
 					{
 						visible = true;
 					}
@@ -360,8 +441,15 @@ void Chunk::Draw()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
 }
 
+bool Chunk::InView()
+{
+	return true;
+}
+
 void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates)
 {
+	std::lock_guard<std::mutex> lock(blocks_mutex);
+
 	//We cannot just delete the block do we queue it for unloading
 	//replacing the block
 	int local_x;

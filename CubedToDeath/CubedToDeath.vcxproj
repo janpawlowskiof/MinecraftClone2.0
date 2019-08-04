@@ -168,6 +168,7 @@
     <ClCompile Include="ChunkManager.cpp" />
     <ClCompile Include="ComplexBlock.cpp" />
     <ClCompile Include="FastNoise.cpp" />
+    <ClCompile Include="HitInfo.cpp" />
     <ClCompile Include="MyCraft.cpp" />
     <ClCompile Include="CubedToDeath.cpp" />
     <ClCompile Include="glad.c" />
@@ -183,6 +184,7 @@
     <ClInclude Include="ChunkManager.h" />
     <ClInclude Include="ComplexBlock.h" />
     <ClInclude Include="FastNoise.h" />
+    <ClInclude Include="HitInfo.h" />
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="MyCraft.h" />
     <ClInclude Include="Player.h" />

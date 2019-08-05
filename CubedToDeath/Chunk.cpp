@@ -5,8 +5,8 @@
 void Chunk::InitializeBuffers()
 {
 	//generating vbo that belongs to chunk
-	glGenBuffers(2, vbo);
-	glGenVertexArrays(2, vao);
+	glGenBuffers(3, vbo);
+	glGenVertexArrays(3, vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 
@@ -25,6 +25,18 @@ void Chunk::InitializeBuffers()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	//generating vao that belongs to chunk
 	glBindVertexArray(vao[COMPLEX]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
+	//generating vao that belongs to chunk
+	glBindVertexArray(vao[FLUID]);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -189,7 +201,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			float mountain_upper_threshold = 0.6f;
 			float ocean_lower_threshold = 0.4f;
 			float ocean_upper_threshold = 0.5f;
-			int ocean_level = 24;
+			int ocean_level = 30;
 
 			float mountain_placement_value = clip(ChunkManager::mountain_placement_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), mountain_lower_threshold, mountain_upper_threshold);
 			float mountain_factor = powf((mountain_placement_value - mountain_lower_threshold) / (mountain_upper_threshold - mountain_lower_threshold), 2);
@@ -211,7 +223,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 
 			for (int y = ground_level+1; y < ocean_level; y++)
 			{
-				blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
+				blocks[y][x][z] = SimpleBlock::CreateNew(blk_id::water_id);
 			}
 
 			for (int y = std::max(ground_level+1, ocean_level); y < 128; y++)
@@ -259,7 +271,7 @@ void Chunk::RecalculateVisibility()
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
 
-	int triangles_count_simple = 0, triangles_count_complex = 0;
+	int triangles_count_simple = 0, triangles_count_complex = 0, triangles_count_fluid = 0;
 	bool visible = false;
 	//chunks in each direciton
 
@@ -272,7 +284,24 @@ void Chunk::RecalculateVisibility()
 				if (blocks[y][x][z]->id == blk_id::air_id)
 					continue;
 				//adding simple faces depending on the block position
-				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					//adding complex models
+					triangles_count_complex += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
+				}
+				else if (blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
+				{
+					if (blocks[y][x][z]->id != blocks[y + 1][x][z]->id)
+					{
+						blocks[y][x][z]->SetFaceVisible(SimpleBlock::TOP, true);
+						triangles_count_fluid += 2;
+					}
+					else
+					{
+						blocks[y][x][z]->SetFaceVisible(SimpleBlock::TOP, false);
+					}
+				}
+				else
 				{
 					if (z == 15)
 					{
@@ -331,7 +360,7 @@ void Chunk::RecalculateVisibility()
 
 					if (y == 0)
 					{
-						visible = true;
+						visible = false;
 					}
 					else
 					{
@@ -339,11 +368,6 @@ void Chunk::RecalculateVisibility()
 					}
 					blocks[y][x][z]->SetFaceVisible(SimpleBlock::BOTTOM, visible);
 					triangles_count_simple += 2 * visible;
-				}
-				else
-				{
-					//adding complex models
-					triangles_count_complex += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
 				}
 			}
 	if (vertices_simple)
@@ -357,55 +381,36 @@ void Chunk::RecalculateVisibility()
 
 	vertices_simple = new float[triangles_count_simple * 3 * 8];
 	vertices_complex = new float[triangles_count_complex * 3 * 8];
+	vertices_fluid = new float[triangles_count_fluid * 3 * 8];
 	//target adress that we will insert our data into
 	float* target_simple = vertices_simple;
 	float* target_complex = vertices_complex;
+	float* target_fluid = vertices_fluid;
 
 	for (int y = 0; y < 127; y++)
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
-				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
 				{
-					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
+					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
+				else if(blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
+				{
+					target_fluid = blocks[y][x][z]->CreateModel(target_fluid, x + 16 * chunk_x, y, z + 16 * chunk_z);;
 				}
 				else
 				{
-					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
 			}
 	buffers_update_needed = true;
 	visibility_update_needed = false;
 	triangles_count[SIMPLE] = triangles_count_simple;
 	triangles_count[COMPLEX] = triangles_count_complex;
+	triangles_count[FLUID] = triangles_count_fluid;
 }
 
-void Chunk::RecalculateTrianglesCount()
-{
-	triangles_count[SIMPLE] = triangles_count[COMPLEX] = 0;
-	for (int y = 0; y < 127; y++)
-		for (int x = 0; x < 16; x++)
-			for (int z = 0; z < 16; z++)
-			{
-				if (!blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
-				{
-					if (blocks[y][x][z]->id == blk_id::air_id)
-						continue;
-					//2 triangles per each face
-					triangles_count[SIMPLE] +=
-						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::NORTH) +
-						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::SOUTH) +
-						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::WEST) +
-						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::EAST) +
-						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::TOP) +
-						2 * blocks[y][x][z]->GetFaceVisible(SimpleBlock::BOTTOM);
-				}
-				else
-				{
-					triangles_count[COMPLEX] += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
-				}
-			}
-}
 
 void Chunk::UpdateVbos()
 {
@@ -420,6 +425,11 @@ void Chunk::UpdateVbos()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
 	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 8 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+
+	//transfering our data to the gpu
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
+	glBindVertexArray(vao[FLUID]);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[FLUID] * 3 * 8 * sizeof(float), vertices_fluid, GL_STATIC_DRAW);
 
 	//deleting vertices array now that we're done
 	//delete[] vertices_simple;
@@ -438,6 +448,13 @@ void Chunk::Draw()
 	//glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
+}
+
+void Chunk::DrawFluids()
+{
+	glBindVertexArray(vao[FLUID]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
+	glDrawArrays(GL_TRIANGLES, 0, triangles_count[FLUID] * 3);
 }
 
 bool Chunk::InView()
@@ -505,12 +522,15 @@ Chunk::~Chunk()
 	{
 		MyCraft::QueueBuffersToDelete(vbo[SIMPLE], vao[SIMPLE]);
 		MyCraft::QueueBuffersToDelete(vbo[COMPLEX], vao[COMPLEX]);
+		MyCraft::QueueBuffersToDelete(vbo[FLUID], vao[FLUID]);
 	}
 
 	if (vertices_simple != nullptr)
 		delete[] vertices_simple;
 	if (vertices_complex != nullptr)
 		delete[] vertices_complex;
+	if (vertices_fluid != nullptr)
+		delete[] vertices_fluid;
 
 	for (int y = 0; y < 128; y++)
 		for (int x = 0; x < 16; x++)

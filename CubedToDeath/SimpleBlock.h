@@ -9,7 +9,7 @@ class SimpleBlock
 public:
 	unsigned char id = 255;
 	unsigned char face_visible = 63;
-	unsigned char flags = 254;
+	unsigned char flags = 252;
 	unsigned char power_level = 0;
 	unsigned char light_level = 0;
 
@@ -32,10 +32,11 @@ public:
 	enum Flag
 	{
 		COMPLEX = 1,
-		OPAQUE = 2,
+		FLUID = 2,
+		OPAQUE = 4,
 	};
 
-	SimpleBlock(unsigned char id = 255);
+	SimpleBlock(unsigned char id = 0);
 	~SimpleBlock();
 
 
@@ -76,6 +77,8 @@ namespace blk_id
 		leaves_id,
 
 		torch_id,
+		water_id,
+
 	};
 }
 //bo textura ma 16x16 bloków

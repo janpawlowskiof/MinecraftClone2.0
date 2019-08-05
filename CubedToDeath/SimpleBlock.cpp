@@ -6,10 +6,19 @@
 SimpleBlock::SimpleBlock(unsigned char id)
 {
 	this->id = id;
-	if (id == blk_id::air_id || id == 255)
+
+	switch (id)
+	{
+	case blk_id::air_id:
 		SetFlag(OPAQUE, false);
-	else
+		break;
+	case blk_id::water_id:
+		SetFlag(OPAQUE, false);
+		SetFlag(FLUID, true);
+		break;
+	default:
 		SetFlag(OPAQUE, true);
+	}
 }
 
 
@@ -141,6 +150,14 @@ float* SimpleBlock::CreateModel(float* target, int world_x, int world_y, int wor
 	case blk_id::leaves_id:
 		top_x = bottom_x = side_x = 5;
 		top_y = bottom_y = side_y = 3;
+		break;
+	case blk_id::water_id:
+		top_x = 13;
+		top_y = 12;
+		if (GetFaceVisible(TOP))
+			return CreateTopFace(target, world_x, world_y, world_z, top_x, top_y);
+		else
+			return target;
 		break;
 	case blk_id::air_id:
 	default:

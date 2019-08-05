@@ -35,6 +35,7 @@ public:
 	//text shader
 	static Shader* text_shader;
 	static Shader* sprite_shader;
+	static Shader* fluid_shader;
 	//mapa konfiguracyjna
 	static std::map<std::string, std::string> config_map;
 	//okienko
@@ -47,6 +48,8 @@ public:
 	static Text* text;
 	static chunk_hash_map chunk_map;
 	static bool command_input_enabled;
+	static double current_time;
+	static double last_time;
 
 private:
 	//initializes opengl

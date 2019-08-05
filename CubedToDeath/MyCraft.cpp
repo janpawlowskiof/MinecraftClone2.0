@@ -75,7 +75,9 @@ void MyCraft::Run()
 	texture_terrain = new Texture(config_map["texture_terrain_path"]);
 	basic_shader = new Shader("res/basic.vert", "res/basic.frag");
 	text_shader = new Shader("res/text.vert", "res/text.frag");
-	sprite_shader = new Shader("res/background.vert", "res/background.frag");
+	sprite_shader = new Shader("res/sprite.vert", "res/sprite.frag");
+	fluid_shader = new Shader("res/fluid.vert", "res/fluid.frag");
+
 	player = new Player();
 	text = new Text("fonts/clacon.ttf");
 	crosshair = new Sprite("res/crosshair.png");
@@ -84,8 +86,8 @@ void MyCraft::Run()
 
 	///	test  ///
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	double last_time = glfwGetTime();
-	double current_time;
+	last_time = glfwGetTime();
+	current_time;
 	vbos_delete_queue.reserve(3000);
 	vaos_delete_queue.reserve(3000);
 	//main loop
@@ -94,7 +96,6 @@ void MyCraft::Run()
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		chunk_map = ChunkManager::GetChunkMap();
-		basic_shader->Use();
 		texture_terrain->Bind();
 		player->Update(chunk_map);
 		Update();
@@ -103,7 +104,7 @@ void MyCraft::Run()
 		ChunkManager::GiveThreadPermissionToUnloadBlocks(ChunkManager::MAIN);
 		ChunkManager::GiveThreadPermissionToUnloadChunks(ChunkManager::MAIN);
 
-		double current_time = glfwGetTime();
+		current_time = glfwGetTime();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		crosshair->Draw(width / 2 - 40, height / 2 - 40, 80, 80);
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
@@ -187,13 +188,12 @@ void MyCraft::Update()
 		vbos_delete_queue.clear();
 	}
 
-
+	basic_shader->Use();
 	//iterates over every loaded chunk
 	auto iterator = chunk_map.begin();
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
-
 		/*float angleA = glm::acos(glm::dot(
 			glm::normalize(glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
 		float angleB = glm::acos(glm::dot(
@@ -219,7 +219,6 @@ void MyCraft::Update()
 			continue;
 		}*/
 
-
 		//initializing chunks that need to be initialized
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
@@ -231,6 +230,16 @@ void MyCraft::Update()
 		//draws th echunk
 		chunk->Draw();
 
+		iterator++;
+	}
+
+	fluid_shader->Use();
+	fluid_shader->SetFloat(fluid_shader->time_location, current_time);
+	iterator = chunk_map.begin();
+	while (iterator != chunk_map.end())
+	{
+		auto chunk = iterator->second;
+		chunk->DrawFluids();
 		iterator++;
 	}
 }
@@ -303,6 +312,7 @@ std::map<std::string, std::string> MyCraft::config_map;
 Shader* MyCraft::basic_shader = nullptr;
 Shader* MyCraft::text_shader = nullptr;
 Shader* MyCraft::sprite_shader = nullptr;
+Shader* MyCraft::fluid_shader = nullptr;
 GLFWwindow* MyCraft::window = nullptr;
 Player* MyCraft::player = nullptr;
 ChunkManager MyCraft::chunk_manager;
@@ -320,3 +330,5 @@ Text* MyCraft::text = nullptr;
 bool MyCraft::command_input_enabled = false;
 std::string MyCraft::command_input;
 Command MyCraft::command;
+double MyCraft::current_time = 1;
+double MyCraft::last_time = 1;

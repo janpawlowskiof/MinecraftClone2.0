@@ -61,11 +61,18 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	current_chunk_z = floor(position.z / 16.0);
 
 	//calculating view matrix
+	MyCraft::basic_shader->Use();
 	glm::mat4 view = glm::lookAt(position, position + forward, glm::vec3(0, 1, 0));
 	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->view_location, view);
 	//updating projection matrix
 	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
 	glUniform3f(MyCraft::basic_shader->view_position_location, position.x, position.y, position.z);
+
+	MyCraft::fluid_shader->Use();
+	MyCraft::fluid_shader->SetMat4(MyCraft::fluid_shader->view_location, view);
+	//updating projection matrix
+	MyCraft::fluid_shader->SetMat4(MyCraft::fluid_shader->projection_location, projection);
+	glUniform3f(MyCraft::fluid_shader->view_position_location, position.x, position.y, position.z);
 
 	if (glfwGetMouseButton(MyCraft::window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{

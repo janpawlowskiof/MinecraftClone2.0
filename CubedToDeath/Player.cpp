@@ -4,79 +4,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-bool Player::GetHitInfo(HitInfo& hit_info)
-{
-	//return SimpleBlock::CheckRayCollision(Player::position, Player::forward, 1, 60, 1, hi);
-
-	const int check_distance = 5;
-	const int min_check_x = (Player::forward.x < 0) ? -check_distance : 0;
-	const int max_check_x = (Player::forward.x < 0) ? 0 : check_distance;
-
-	const int min_check_y = (Player::forward.y < 0) ? -check_distance : 0;
-	const int max_check_y = (Player::forward.y < 0) ? 0 : check_distance;
-
-	const int min_check_z = (Player::forward.z < 0) ? -check_distance : 0;
-	const int max_check_z = (Player::forward.z < 0) ? 0 : check_distance;
-
-	auto iterator = MyCraft::chunk_map.find(std::make_pair(current_chunk_x, current_chunk_z));
-	if (iterator == MyCraft::chunk_map.end())
-		return false;
-
-	Chunk* current_chunk = iterator->second;
-	HitInfo hi;
-	int player_local_x = std::floor(position.x) - 16 * current_chunk->chunk_x;
-	int player_local_z = std::floor(position.z) - 16 * current_chunk->chunk_z;
-
-	bool block_hit = false;
-	for (int x = -check_distance; x <= check_distance; x++)
-		for (int z = -check_distance; z <= check_distance; z++)
-			for (int y = -check_distance; y <= check_distance; y++)
-			{
-				int local_x = player_local_x + x;
-				int local_z = player_local_z + z;
-				int local_y = std::min(std::max((int)std::floor(position.y) + y, 0), 127);
-
-				Chunk* hit_chunk = current_chunk;
-				SimpleBlock* hit_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, hit_chunk);
-				//Chunk* place_chunk = current_chunk;
-				//SimpleBlock* place_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, place_chunk);
-				if (hit_block->id == blk_id::air_id)
-					continue;
-
-				if (!hit_block->GetFlag(SimpleBlock::COMPLEX))
-				{
-					if (SimpleBlock::CheckRayCollision(position, forward, std::floor(position.x + x), std::floor(position.y + y), std::floor(position.z + z), hi))
-					{
-						if (hi.distance < hit_info.distance)
-						{
-							hit_info = hi;
-							//Chunk* place_chunk = current_chunk;
-							//SimpleBlock* place_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, place_chunk);
-							//hit_info.Update(hit_chunk, hit_block);
-							hit_info.hit_block = hit_block;
-							hit_info.hit_chunk = hit_chunk;
-							block_hit = true;
-						}
-					}
-				}
-				else
-				{
-					///				complex block detection				///
-				}
-			}
-	if (!block_hit)
-		return false;
-	int local_place_x = hit_info.place_x - 16 * hit_info.hit_chunk->chunk_x;
-	int local_place_z = hit_info.place_z - 16 * hit_info.hit_chunk->chunk_z;
-	Chunk* place_chunk = nullptr;
-	SimpleBlock* place_block = hit_info.hit_chunk->GetBlockInArea(local_place_x, hit_info.place_y, local_place_z, place_chunk);
-
-	hit_info.place_block = place_block;
-	hit_info.place_chunk = place_chunk;
-	//hit_info.Update(hit_chunk, hit_block, place_chunk, place_block);
-	return true;
-}
-
 Player::Player()
 {
 	//config settings
@@ -110,12 +37,17 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	last_time = glfwGetTime();
 
 	//movement delta in every given LOCAL direction
-	float delta_forward =
-		((glfwGetKey(MyCraft::window, GLFW_KEY_W) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_S) == GLFW_PRESS)) * player_speed * delta_time;
-	float delta_right =
-		((glfwGetKey(MyCraft::window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_A) == GLFW_PRESS)) * player_speed * delta_time;
-	float delta_up =
-		((glfwGetKey(MyCraft::window, GLFW_KEY_SPACE) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)) * player_speed * delta_time;
+
+	float delta_forward = 0, delta_right = 0, delta_up= 0;
+	if (!MyCraft::command_input_enabled)
+	{
+		delta_forward =
+			((glfwGetKey(MyCraft::window, GLFW_KEY_W) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_S) == GLFW_PRESS)) * player_speed * delta_time;
+		delta_right =
+			((glfwGetKey(MyCraft::window, GLFW_KEY_D) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_A) == GLFW_PRESS)) * player_speed * delta_time;
+		delta_up =
+			((glfwGetKey(MyCraft::window, GLFW_KEY_SPACE) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)) * player_speed * delta_time;
+	}
 
 	//forward but aligned to the ground
 	forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);
@@ -147,16 +79,16 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 				//hit_info.chunk->visibility_update_needed;
 				hit_info.hit_chunk->RecalculateVisibility();
 
-				if (hit_info.hit_x%16 == 0 && hit_info.hit_chunk->east_chunk)
+				if (hit_info.hit_x % 16 == 0 && hit_info.hit_chunk->east_chunk)
 					hit_info.hit_chunk->east_chunk->RecalculateVisibility();
 
-				if (hit_info.hit_x%16 == 15 && hit_info.hit_chunk->west_chunk)
+				if (hit_info.hit_x % 16 == 15 && hit_info.hit_chunk->west_chunk)
 					hit_info.hit_chunk->west_chunk->RecalculateVisibility();
 
-				if (hit_info.hit_z%16 == 0 && hit_info.hit_chunk->south_chunk)
+				if (hit_info.hit_z % 16 == 0 && hit_info.hit_chunk->south_chunk)
 					hit_info.hit_chunk->south_chunk->RecalculateVisibility();
 
-				if (hit_info.hit_z%16 == 15 && hit_info.hit_chunk->north_chunk)
+				if (hit_info.hit_z % 16 == 15 && hit_info.hit_chunk->north_chunk)
 					hit_info.hit_chunk->north_chunk->RecalculateVisibility();
 			}
 		}
@@ -173,7 +105,7 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 			HitInfo hit_info;
 			if (GetHitInfo(hit_info))
 			{
-				hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, new SimpleBlock(blk_id::stone_id), true);
+				hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, SimpleBlock::CreateNew(selected_block_id), true);
 				//hit_info.chunk->visibility_update_needed;
 				hit_info.place_chunk->RecalculateVisibility();
 
@@ -198,9 +130,85 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	//std::cout << forward.x << " " << forward.y << " " << forward.z << std::endl;
 }
 
+//return whether some block was hit by the raycast, and fill HitInfo abject with hit related data
+bool Player::GetHitInfo(HitInfo& hit_info)
+{
+	//range in which blocks are checked
+	const int check_distance = 6;
+	const int min_check_x = (Player::forward.x < 0) ? -check_distance : 0;
+	const int max_check_x = (Player::forward.x < 0) ? 0 : check_distance;
+
+	const int min_check_y = (Player::forward.y < 0) ? -check_distance : 0;
+	const int max_check_y = (Player::forward.y < 0) ? 0 : check_distance;
+
+	const int min_check_z = (Player::forward.z < 0) ? -check_distance : 0;
+	const int max_check_z = (Player::forward.z < 0) ? 0 : check_distance;
+
+	//finding chunk on which player stands
+	auto iterator = MyCraft::chunk_map.find(std::make_pair(current_chunk_x, current_chunk_z));
+	if (iterator == MyCraft::chunk_map.end())
+		return false;
+
+	Chunk* current_chunk = iterator->second;
+	//httinfo object with data related to currently checked block
+	HitInfo hi;
+	int player_local_x = std::floor(position.x) - 16 * current_chunk->chunk_x;
+	int player_local_z = std::floor(position.z) - 16 * current_chunk->chunk_z;
+
+	bool block_hit = false;
+	//loop over all blocks in range
+	for (int x = min_check_x; x <= max_check_x; x++)
+		for (int z = min_check_z; z <= max_check_z; z++)
+			for (int y = min_check_y; y <= max_check_z; y++)
+			{
+				int local_x = player_local_x + x;
+				int local_z = player_local_z + z;
+				int local_y = std::min(std::max((int)std::floor(position.y) + y, 0), 127);
+
+				//getting pointer to block we want to check and its chunk
+				Chunk* hit_chunk = current_chunk;
+				SimpleBlock* hit_block = current_chunk->GetBlockInArea(local_x, local_y, local_z, hit_chunk);
+				//skipping air
+				if (hit_block->id == blk_id::air_id)
+					continue;
+
+				if (!hit_block->GetFlag(SimpleBlock::COMPLEX))
+				{
+					//check if hit for simple blocks
+					if (SimpleBlock::CheckRayCollision(position, forward, std::floor(position.x + x), std::floor(position.y + y), std::floor(position.z + z), hi))
+					{
+						//check if current hit is better than the best so far
+						if (hi.distance < hit_info.distance)
+						{
+							hit_info = hi;
+							hit_info.hit_block = hit_block;
+							hit_info.hit_chunk = hit_chunk;
+							block_hit = true;
+						}
+					}
+				}
+				else
+				{
+					///				complex block detection				///
+				}
+			}
+	if (!block_hit)
+		return false;
+
+	//setting info about place block
+	int local_place_x = hit_info.place_x - 16 * hit_info.hit_chunk->chunk_x;
+	int local_place_z = hit_info.place_z - 16 * hit_info.hit_chunk->chunk_z;
+	Chunk* place_chunk = nullptr;
+	SimpleBlock* place_block = hit_info.hit_chunk->GetBlockInArea(local_place_x, hit_info.place_y, local_place_z, place_chunk);
+	hit_info.place_block = place_block;
+	hit_info.place_chunk = place_chunk;
+	return true;
+}
+
 glm::vec3 Player::position = glm::vec3(10, 60, 10);
 glm::vec3 Player::forward = glm::vec3(0, 0, 1);
 glm::vec3 Player::forward_flat = glm::vec3(0, 0, 1);
 int Player::current_chunk_x, Player::current_chunk_z;
 float Player::pitch = 0;
 float Player::yaw = 0;
+int Player::selected_block_id = blk_id::stone_id;

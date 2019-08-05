@@ -27,8 +27,10 @@ public:
 	static glm::vec3 position;
 	static glm::vec3 forward;
 	static glm::vec3 forward_flat;
+	//return whether some block was hit by the raycast, and fill HitInfo abject with hit related data
 	static bool GetHitInfo(HitInfo& hit_info);
 	static int current_chunk_x, current_chunk_z;
+	static int selected_block_id;
 	Player();
 	//Updates player position
 	void Update(std::map<std::pair<int, int>, Chunk*> chunk_map);

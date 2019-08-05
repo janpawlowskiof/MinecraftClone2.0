@@ -1,6 +1,7 @@
 #include "SimpleBlock.h"
 #include <iostream>
 #include "HitInfo.h"
+#include "ComplexBlock.h"
 
 SimpleBlock::SimpleBlock(unsigned char id)
 {
@@ -260,4 +261,16 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 		}
 	}
 	return false;
+}
+
+SimpleBlock* SimpleBlock::CreateNew(int block_id)
+{
+	switch (block_id)
+	{
+	case blk_id::torch_id:
+		return new blk::Torch();
+	
+	default:
+		return new SimpleBlock(block_id);
+	}
 }

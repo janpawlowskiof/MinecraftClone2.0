@@ -15,6 +15,7 @@
 #include <mutex>
 #include "Text.h"
 #include "Sprite.h"
+#include "Command.h"
 
 class MyCraft
 {
@@ -27,6 +28,8 @@ public:
 	static void QueueBuffersToDelete(unsigned int vbo, unsigned int vao);
 	//mouse callback
 	static void mouse_callback(GLFWwindow* window, double x, double y);
+	static void character_callback(GLFWwindow* window, unsigned int codepoint);
+	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	//podstawowy shader
 	static Shader* basic_shader;
 	//text shader
@@ -43,6 +46,8 @@ public:
 	static int render_distance;
 	static Text* text;
 	static chunk_hash_map chunk_map;
+	static bool command_input_enabled;
+
 private:
 	//initializes opengl
 	void InitializeOpenGL();
@@ -64,9 +69,10 @@ private:
 	//thread responsible for managing world
 	std::thread world_manager;
 	std::thread chunk_unloader;
-
+	//crosshair sprite
 	Sprite* crosshair;
-
+	static Command command;
+	static std::string command_input;
 	static std::mutex buffers_queue_mutex;
 	static std::vector<unsigned int> vbos_delete_queue;
 	static std::vector<unsigned int> vaos_delete_queue;

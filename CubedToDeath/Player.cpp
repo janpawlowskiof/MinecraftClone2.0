@@ -133,7 +133,7 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->view_location, view);
 	//updating projection matrix
 	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
-
+	glUniform3f(MyCraft::basic_shader->view_position_location, position.x, position.y, position.z);
 
 	if (glfwGetMouseButton(MyCraft::window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{

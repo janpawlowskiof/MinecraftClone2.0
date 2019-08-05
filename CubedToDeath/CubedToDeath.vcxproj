@@ -163,23 +163,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Block.cpp" />
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="ChunkManager.cpp" />
     <ClCompile Include="ComplexBlock.cpp" />
     <ClCompile Include="FastNoise.cpp" />
-    <ClCompile Include="HitInfo.cpp" />
     <ClCompile Include="MyCraft.cpp" />
     <ClCompile Include="CubedToDeath.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SimpleBlock.cpp" />
+    <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Block.h" />
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="ChunkManager.h" />
     <ClInclude Include="ComplexBlock.h" />
@@ -190,6 +188,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SimpleBlock.h" />
+    <ClInclude Include="Sprite.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Texture.h" />

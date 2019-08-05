@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H  
+#include "Sprite.h"
 
 struct Character
 {
@@ -25,6 +26,6 @@ private:
 	FT_Library ft;
 	FT_Face face;
 	unsigned int vao, vbo;
-	unsigned int background_vao, background_vbo;
+	Sprite* sprite;
 };
 

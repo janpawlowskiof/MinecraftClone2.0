@@ -79,6 +79,7 @@ Shader::Shader(std::string vertex_path, std::string fragment_path)
 	view_location = glad_glGetUniformLocation(shader_id, "view");
 	projection_location = glad_glGetUniformLocation(shader_id, "projection");
 	color_location = glad_glGetUniformLocation(shader_id, "input_color");
+	view_position_location = glad_glGetUniformLocation(shader_id, "view_pos");
 }
 
 

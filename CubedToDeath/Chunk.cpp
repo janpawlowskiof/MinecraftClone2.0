@@ -1,6 +1,5 @@
 #include "Chunk.h"
 #include "MyCraft.h"
-#include "Block.h"
 #include "SimpleBlock.h"
 
 void Chunk::InitializeBuffers()

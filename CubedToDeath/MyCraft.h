@@ -10,11 +10,11 @@
 #include "Shader.h"
 #include "Chunk.h"
 #include "Player.h"
-#include "Block.h"
 #include "Texture.h"
 #include "ChunkManager.h"
 #include <mutex>
 #include "Text.h"
+#include "Sprite.h"
 
 class MyCraft
 {
@@ -64,6 +64,8 @@ private:
 	//thread responsible for managing world
 	std::thread world_manager;
 	std::thread chunk_unloader;
+
+	Sprite* crosshair;
 
 	static std::mutex buffers_queue_mutex;
 	static std::vector<unsigned int> vbos_delete_queue;

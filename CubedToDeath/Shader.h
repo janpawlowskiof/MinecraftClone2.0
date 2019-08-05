@@ -23,6 +23,7 @@ public:
 	int view_location;
 	int projection_location;
 	int color_location;
+	int view_position_location;
 private:
 	unsigned int shader_id;
 };

@@ -6,9 +6,10 @@
 #include "stb_image.h"
 #include <iostream>
 
-Texture::Texture(std::string path)
+Texture::Texture(std::string path, int index)
 {
 	glGenTextures(1, &texture_id);
+	glActiveTexture(GL_TEXTURE0 + index);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
 	// set the texture wrapping/filtering options (on the currently bound texture object)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -28,7 +29,6 @@ Texture::Texture(std::string path)
 		std::cout << "Failed to load texture" << std::endl;
 	}
 	stbi_image_free(data);
-	glActiveTexture(GL_TEXTURE0);
 }
 
 void Texture::Bind()

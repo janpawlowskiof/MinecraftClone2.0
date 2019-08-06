@@ -8,7 +8,7 @@ class Sprite
 public:
 	Sprite(std::string path)
 	{
-		texture = new Texture(path);
+		texture = new Texture(path, 0);
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);
 		glBindVertexArray(vao);
@@ -29,7 +29,7 @@ public:
 		glDeleteVertexArrays(1, &vao);
 	}
 
+	Texture* texture;
 private:
 	unsigned int vao, vbo;
-	Texture* texture;
 };

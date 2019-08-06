@@ -35,7 +35,8 @@ public:
 	void RecalculateVisibility();
 	//void UpdateVboComplex();
 	void UpdateVbos();
-	void Draw();
+	void DrawSimple();
+	void DrawComplex();
 	void DrawFluids();
 	bool InView();
 	void ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates = true);

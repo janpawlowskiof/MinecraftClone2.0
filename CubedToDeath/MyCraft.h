@@ -36,6 +36,8 @@ public:
 	static Shader* text_shader;
 	static Shader* sprite_shader;
 	static Shader* fluid_shader;
+	static Shader* depth_shader;
+	static Shader* post_shader;
 	//mapa konfiguracyjna
 	static std::map<std::string, std::string> config_map;
 	//okienko
@@ -50,7 +52,8 @@ public:
 	static bool command_input_enabled;
 	static double current_time;
 	static double last_time;
-
+	static unsigned int fbo_depth_map;
+	static unsigned int depth_map;
 private:
 	//initializes opengl
 	void InitializeOpenGL();
@@ -61,22 +64,28 @@ private:
 	static void ChunkUnloaderFunction();
 	//draws world
 	static void Update();
+	static void RenderDepthMap();
 	//has mouse been updated previously
 	static bool first_mouse;
 	//last mouse coordinates
 	static double last_x, last_y;
 	//main texture
-	Texture* texture_terrain;
+	static Texture* texture_terrain;
 	//chunk manager
 	static ChunkManager chunk_manager;
 	//thread responsible for managing world
 	std::thread world_manager;
 	std::thread chunk_unloader;
 	//crosshair sprite
-	Sprite* crosshair;
+	static Sprite* crosshair;
 	static Command command;
 	static std::string command_input;
 	static std::mutex buffers_queue_mutex;
 	static std::vector<unsigned int> vbos_delete_queue;
 	static std::vector<unsigned int> vaos_delete_queue;
+	static glm::mat4 light_space_matrix;
+
+	static unsigned int quadVAO;
+	static unsigned int quadVBO;
+
 };

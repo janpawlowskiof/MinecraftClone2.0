@@ -438,13 +438,16 @@ void Chunk::UpdateVbos()
 	buffers_update_needed = false;
 }
 
-void Chunk::Draw()
+void Chunk::DrawSimple()
 {
 	//binds its vao and draw itself
 	//glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[SIMPLE] * 3);
+}
 
+void Chunk::DrawComplex()
+{
 	//glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
@@ -452,7 +455,7 @@ void Chunk::Draw()
 
 void Chunk::DrawFluids()
 {
-	glBindVertexArray(vao[FLUID]);
+	//glBindVertexArray(vao[FLUID]);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[FLUID] * 3);
 }

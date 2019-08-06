@@ -206,8 +206,12 @@
     <Image Include="res\terrain.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\depth.frag" />
+    <None Include="res\depth.vert" />
     <None Include="res\fluid.frag" />
     <None Include="res\fluid.vert" />
+    <None Include="res\post_process.frag" />
+    <None Include="res\post_process.vert" />
     <None Include="res\sprite.frag" />
     <None Include="res\sprite.vert" />
     <None Include="res\text.frag" />

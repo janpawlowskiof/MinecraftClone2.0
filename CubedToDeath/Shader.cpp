@@ -81,6 +81,23 @@ Shader::Shader(std::string vertex_path, std::string fragment_path)
 	color_location = glad_glGetUniformLocation(shader_id, "input_color");
 	view_position_location = glad_glGetUniformLocation(shader_id, "view_pos");
 	time_location = glad_glGetUniformLocation(shader_id, "time");
+	light_space_location = glad_glGetUniformLocation(shader_id, "light_space_matrix");
+	texture_terrain = glad_glGetUniformLocation(shader_id, "texture_terrain");
+	texture_depth = glad_glGetUniformLocation(shader_id, "shadow_map");
+
+	Use();
+	if (texture_terrain >= 0)
+	{
+		std::cout << glGetError() << " pre\n";
+		glUniform1i(texture_terrain, 0);
+		std::cout << glGetError() << " past\n";
+	}
+	if (texture_depth >= 0)
+	{
+		std::cout << glGetError() << " pre\n";
+		glUniform1i(texture_depth, 1);
+		std::cout << glGetError() << " past\n";
+	}
 }
 
 

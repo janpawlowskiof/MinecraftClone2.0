@@ -4,9 +4,9 @@
 class Texture
 {
 public:
-	Texture(std::string path);
+	Texture(std::string path, int index);
 	void Bind();
-private:
 	unsigned int texture_id;
+private:
 };
 

@@ -13,9 +13,9 @@ class Shader
 public:
 	Shader(std::string vertex_path, std::string fragment_path);
 	//sets float uniform
-	void SetFloat(const int uniform_location, const float value);
+	static void SetFloat(const int uniform_location, const float value);
 	//sets mat4 uniform
-	void SetMat4(const int uniform_location, const glm::mat4 value);
+	static void SetMat4(const int uniform_location, const glm::mat4 value);
 	//uses this shader
 	void Use();
 	//uniforms location
@@ -25,6 +25,9 @@ public:
 	int color_location;
 	int view_position_location;
 	int time_location;
+	int light_space_location;
+	int texture_terrain;
+	int texture_depth;
 private:
 	unsigned int shader_id;
 };

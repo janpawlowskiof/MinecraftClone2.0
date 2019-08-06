@@ -15,6 +15,7 @@ void Sprite::Draw(int x, int y, int width, int height)
 	{ x + width, y, 1.0, 1.0 },
 	{ x + width, y + height, 1.0, 0.0 } };
 
+	glActiveTexture(GL_TEXTURE0);
 	texture->Bind();
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);

@@ -25,9 +25,13 @@ public:
 	int color_location;
 	int view_position_location;
 	int time_location;
-	int light_space_location;
-	int texture_terrain;
-	int texture_depth;
+	int light_space_close_location;
+	int light_space_far_location;
+	//int texture_terrain;
+	//int texture_depth;
+	int light_direction_location;
+	int light_color_location;
+	int transform_matrix_location;
 private:
 	unsigned int shader_id;
 };

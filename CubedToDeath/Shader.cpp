@@ -81,22 +81,28 @@ Shader::Shader(std::string vertex_path, std::string fragment_path)
 	color_location = glad_glGetUniformLocation(shader_id, "input_color");
 	view_position_location = glad_glGetUniformLocation(shader_id, "view_pos");
 	time_location = glad_glGetUniformLocation(shader_id, "time");
-	light_space_location = glad_glGetUniformLocation(shader_id, "light_space_matrix");
-	texture_terrain = glad_glGetUniformLocation(shader_id, "texture_terrain");
-	texture_depth = glad_glGetUniformLocation(shader_id, "shadow_map");
+	light_space_close_location = glad_glGetUniformLocation(shader_id, "light_space_close_matrix");
+	light_space_far_location = glad_glGetUniformLocation(shader_id, "light_space_far_matrix");
+	light_direction_location = glad_glGetUniformLocation(shader_id, "light_direction");
+	light_color_location = glad_glGetUniformLocation(shader_id, "light_color");
+	transform_matrix_location = glad_glGetUniformLocation(shader_id, "transform_matrix");
+
+	int texture_terrain_location = glad_glGetUniformLocation(shader_id, "texture_terrain");
+	int shadow_map_close_location = glad_glGetUniformLocation(shader_id, "shadow_map_close");
+	int shadow_map_far_location = glad_glGetUniformLocation(shader_id, "shadow_map_far");
 
 	Use();
-	if (texture_terrain >= 0)
+	if (texture_terrain_location >= 0)
 	{
-		std::cout << glGetError() << " pre\n";
-		glUniform1i(texture_terrain, 0);
-		std::cout << glGetError() << " past\n";
+		glUniform1i(texture_terrain_location, 0);
 	}
-	if (texture_depth >= 0)
+	if (shadow_map_close_location >= 0)
 	{
-		std::cout << glGetError() << " pre\n";
-		glUniform1i(texture_depth, 1);
-		std::cout << glGetError() << " past\n";
+		glUniform1i(shadow_map_close_location, 1);
+	}
+	if (shadow_map_far_location >= 0)
+	{
+		glUniform1i(shadow_map_far_location, 2);
 	}
 }
 

@@ -232,11 +232,6 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 			}
 		}
 	///											///
-	if (chunk_x == -1 && chunk_z == -4)
-	{
-		delete blocks[54][11][6];
-		blocks[54][11][6] = new SimpleBlock(blk_id::dirt_id);
-	}
 
 	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
 	if (north_chunk)
@@ -378,10 +373,14 @@ void Chunk::RecalculateVisibility()
 	{
 		delete[] vertices_complex;
 	}
-
+	if (vertices_fluid)
+	{
+		delete[] vertices_fluid;
+	}
 	vertices_simple = new float[triangles_count_simple * 3 * 8];
 	vertices_complex = new float[triangles_count_complex * 3 * 8];
 	vertices_fluid = new float[triangles_count_fluid * 3 * 8];
+
 	//target adress that we will insert our data into
 	float* target_simple = vertices_simple;
 	float* target_complex = vertices_complex;
@@ -416,6 +415,7 @@ void Chunk::UpdateVbos()
 {
 	assert(vertices_complex);
 	assert(vertices_simple);
+	assert(vertices_fluid);
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
@@ -455,14 +455,13 @@ void Chunk::DrawComplex()
 
 void Chunk::DrawFluids()
 {
-	//glBindVertexArray(vao[FLUID]);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
+	glBindVertexArray(vao[FLUID]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[FLUID] * 3);
 }
 
 bool Chunk::InView()
 {
-	return true;
+	return false;
 }
 
 void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates)

@@ -37,18 +37,31 @@ void MyCraft::InitializeOpenGL()
 	glfwSetCharCallback(window, character_callback);
 	glfwSetKeyCallback(window, key_callback);
 
-	glGenFramebuffers(1, &fbo_depth_map);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
-	glGenTextures(1, &depth_map);
-	glBindTexture(GL_TEXTURE_2D, depth_map);
+	glGenFramebuffers(1, &fbo_shadow_map);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_shadow_map);
+	glGenTextures(1, &shadow_map_close);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_close);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		2048, 2048, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	//glActiveTexture(GL_TEXTURE1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	glGenTextures(1, &shadow_map_far);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_far);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
 		4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	//glActiveTexture(GL_TEXTURE1);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_map, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
@@ -101,7 +114,7 @@ void MyCraft::Run()
 	post_shader = new Shader("res/post_process.vert", "res/post_process.frag");
 
 	///										TESTING											
-	/*post_shader->Use();
+	post_shader->Use();
 
 	float quadVertices[] = {
 		// positions        // texture Coords
@@ -119,7 +132,7 @@ void MyCraft::Run()
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));*/
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	///																						
 
@@ -241,29 +254,25 @@ void MyCraft::Update()
 		vbos_delete_queue.clear();
 	}
 
-	//RenderDepthMap();
-	//return;
-
-	glm::mat4 light_projection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 150.0f);
-	glm::mat4 light_view = glm::lookAt(
-		glm::vec3(0, 100, 0),
-		glm::vec3(10, 0, 0),
-		glm::vec3(0.0f, 1.0f, 0.0f));
-
-	depth_shader->Use();
-	Shader::SetMat4(depth_shader->projection_location, light_projection);
-	Shader::SetMat4(depth_shader->view_location, light_view);
-	RenderDepthMap();
-	glCullFace(GL_BACK);
-
+	auto light_default_position = glm::angleAxis(glm::radians(50.0f), glm::vec3(0, 0, 1)) * glm::vec3(0,1,0);
+	auto light_rotation_axis = glm::cross(light_default_position, glm::vec3(0, 0, 1));
+	light_direction = glm::angleAxis(glm::radians(-20.0f),  light_rotation_axis) * light_default_position;
+	RenderShadowMaps();
+	//RENDER SOLIDS()
+	//RENDER FLUIDS()
 	basic_shader->Use();
-	Shader::SetMat4(basic_shader->light_space_location, light_space_matrix);
+	Shader::SetMat4(basic_shader->light_space_close_location, light_space_close_matrix);
+	Shader::SetMat4(basic_shader->light_space_far_location, light_space_far_matrix);
+	glUniform3f(basic_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
 
 	glActiveTexture(GL_TEXTURE0);
 	texture_terrain->Bind();
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, depth_map);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_close);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_far);
 
 	//iterates over every loaded chunk
 	//glActiveTexture(GL_TEXTURE2);
@@ -273,30 +282,6 @@ void MyCraft::Update()
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
-		/*float angleA = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleB = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleC = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleD = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleE = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16, 127, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleF = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 127, chunk->chunk_z * 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleG = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16 + 16, 127, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
-		float angleH = glm::acos(glm::dot(
-			glm::normalize(glm::vec3(chunk->chunk_x * 16, 127, chunk->chunk_z * 16 + 16) - Player::position + Player::forward * 16.0f), Player::forward));
-
-		float max_angle = glm::radians(55.0f);
-		if (!(angleA <= max_angle || angleB <= max_angle || angleC <= max_angle || angleD <= max_angle ||
-			angleE <= max_angle || angleF <= max_angle || angleG <= max_angle || angleH <= max_angle))
-		{
-			iterator++;
-			continue;
-		}*/
 
 		//initializing chunks that need to be initialized
 		if (!chunk->buffers_initialized)
@@ -318,29 +303,34 @@ void MyCraft::Update()
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
+		//initializing chunks that need to be initialized
+		if (!chunk->buffers_initialized)
+			chunk->InitializeBuffers();
+		//updates vbos on chunks that reqire doing so
+		if (chunk->buffers_update_needed)
+			chunk->UpdateVbos();
+		//draws the chunk
 		chunk->DrawFluids();
 		iterator++;
 	}
 }
 
-void MyCraft::RenderDepthMap()
+void MyCraft::RenderShadowMaps()
 {
-	//glCullFace(GL_FRONT);
-
-	glm::mat4 light_projection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 250.0f);
+	//glCullFace(GL_NONE);
 	glm::mat4 light_view = glm::lookAt(
-		glm::vec3(Player::position.x, 150, Player::position.z) + glm::normalize(glm::vec3(0.3, 0.9, 0.55)),
-		glm::vec3(Player::position.x, 150, Player::position.z),
+		glm::vec3(Player::position.x, 60, Player::position.z) + 100.0f * light_direction,
+		glm::vec3(Player::position.x, 60, Player::position.z),
 		glm::vec3(0.0f, 1.0f, 0.0f));
-	light_space_matrix = light_projection * light_view;
 
+	glm::mat4 light_projection_close = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, 1.0f, 400.0f);
+	light_space_close_matrix = light_projection_close * light_view;
 	depth_shader->Use();
-	Shader::SetMat4(depth_shader->light_space_location, light_space_matrix);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_depth_map);
-	glViewport(0, 0, 4096, 4096);
+	Shader::SetMat4(depth_shader->transform_matrix_location, light_space_close_matrix);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_shadow_map);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_close, 0);
+	glViewport(0, 0, 2048, 2048);
 	glClear(GL_DEPTH_BUFFER_BIT);
-
 	auto iterator = chunk_map.begin();
 	while (iterator != chunk_map.end())
 	{
@@ -348,8 +338,24 @@ void MyCraft::RenderDepthMap()
 		chunk->DrawSimple();
 		iterator++;
 	}
+
+	glm::mat4 light_projection_far = glm::ortho(-600.0f, 600.0f, -600.0f, 600.0f, 1.0f, 700.0f);
+	light_space_far_matrix = light_projection_far * light_view;
+	Shader::SetMat4(depth_shader->transform_matrix_location, light_space_far_matrix);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_far, 0);
+	glViewport(0, 0, 4096, 4096);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	iterator = chunk_map.begin();
+	while (iterator != chunk_map.end())
+	{
+		auto chunk = iterator->second;
+		chunk->DrawSimple();
+		iterator++;
+	}
+
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
+	//glCullFace(GL_BACK);
 
 	/*glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, width, height);
@@ -414,7 +420,7 @@ void MyCraft::key_callback(GLFWwindow* window, int key, int scancode, int action
 MyCraft::~MyCraft()
 {
 	glfwTerminate();
-	glDeleteFramebuffers(1, &fbo_depth_map);
+	glDeleteFramebuffers(1, &fbo_shadow_map);
 	delete basic_shader;
 	delete text_shader;
 	delete sprite_shader;
@@ -455,11 +461,17 @@ std::string MyCraft::command_input;
 Command MyCraft::command;
 double MyCraft::current_time = 1;
 double MyCraft::last_time = 1;
-unsigned int MyCraft::fbo_depth_map;
-unsigned int MyCraft::depth_map;
+unsigned int MyCraft::fbo_shadow_map;
+unsigned int MyCraft::shadow_map_close;
+unsigned int MyCraft::shadow_map_far;
 Texture* MyCraft::texture_terrain = nullptr;
-glm::mat4 MyCraft::light_space_matrix;
+glm::mat4 MyCraft::light_space_close_matrix;
+glm::mat4 MyCraft::light_space_far_matrix;
 Sprite* MyCraft::crosshair;
+glm::vec3 MyCraft::light_direction = glm::normalize(glm::vec3(0.5, 0.9, 0.1));
+glm::vec3 MyCraft::light_color = glm::vec3(0.9, 0.7, 0.7);
+
+
 ///testing
 unsigned int MyCraft::quadVAO;
 unsigned int MyCraft::quadVBO;

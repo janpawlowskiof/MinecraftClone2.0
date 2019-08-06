@@ -52,8 +52,9 @@ public:
 	static bool command_input_enabled;
 	static double current_time;
 	static double last_time;
-	static unsigned int fbo_depth_map;
-	static unsigned int depth_map;
+	static unsigned int fbo_shadow_map;
+	static unsigned int shadow_map_close;
+	static unsigned int shadow_map_far;
 private:
 	//initializes opengl
 	void InitializeOpenGL();
@@ -64,7 +65,7 @@ private:
 	static void ChunkUnloaderFunction();
 	//draws world
 	static void Update();
-	static void RenderDepthMap();
+	static void RenderShadowMaps();
 	//has mouse been updated previously
 	static bool first_mouse;
 	//last mouse coordinates
@@ -83,7 +84,10 @@ private:
 	static std::mutex buffers_queue_mutex;
 	static std::vector<unsigned int> vbos_delete_queue;
 	static std::vector<unsigned int> vaos_delete_queue;
-	static glm::mat4 light_space_matrix;
+	static glm::mat4 light_space_close_matrix;
+	static glm::mat4 light_space_far_matrix;
+	static glm::vec3 light_direction;
+	static glm::vec3 light_color;
 
 	static unsigned int quadVAO;
 	static unsigned int quadVBO;

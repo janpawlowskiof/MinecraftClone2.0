@@ -16,7 +16,6 @@ private:
 	float mouse_sensitivity;
 	//time of previous update
 	double last_time;
-	glm::mat4 projection;
 	bool lmb_down = false;
 	bool rmb_down = false;
 public:
@@ -27,6 +26,8 @@ public:
 	static glm::vec3 position;
 	static glm::vec3 forward;
 	static glm::vec3 forward_flat;
+	static glm::mat4 projection;
+	static glm::mat4 view;
 	//return whether some block was hit by the raycast, and fill HitInfo abject with hit related data
 	static bool GetHitInfo(HitInfo& hit_info);
 	static int current_chunk_x, current_chunk_z;

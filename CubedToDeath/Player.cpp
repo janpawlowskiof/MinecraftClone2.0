@@ -61,18 +61,17 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	current_chunk_z = floor(position.z / 16.0);
 
 	//calculating view matrix
-	MyCraft::basic_shader->Use();
-	glm::mat4 view = glm::lookAt(position, position + forward, glm::vec3(0, 1, 0));
-	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->view_location, view);
-	//updating projection matrix
-	MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
-	glUniform3f(MyCraft::basic_shader->view_position_location, position.x, position.y, position.z);
+	//MyCraft::basic_shader->Use();
+	view = glm::lookAt(position, position + forward, glm::vec3(0, 1, 0));
+	//MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->view_location, view);
+	//MyCraft::basic_shader->SetMat4(MyCraft::basic_shader->projection_location, projection);
+	//glUniform3f(MyCraft::basic_shader->view_position_location, position.x, position.y, position.z);
 
-	MyCraft::fluid_shader->Use();
+	/*MyCraft::fluid_shader->Use();
 	MyCraft::fluid_shader->SetMat4(MyCraft::fluid_shader->view_location, view);
 	//updating projection matrix
 	MyCraft::fluid_shader->SetMat4(MyCraft::fluid_shader->projection_location, projection);
-	glUniform3f(MyCraft::fluid_shader->view_position_location, position.x, position.y, position.z);
+	glUniform3f(MyCraft::fluid_shader->view_position_location, position.x, position.y, position.z);*/
 
 	if (glfwGetMouseButton(MyCraft::window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{
@@ -97,6 +96,12 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 
 				if (hit_info.hit_z % 16 == 15 && hit_info.hit_chunk->north_chunk)
 					hit_info.hit_chunk->north_chunk->RecalculateVisibility();
+
+				if(MyCraft::ps)
+					delete MyCraft::ps;
+				MyCraft::ps = new ParticleSystem(glm::vec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), SimpleBlock::GetColor(hit_info.hit_block->id));
+				MyCraft::ps->Initialize();
+				MyCraft::ps->Start();
 			}
 		}
 	}
@@ -212,6 +217,8 @@ bool Player::GetHitInfo(HitInfo& hit_info)
 	return true;
 }
 
+glm::mat4 Player::projection;
+glm::mat4 Player::view;
 glm::vec3 Player::position = glm::vec3(10, 60, 10);
 glm::vec3 Player::forward = glm::vec3(0, 0, 1);
 glm::vec3 Player::forward_flat = glm::vec3(0, 0, 1);

@@ -60,6 +60,9 @@
     <ClCompile Include="Command.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -105,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Command.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -157,6 +163,18 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="res\depth.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="res\particle.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="res\particle.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="res\particle_depth.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="res\particle_depth.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -2,6 +2,87 @@
 #include "MyCraft.h"
 #include "SimpleBlock.h"
 
+float clip(float n, float lower, float upper) {
+	return std::max(lower, std::min(n, upper));
+}
+
+Chunk::Chunk(int chunk_x, int chunk_z)
+{
+	//std::cout << "scon" << chunk_x << " " << chunk_z << std::endl;
+
+	//init
+	this->chunk_x = chunk_x;
+	this->chunk_z = chunk_z;
+
+	///			TEST INITIALIZATION			///
+	for (int x = 0; x < 16; x++)
+		for (int z = 0; z < 16; z++)
+		{
+			float mountain_lower_threshold = 0.1f;
+			float mountain_upper_threshold = 0.6f;
+			float ocean_lower_threshold = 0.4f;
+			float ocean_upper_threshold = 0.5f;
+			int ocean_level = 30;
+
+			float mountain_placement_value = clip(ChunkManager::mountain_placement_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), mountain_lower_threshold, mountain_upper_threshold);
+			float mountain_factor = powf((mountain_placement_value - mountain_lower_threshold) / (mountain_upper_threshold - mountain_lower_threshold), 2);
+			float mountain_value = (ChunkManager::test_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16) + 1) * 35 * mountain_factor;
+
+			float tectonical_value = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), -0.5f, 1) * 10;
+
+			float ocean_placement_value = clip(ChunkManager::ocean_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), ocean_lower_threshold, ocean_upper_threshold);
+			float ocean_factor = powf((ocean_placement_value - ocean_lower_threshold) / (ocean_upper_threshold - ocean_lower_threshold), 2);
+
+			int ground_level = clip(5 + (30 + tectonical_value) * (1 - ocean_factor) + mountain_value, 0, 127);
+			height_values[x][z] = ground_level;
+			for (int y = 0; y <= ground_level; y++)
+			{
+				blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
+			}
+
+			blocks[ground_level][x][z] = new SimpleBlock(blk_id::grass_id);
+
+			for (int y = ground_level + 1; y < ocean_level; y++)
+			{
+				blocks[y][x][z] = SimpleBlock::CreateNew(blk_id::water_id);
+			}
+
+			for (int y = std::max(ground_level + 1, ocean_level); y < 128; y++)
+			{
+				blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
+			}
+		}
+	///											///
+
+	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
+	if (north_chunk)
+	{
+		north_chunk->south_chunk = this;
+		north_chunk->visibility_update_needed = true;
+	}
+	south_chunk = ChunkManager::GetChunk(chunk_x, chunk_z - 1);
+	if (south_chunk)
+	{
+		south_chunk->north_chunk = this;
+		south_chunk->visibility_update_needed = true;
+	}
+	west_chunk = ChunkManager::GetChunk(chunk_x + 1, chunk_z);
+	if (west_chunk)
+	{
+		west_chunk->east_chunk = this;
+		west_chunk->visibility_update_needed = true;
+	}
+	east_chunk = ChunkManager::GetChunk(chunk_x - 1, chunk_z);
+	if (east_chunk)
+	{
+		east_chunk->west_chunk = this;
+		east_chunk->visibility_update_needed = true;
+	}
+	RecalculateVisibility();
+
+	//std::cout << "fcon" << chunk_x << " " << chunk_z << std::endl;
+}
+
 void Chunk::InitializeBuffers()
 {
 	//generating vbo that belongs to chunk
@@ -47,10 +128,6 @@ void Chunk::InitializeBuffers()
 	glEnableVertexAttribArray(2);
 
 	buffers_initialized = true;
-}
-
-float clip(float n, float lower, float upper) {
-	return std::max(lower, std::min(n, upper));
 }
 
 void Chunk::GenerateStructures()
@@ -185,82 +262,6 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 	}
 }
 
-Chunk::Chunk(int chunk_x, int chunk_z)
-{
-	//std::cout << "scon" << chunk_x << " " << chunk_z << std::endl;
-
-	//init
-	this->chunk_x = chunk_x;
-	this->chunk_z = chunk_z;
-
-	///			TEST INITIALIZATION			///
-	for (int x = 0; x < 16; x++)
-		for (int z = 0; z < 16; z++)
-		{
-			float mountain_lower_threshold = 0.1f;
-			float mountain_upper_threshold = 0.6f;
-			float ocean_lower_threshold = 0.4f;
-			float ocean_upper_threshold = 0.5f;
-			int ocean_level = 30;
-
-			float mountain_placement_value = clip(ChunkManager::mountain_placement_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), mountain_lower_threshold, mountain_upper_threshold);
-			float mountain_factor = powf((mountain_placement_value - mountain_lower_threshold) / (mountain_upper_threshold - mountain_lower_threshold), 2);
-			float mountain_value = (ChunkManager::test_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16) + 1) * 35 * mountain_factor;
-
-			float tectonical_value = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), -0.5f, 1) * 10;
-
-			float ocean_placement_value = clip(ChunkManager::ocean_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), ocean_lower_threshold, ocean_upper_threshold);
-			float ocean_factor = powf((ocean_placement_value - ocean_lower_threshold) / (ocean_upper_threshold - ocean_lower_threshold), 2);
-
-			int ground_level = clip(20 + (30 + tectonical_value) * (1 - ocean_factor) + mountain_value, 0, 127);
-			height_values[x][z] = ground_level;
-			for (int y = 0; y <= ground_level; y++)
-			{
-				blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
-			}
-
-			blocks[ground_level][x][z] = new SimpleBlock(blk_id::grass_id);
-
-			for (int y = ground_level+1; y < ocean_level; y++)
-			{
-				blocks[y][x][z] = SimpleBlock::CreateNew(blk_id::water_id);
-			}
-
-			for (int y = std::max(ground_level+1, ocean_level); y < 128; y++)
-			{
-				blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
-			}
-		}
-	///											///
-
-	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
-	if (north_chunk)
-	{
-		north_chunk->south_chunk = this;
-		north_chunk->visibility_update_needed = true;
-	}
-	south_chunk = ChunkManager::GetChunk(chunk_x, chunk_z - 1);
-	if (south_chunk)
-	{
-		south_chunk->north_chunk = this;
-		south_chunk->visibility_update_needed = true;
-	}
-	west_chunk = ChunkManager::GetChunk(chunk_x + 1, chunk_z);
-	if (west_chunk)
-	{
-		west_chunk->east_chunk = this;
-		west_chunk->visibility_update_needed = true;
-	}
-	east_chunk = ChunkManager::GetChunk(chunk_x - 1, chunk_z);
-	if (east_chunk)
-	{
-		east_chunk->west_chunk = this;
-		east_chunk->visibility_update_needed = true;
-	}
-	RecalculateVisibility();
-
-	//std::cout << "fcon" << chunk_x << " " << chunk_z << std::endl;
-}
 
 void Chunk::RecalculateVisibility()
 {
@@ -441,20 +442,21 @@ void Chunk::UpdateVbos()
 void Chunk::DrawSimple()
 {
 	//binds its vao and draw itself
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[SIMPLE] * 3);
 }
 
 void Chunk::DrawComplex()
 {
-	//glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
 }
 
 void Chunk::DrawFluids()
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	glBindVertexArray(vao[FLUID]);
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[FLUID] * 3);
 }

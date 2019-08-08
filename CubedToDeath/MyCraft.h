@@ -16,6 +16,7 @@
 #include "Text.h"
 #include "Sprite.h"
 #include "Command.h"
+#include "ParticleSystem.h"
 
 class MyCraft
 {
@@ -38,6 +39,8 @@ public:
 	static Shader* fluid_shader;
 	static Shader* depth_shader;
 	static Shader* post_shader;
+	static Shader* particle_shader;
+	static Shader* particle_depth_shader;
 	//mapa konfiguracyjna
 	static std::map<std::string, std::string> config_map;
 	//okienko
@@ -55,6 +58,8 @@ public:
 	static unsigned int fbo_shadow_map;
 	static unsigned int shadow_map_close;
 	static unsigned int shadow_map_far;
+
+	static ParticleSystem* ps;
 private:
 	//initializes opengl
 	void InitializeOpenGL();
@@ -63,9 +68,12 @@ private:
 	//function of world manager thread
 	static void WorldManagerFunction();
 	static void ChunkUnloaderFunction();
-	//draws world
+
+	static void DeleteBuffers();
 	static void Update();
+	static void RenderScene();
 	static void RenderShadowMaps();
+	static void RenderParticles();
 	//has mouse been updated previously
 	static bool first_mouse;
 	//last mouse coordinates
@@ -91,5 +99,4 @@ private:
 
 	static unsigned int quadVAO;
 	static unsigned int quadVBO;
-
 };

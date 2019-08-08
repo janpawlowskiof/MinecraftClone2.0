@@ -291,3 +291,25 @@ SimpleBlock* SimpleBlock::CreateNew(int block_id)
 		return new SimpleBlock(block_id);
 	}
 }
+
+glm::vec3 SimpleBlock::GetColor(int block_id)
+{
+	switch (block_id)
+	{
+	case blk_id::dirt_id:
+	case blk_id::grass_id:
+		return glm::vec3(120.0, 85, 58)/255.0f;
+	case blk_id::stone_id:
+		return glm::vec3(116, 116, 116) / 255.0f;
+
+	case blk_id::wood_id:
+		return glm::vec3(104, 83, 50) / 255.0f;
+	case blk_id::leaves_id:
+		return glm::vec3(80, 144, 38) / 255.0f;
+	case blk_id::water_id:
+		return glm::vec3(0, 0, 1);
+	case blk_id::air_id:
+	default:
+		return glm::vec3(0,0,0);
+	}
+}

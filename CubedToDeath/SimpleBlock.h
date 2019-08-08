@@ -62,6 +62,7 @@ public:
 
 	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info);
 	static SimpleBlock* CreateNew(int block_id);
+	static glm::vec3 GetColor(int block_id);
 	//static float* CreateModel(
 };
 

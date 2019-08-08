@@ -171,6 +171,7 @@
     <ClCompile Include="MyCraft.cpp" />
     <ClCompile Include="CubedToDeath.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="SimpleBlock.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="HitInfo.h" />
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="MyCraft.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SimpleBlock.h" />
@@ -210,6 +212,10 @@
     <None Include="res\depth.vert" />
     <None Include="res\fluid.frag" />
     <None Include="res\fluid.vert" />
+    <None Include="res\particle.frag" />
+    <None Include="res\particle.vert" />
+    <None Include="res\particle_depth.frag" />
+    <None Include="res\particle_depth.vert" />
     <None Include="res\post_process.frag" />
     <None Include="res\post_process.vert" />
     <None Include="res\sprite.frag" />

@@ -76,11 +76,25 @@ namespace blk_id
 		wood_id,
 		grass_id,
 		leaves_id,
-
 		torch_id,
 		water_id,
+	};
+}
 
+namespace tex_id
+{
+	enum
+	{
+		dirt,
+		stone,
+		wood_side,
+		wood_top,
+		grass_side,
+		grass_top,
+		leaves,
+		torch_side,
+		water,
 	};
 }
 //bo textura ma 16x16 bloków
-#define m_unit (1.0f/16.0f)
+#define m_unit (1.0f)

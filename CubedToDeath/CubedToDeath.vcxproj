@@ -178,6 +178,7 @@
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureArray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Chunk.h" />
@@ -196,6 +197,7 @@
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TextureArray.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="config.txt" />

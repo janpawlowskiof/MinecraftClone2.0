@@ -6,11 +6,11 @@ in vec3 normal;
 in vec3 frag_pos;
 in vec4 light_space_close_frag;
 in vec4 light_space_far_frag;
+in float textureID;
 
-uniform sampler2D texture_terrain;
+uniform sampler2DArray texture_terrain;
 uniform sampler2D shadow_map_close;
 uniform sampler2D shadow_map_far;
-
 uniform vec3 view_pos;
 uniform vec3 light_direction;
 
@@ -81,7 +81,7 @@ void main()
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
 	vec3 specular = specular_strength * spec * light_color;  
 
-	vec4 color = texture(texture_terrain, tex_coords);
+	vec4 color = texture(texture_terrain, vec3(tex_coords, textureID));
 	if(color.a < 0.5) discard;
 	float shadow = CalculateShadow();
     vec3 result = (ambient + (diffuse + specular) * (1.0f - shadow)) * color.rgb;

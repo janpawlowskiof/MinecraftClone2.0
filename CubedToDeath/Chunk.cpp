@@ -93,39 +93,47 @@ void Chunk::InitializeBuffers()
 
 	//generating vao that belongs to chunk
 	glBindVertexArray(vao[SIMPLE]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	//generating vao that belongs to chunk
 	glBindVertexArray(vao[COMPLEX]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	//generating vao that belongs to chunk
 	glBindVertexArray(vao[FLUID]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
 
 	buffers_initialized = true;
 }
@@ -378,9 +386,9 @@ void Chunk::RecalculateVisibility()
 	{
 		delete[] vertices_fluid;
 	}
-	vertices_simple = new float[triangles_count_simple * 3 * 8];
-	vertices_complex = new float[triangles_count_complex * 3 * 8];
-	vertices_fluid = new float[triangles_count_fluid * 3 * 8];
+	vertices_simple = new float[triangles_count_simple * 3 * 9];
+	vertices_complex = new float[triangles_count_complex * 3 * 9];
+	vertices_fluid = new float[triangles_count_fluid * 3 * 9];
 
 	//target adress that we will insert our data into
 	float* target_simple = vertices_simple;
@@ -420,17 +428,17 @@ void Chunk::UpdateVbos()
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[SIMPLE] * 3 * 8 * sizeof(float), vertices_simple, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[SIMPLE] * 3 * 9 * sizeof(float), vertices_simple, GL_STATIC_DRAW);
 
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 8 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 9 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
 
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	glBindVertexArray(vao[FLUID]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[FLUID] * 3 * 8 * sizeof(float), vertices_fluid, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[FLUID] * 3 * 9 * sizeof(float), vertices_fluid, GL_STATIC_DRAW);
 
 	//deleting vertices array now that we're done
 	//delete[] vertices_simple;

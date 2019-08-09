@@ -76,7 +76,6 @@ void MyCraft::InitializeOpenGL()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
@@ -105,7 +104,8 @@ void MyCraft::Run()
 	//std::cout << glGetString(GL_VENDOR) << std::endl;
 	command.Initialize();
 
-	texture_terrain = new Texture(config_map["texture_terrain_path"], 0);
+	//texture_terrain = new Texture(config_map["texture_terrain_path"], 0);
+	texture_terrain_array = new TextureArray("res");
 	basic_shader = new Shader("res/basic.vert", "res/basic.frag");
 	text_shader = new Shader("res/text.vert", "res/text.frag");
 	sprite_shader = new Shader("res/sprite.vert", "res/sprite.frag");
@@ -277,7 +277,7 @@ void MyCraft::RenderScene()
 	glUniform3f(basic_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
 
 	glActiveTexture(GL_TEXTURE0);
-	texture_terrain->Bind();
+	texture_terrain_array->Bind();
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, shadow_map_close);
@@ -477,7 +477,8 @@ MyCraft::~MyCraft()
 	delete post_shader;
 	delete player;
 	delete window;
-	delete texture_terrain;
+	//delete texture_terrain;
+	delete texture_terrain_array;
 	delete text;
 	delete crosshair;
 }
@@ -514,7 +515,8 @@ double MyCraft::last_time = 1;
 unsigned int MyCraft::fbo_shadow_map;
 unsigned int MyCraft::shadow_map_close;
 unsigned int MyCraft::shadow_map_far;
-Texture* MyCraft::texture_terrain = nullptr;
+//Texture* MyCraft::texture_terrain = nullptr;
+TextureArray* MyCraft::texture_terrain_array = nullptr;
 glm::mat4 MyCraft::light_space_close_matrix;
 glm::mat4 MyCraft::light_space_far_matrix;
 Sprite* MyCraft::crosshair;

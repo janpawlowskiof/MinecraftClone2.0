@@ -11,6 +11,7 @@
 #include "Chunk.h"
 #include "Player.h"
 #include "Texture.h"
+#include "TextureArray.h"
 #include "ChunkManager.h"
 #include <mutex>
 #include "Text.h"
@@ -79,7 +80,8 @@ private:
 	//last mouse coordinates
 	static double last_x, last_y;
 	//main texture
-	static Texture* texture_terrain;
+	//static Texture* texture_terrain;
+	static TextureArray* texture_terrain_array;
 	//chunk manager
 	static ChunkManager chunk_manager;
 	//thread responsible for managing world

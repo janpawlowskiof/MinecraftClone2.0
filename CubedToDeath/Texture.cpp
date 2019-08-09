@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vector>
-#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
 
@@ -26,7 +26,7 @@ Texture::Texture(std::string path, int index)
 	}
 	else
 	{
-		std::cout << "Failed to load texture" << std::endl;
+		std::cout << "Failed to load texture " << path << std::endl;
 	}
 	stbi_image_free(data);
 }

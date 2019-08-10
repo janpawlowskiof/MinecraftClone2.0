@@ -8,6 +8,7 @@
 #include <iostream>
 #include "SimpleBlock.h"
 #include <algorithm>
+#include "MyCraft.h"
 
 TextureArray::TextureArray(std::string path)
 {
@@ -25,12 +26,12 @@ TextureArray::TextureArray(std::string path)
 	std::cout << "ver: " << glGetString(GL_VERSION) << "\n";
 	float aniso = 0.0f;
 	glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &aniso);
-	std::cout << "max aniso level: " << aniso << "\n";
-	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
+	std::cout << "max anisotropic level: " << aniso << "\n";
+	glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(aniso, std::stof(MyCraft::config_map["anidotropic_filtering"])));
 	//std::cout << glGetError() << " \n";
 
 
-	glTexImage3D(GL_TEXTURE_2D_ARRAY,
+	/*glTexImage3D(GL_TEXTURE_2D_ARRAY,
 		0,                // level
 		GL_RGBA8,         // Internal format
 		texture_size, texture_size, layer_count, // width,height,depth
@@ -53,7 +54,14 @@ TextureArray::TextureArray(std::string path)
 		0,                // border?
 		GL_RGBA,          // format
 		GL_UNSIGNED_BYTE, // type
-		nullptr);
+		nullptr);*/
+
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+		std::stoi(MyCraft::config_map["mipmap_count"]),
+		GL_RGBA8,
+		texture_size,
+		texture_size,
+		layer_count);
 
 
 	LoadLayer(tex_id::dirt, "res/block/dirt.png");
@@ -64,6 +72,7 @@ TextureArray::TextureArray(std::string path)
 	LoadLayer(tex_id::wood_top, "res/block/spruce_log_top.png");
 	LoadLayer(tex_id::wood_top, "res/block/spruce_log_top.png");
 	LoadLayer(tex_id::leaves, "res/block/spruce_leaves.png");
+	LoadLayer(tex_id::torch_side, "res/block/torch.png");
 
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 }

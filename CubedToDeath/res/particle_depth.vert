@@ -33,7 +33,7 @@ void main()
 {
 	int grid = 6;
 	vec3 initial_offset = vec3(gl_InstanceID % grid, (gl_InstanceID/grid)%grid, gl_InstanceID/(grid * grid));
-	vec3 initial_velocity = 5.7f * velocities[gl_InstanceID%20] + 10* ((model * vec4(initial_offset, 1)).xyz - (model * vec4(grid/2,grid/2,grid/2, 1)).xyz);
+	vec3 initial_velocity = 5.7f * velocities[(gl_InstanceID + uint((model * vec4(1)).x * 10 + (model * vec4(1)).y* 6)) %20] + 10* ((model * vec4(initial_offset, 1)).xyz - (model * vec4(grid/2,grid/2,grid/2, 1)).xyz);
 	initial_velocity.y += 8;
 	vec4 position = model * vec4(max(0.45 - time, 0) * aPos + initial_offset + initial_velocity * time + vec3(0, -50, 0) * time * time, 1);
 

@@ -1,7 +1,17 @@
 width = 1280
 height = 720
+
+#recommended 0.1
 mouse_sensitivity = 0.1
-player_speed = 10
+
+player_speed = 15
 fov = 90.0
 render_distance = 15
-texture_terrain_path = res/terrain.png
+
+#range between 0 and 16
+anidotropic_filtering = 16
+
+#range 1 - 5
+mipmap_count = 4
+
+texture_terrain_path = res/block

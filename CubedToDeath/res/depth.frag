@@ -1,10 +1,11 @@
 #version 450 core
+uniform sampler2DArray texture_terrain;
+in float textureID;
+in vec2 tex_coords;
 
 
 void main()
 {             
-    //FragColor = texture(depthMap, TexCoords);
-    //FragColor = vec4(vec3(LinearizeDepth(depthValue) / 150), 1.0); // perspective
-    //FragColor = vec4(vec3(depthValue), 1.0); // orthographic
-	//FragColor = vec4(1,0,0,1);
+    vec4 color = texture(texture_terrain, vec3(tex_coords, textureID));
+	if(color.a < 0.5) discard;
 }

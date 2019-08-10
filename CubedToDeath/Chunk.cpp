@@ -89,50 +89,50 @@ void Chunk::InitializeBuffers()
 	glGenBuffers(3, vbo);
 	glGenVertexArrays(3, vao);
 
+
+	//generating vao that belongs to chunk
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
-
-	//generating vao that belongs to chunk
 	glBindVertexArray(vao[SIMPLE]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(8 * sizeof(float)));
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
+	//generating vao that belongs to chunk
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
-	//generating vao that belongs to chunk
 	glBindVertexArray(vao[COMPLEX]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(8 * sizeof(float)));
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	//generating vao that belongs to chunk
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	glBindVertexArray(vao[FLUID]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 8 * sizeof(float) + sizeof(int), (void*)(8 * sizeof(float)));
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
 	buffers_initialized = true;
@@ -177,7 +177,8 @@ void Chunk::GenerateStructures()
 					ReplaceBlock(x, ground_level + 4, z + 1, new SimpleBlock(blk_id::leaves_id), false);
 					ReplaceBlock(x, ground_level + 4, z - 1, new SimpleBlock(blk_id::leaves_id), false);
 					ReplaceBlock(x, ground_level + 4, z + 2, new SimpleBlock(blk_id::leaves_id), false);
-					ReplaceBlock(x, ground_level + 4, z - 2, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x, ground_level + 4, z - 2, SimpleBlock::CreateNew(blk_id::leaves_id), false);
+					//ReplaceBlock(x, ground_level + 5, z, SimpleBlock::CreateNew(blk_id::torch_id), false);
 					//ReplaceBlock(x, ground_level + 3, z + 1, new SimpleBlock(blk_id::leaves_id), false);
 					//ReplaceBlock(x, ground_level + 3, z-1, new SimpleBlock(blk_id::leaves_id), false);
 

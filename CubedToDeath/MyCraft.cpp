@@ -11,10 +11,10 @@ void MyCraft::InitializeOpenGL()
 {
 	//standardowa inicjalizacja
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+	//glfwWindowHint(GLFW_SAMPLES, 4);
 	window = glfwCreateWindow(width, height, "Turbo Minecraft Clone 2.0", NULL, NULL);
 	if (window == NULL)
 	{
@@ -75,7 +75,7 @@ void MyCraft::InitializeOpenGL()
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+	//glEnable(GL_MULTISAMPLE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
@@ -363,6 +363,7 @@ void MyCraft::RenderShadowMaps()
 		if (chunk->buffers_update_needed)
 			chunk->UpdateVbos();
 		chunk->DrawSimple();
+		chunk->DrawComplex();
 		iterator++;
 	}
 	//rendering partices to the close depth map

@@ -61,9 +61,10 @@ public:
 	}
 
 	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info);
+	static SimpleBlock* CreateNew(int block_id, HitInfo hit_info);
 	static SimpleBlock* CreateNew(int block_id);
 	static glm::vec3 GetColor(int block_id);
-	//static float* CreateModel(
+	static Direction GetDirection(glm::ivec3 vec);
 };
 
 namespace blk_id
@@ -77,6 +78,7 @@ namespace blk_id
 		grass_id,
 		leaves_id,
 		torch_id,
+		switch_id,
 		water_id,
 	};
 }
@@ -96,5 +98,4 @@ namespace tex_id
 		water,
 	};
 }
-//bo textura ma 16x16 bloków
 #define m_unit (1.0f)

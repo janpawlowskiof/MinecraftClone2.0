@@ -59,7 +59,7 @@ float CalculateShadow()
 		for(int y = -1; y <= 1; ++y)
 		{
 			float pcfDepth = texture(shadow_map_close, projection_coords.xy + vec2(x, y) * texelSize).r; 
-			result += currentDepth - 0.0002 > pcfDepth ? 1.0 : 0.0;
+			result += currentDepth - 0.0004 > pcfDepth ? 1.0 : 0.0;
 		}    
 	}
 	result /= 9.0;
@@ -81,9 +81,11 @@ void main()
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
 	vec3 specular = specular_strength * spec * light_color;  
 
+	//vec4 color = normal;
 	vec4 color = texture(texture_terrain, vec3(tex_coords, textureID));
 	if(color.a < 0.5) discard;
 	float shadow = CalculateShadow();
     vec3 result = (ambient + (diffuse + specular) * (1.0f - shadow)) * color.rgb;
 	frag = vec4(result, 1.0);
+	//frag = vec4(normal, 1.0);
 }

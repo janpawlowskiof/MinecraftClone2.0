@@ -272,16 +272,21 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 	return false;
 }
 
-SimpleBlock* SimpleBlock::CreateNew(int block_id)
+SimpleBlock* SimpleBlock::CreateNew(int block_id, HitInfo hit_info = HitInfo())
 {
 	switch (block_id)
 	{
 	case blk_id::torch_id:
-		return new blk::Torch();
-	
+		return new blk::Torch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z));
+
 	default:
 		return new SimpleBlock(block_id);
 	}
+}
+
+SimpleBlock* SimpleBlock::CreateNew(int block_id)
+{
+	return CreateNew(block_id, HitInfo());
 }
 
 glm::vec3 SimpleBlock::GetColor(int block_id)
@@ -304,4 +309,20 @@ glm::vec3 SimpleBlock::GetColor(int block_id)
 	default:
 		return glm::vec3(0,0,0);
 	}
+}
+
+SimpleBlock::Direction SimpleBlock::GetDirection(glm::ivec3 vec)
+{
+	if (vec.x >= 1)
+		return EAST;
+	if (vec.x <= -1)
+		return WEST;
+	if (vec.z <= -1)
+		return SOUTH;
+	if (vec.z >= 1)
+		return NORTH;
+	if (vec.y >= 1)
+		return TOP;
+	if (vec.y <= -1)
+		return BOTTOM;
 }

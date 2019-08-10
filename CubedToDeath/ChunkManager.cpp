@@ -72,7 +72,10 @@ void ChunkManager::UnloadBlocks()
 			//deleting block if each flag is set to true
 			if ((*iterator).flags[0] && (*iterator).flags[1])
 			{
-				delete (iterator->item);
+				if(iterator->item->GetFlag(SimpleBlock::COMPLEX))
+					delete (ComplexBlock*)(iterator->item);
+				else
+					delete (iterator->item);
 				iterator = block_unload_queue.erase(iterator);
 			}
 			else

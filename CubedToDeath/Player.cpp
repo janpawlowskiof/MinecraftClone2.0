@@ -117,7 +117,12 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 			HitInfo hit_info;
 			if (GetHitInfo(hit_info))
 			{
-				hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, SimpleBlock::CreateNew(selected_block_id), true);
+				SimpleBlock* block = SimpleBlock::CreateNew(selected_block_id, hit_info);
+				/*if (block->GetFlag(SimpleBlock::COMPLEX))
+				{
+					((ComplexBlock*)block)->direction = 
+				}*/
+				hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, block, true);
 				//hit_info.chunk->visibility_update_needed;
 				hit_info.place_chunk->RecalculateVisibility();
 

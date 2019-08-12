@@ -14,6 +14,11 @@ ChunkManager::ChunkManager()
 	test_noise.SetFrequency(0.015);
 	test_noise.SetGradientPerturbAmp(2.0);
 
+	d3_noise.SetNoiseType(FastNoise::Simplex);
+	d3_noise.SetSeed(1337);
+	d3_noise.SetFrequency(0.1);
+	//d3_noise.SetGradientPerturbAmp(2.0);
+
 	tree_noise.SetNoiseType(FastNoise::Value);
 	tree_noise.SetFrequency(0.2);
 	tree_noise.SetSeed(42319);
@@ -27,8 +32,8 @@ ChunkManager::ChunkManager()
 	mountain_placement_noise.SetFrequency(0.003);
 	mountain_placement_noise.SetSeed(1543676);
 
-	tectonical_noise.SetNoiseType(FastNoise::Cubic);
-	tectonical_noise.SetFrequency(0.01);
+	tectonical_noise.SetNoiseType(FastNoise::Simplex);
+	tectonical_noise.SetFrequency(0.005);
 	mountain_placement_noise.SetSeed(847593);
 
 	ocean_noise.SetFrequency(0.001);
@@ -399,6 +404,7 @@ FastNoise ChunkManager::tree_placement_noise;
 FastNoise ChunkManager::mountain_placement_noise;
 FastNoise ChunkManager::tectonical_noise;
 FastNoise ChunkManager::ocean_noise;
+FastNoise ChunkManager::d3_noise;
 std::mutex ChunkManager::chunk_map_mutex;
 std::mutex ChunkManager::block_unload_queue_mutex;
 std::mutex ChunkManager::chunk_unload_queue_mutex;

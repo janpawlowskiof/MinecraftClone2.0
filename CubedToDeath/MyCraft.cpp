@@ -350,6 +350,7 @@ void MyCraft::RenderShadowMaps()
 
 	auto iterator = chunk_map.begin();
 	const int close_shadow_distance = 3;
+	const int far_shadow_distance = 13;
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
@@ -383,6 +384,13 @@ void MyCraft::RenderShadowMaps()
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
+
+		if (abs(chunk->chunk_x - floorf(Player::position.x / 16.0f)) > far_shadow_distance || abs(chunk->chunk_z - floorf(Player::position.z / 16.0f)) > far_shadow_distance)
+		{
+			iterator++;
+			continue;
+		}
+
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
 		if (chunk->buffers_update_needed)

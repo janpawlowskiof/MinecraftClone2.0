@@ -199,7 +199,7 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 			return true;
 		}
 	}
-	else if (origin.x >= block_x + 1)
+	if (origin.x >= block_x + 1)
 	{
 		if (glm::dot(direction, glm::vec3(-1, 0, 0)) == 0)
 			return false;
@@ -227,7 +227,7 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 			return true;
 		}
 	}
-	else if (origin.z >= block_z + 1)
+	if (origin.z >= block_z + 1)
 	{
 		if (glm::dot(direction, glm::vec3(0, 0, -1)) == 0)
 			return false;
@@ -255,7 +255,7 @@ bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int b
 			return true;
 		}
 	}
-	else if (origin.y >= block_y + 1)
+	if (origin.y >= block_y + 1)
 	{
 		if (glm::dot(direction, glm::vec3(0, -1, 0)) == 0)
 			return false;

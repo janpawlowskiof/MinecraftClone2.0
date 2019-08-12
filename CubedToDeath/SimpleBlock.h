@@ -7,7 +7,7 @@ class HitInfo;
 class SimpleBlock
 {
 public:
-	unsigned char id = 255;
+	unsigned char id = 0;
 	unsigned char face_visible = 63;
 	unsigned char flags = 252;
 	unsigned char power_level = 0;

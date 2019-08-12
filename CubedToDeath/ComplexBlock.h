@@ -20,7 +20,8 @@ public:
 	virtual ~ComplexBlock();
 	virtual float* CreateModel(float* target, int world_x, int world_y, int world_z) = 0;
 	virtual int GetNumberOfTriangles() = 0;
-	//virtual void NeighbourDeleted() = 0;
+	virtual bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) = 0;
+	//virtual void OnPlayerClick() = 0;
 };
 
 namespace blk
@@ -41,8 +42,17 @@ namespace blk
 			return 8;
 		}
 
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override
+		{
+			return false;
+		}
+
 
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
+		~Torch() override
+		{
+			std::cout << "Deleting torch\n";
+		}
 	};
 	/*
 	class Switch : public ComplexBlock

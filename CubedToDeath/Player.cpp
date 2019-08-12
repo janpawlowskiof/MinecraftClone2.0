@@ -176,7 +176,7 @@ bool Player::GetHitInfo(HitInfo& hit_info)
 	//loop over all blocks in range
 	for (int x = min_check_x; x <= max_check_x; x++)
 		for (int z = min_check_z; z <= max_check_z; z++)
-			for (int y = min_check_y; y <= max_check_z; y++)
+			for (int y = min_check_y; y <= max_check_y; y++)
 			{
 				int local_x = player_local_x + x;
 				int local_z = player_local_z + z;

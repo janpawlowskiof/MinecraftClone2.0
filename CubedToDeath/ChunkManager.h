@@ -19,6 +19,7 @@ public:
 	static FastNoise ocean_noise;
 	static FastNoise tree_noise;
 	static FastNoise tree_placement_noise;
+	static FastNoise d3_noise;
 	static int last_chunk_x, last_chunk_z;
 	//updates world
 	void Update();

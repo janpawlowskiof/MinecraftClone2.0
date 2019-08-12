@@ -14,45 +14,68 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	this->chunk_x = chunk_x;
 	this->chunk_z = chunk_z;
 
-	///			TEST INITIALIZATION			///
-	for (int x = 0; x < 16; x++)
-		for (int z = 0; z < 16; z++)
-		{
-			float mountain_lower_threshold = 0.1f;
-			float mountain_upper_threshold = 0.6f;
-			float ocean_lower_threshold = 0.4f;
-			float ocean_upper_threshold = 0.5f;
-			int ocean_level = 30;
+	float noiseValues[5][17][5];
 
-			float mountain_placement_value = clip(ChunkManager::mountain_placement_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), mountain_lower_threshold, mountain_upper_threshold);
-			float mountain_factor = powf((mountain_placement_value - mountain_lower_threshold) / (mountain_upper_threshold - mountain_lower_threshold), 2);
-			float mountain_value = (ChunkManager::test_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16) + 1) * 35 * mountain_factor;
+	for (int x = 0; x < 5; ++x)
+		for (int y = 0; y < 17; ++y)
+			for (int z = 0; z < 5; ++z)
+				noiseValues[x][y][z] = ChunkManager::d3_noise.GetValue(x + chunk_x * 4, y * 2, z + chunk_z * 4);
 
-			float tectonical_value = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), -0.5f, 1) * 10;
+	//3d terrain generation
+	for (int xs = 0; xs < 4; ++xs) //each subchunk
+		for (int zs = 0; zs < 4; ++zs)
+			for (int xb = 0; xb < 4; ++xb) //each block in subchunk
+				for (int zb = 0; zb < 4; ++zb) {
+					int x = xs * 4 + xb;
+					int z = zs * 4 + zb;
+					//int ground_level = height_values[x][z];
+					
+					float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), 0, 1);
+					//float mountaininess = 1;
 
-			float ocean_placement_value = clip(ChunkManager::ocean_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), ocean_lower_threshold, ocean_upper_threshold);
-			float ocean_factor = powf((ocean_placement_value - ocean_lower_threshold) / (ocean_upper_threshold - ocean_lower_threshold), 2);
+					for (int ys = 0; ys < 16; ++ys) {
+						for (int yb = 0; yb < 8; ++yb) {
+							int y = 8 * ys + yb;
 
-			int ground_level = clip(5 + (30 + tectonical_value) * (1 - ocean_factor) + mountain_value, 0, 127);
-			height_values[x][z] = ground_level;
-			for (int y = 0; y <= ground_level; y++)
-			{
-				blocks[y][x][z] = new SimpleBlock(blk_id::dirt_id);
-			}
+							float xd = xb / 4.0;
+							float yd = yb / 8.0;
+							float zd = zb / 4.0;
 
-			blocks[ground_level][x][z] = new SimpleBlock(blk_id::grass_id);
+							float c000 = noiseValues[xs][ys][zs];
+							float c001 = noiseValues[xs][ys][zs + 1];
+							float c010 = noiseValues[xs][ys + 1][zs];
+							float c011 = noiseValues[xs][ys + 1][zs + 1];
+							float c100 = noiseValues[xs + 1][ys][zs];
+							float c101 = noiseValues[xs + 1][ys][zs + 1];
+							float c110 = noiseValues[xs + 1][ys + 1][zs];
+							float c111 = noiseValues[xs + 1][ys + 1][zs + 1];
 
-			for (int y = ground_level + 1; y < ocean_level; y++)
-			{
-				blocks[y][x][z] = SimpleBlock::CreateNew(blk_id::water_id);
-			}
+							float c00 = c000 * (1 - xd) + c100 * xd;
+							float c01 = c001 * (1 - xd) + c101 * xd;
+							float c10 = c010 * (1 - xd) + c110 * xd;
+							float c11 = c011 * (1 - xd) + c111 * xd;
 
-			for (int y = std::max(ground_level + 1, ocean_level); y < 128; y++)
-			{
-				blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
-			}
-		}
-	///											///
+							float c0 = c00 * (1 - yd) + c10 * yd;
+							float c1 = c01 * (1 - yd) + c11 * yd;
+
+							float c = c0 * (1 - zd) + c1 * zd;
+							c = c + (-1 - c) * mountaininess;
+
+							float height_influence = 0.95;
+							float map_influence = 0.25;
+
+							float density = map_influence * c + height_influence * (128-y)/128.0f;
+
+							if (density > (0.4) * (height_influence + map_influence)) {
+								blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
+							}
+							else
+							{
+								blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
+							}
+						}
+					}
+				}
 
 	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
 	if (north_chunk)
@@ -160,8 +183,8 @@ void Chunk::GenerateStructures()
 					tree_values[x + 1][z + 1] > tree_values[x + 1][z + 2] &&
 					tree_values[x + 1][z + 1] > tree_values[x + 1][z])
 				{
-					float tree_placement_value =  clip(ChunkManager::tree_placement_noise.GetValue(chunk_x * 16 + x, chunk_z * 16 + z), 0.0f, 0.6f) / (0.6f);
-					if (tree_values[x+1][z+1] > tree_placement_value)
+					float tree_placement_value = clip(ChunkManager::tree_placement_noise.GetValue(chunk_x * 16 + x, chunk_z * 16 + z), 0.0f, 0.6f) / (0.6f);
+					if (tree_values[x + 1][z + 1] > tree_placement_value)
 						continue;
 
 					int ground_level = height_values[x][z];
@@ -199,8 +222,8 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 		if (local_x < 0)
 		{
 			chunk = south_chunk->east_chunk;
-			local_x = (local_x % 16 + 16)%16;
-			local_z = (local_z % 16 + 16)%16;
+			local_x = (local_x % 16 + 16) % 16;
+			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		else if (local_x >= 16)
@@ -227,7 +250,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 			local_z = local_z % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
-			//north_chunk->east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z % 16, block, false);
+		//north_chunk->east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z % 16, block, false);
 		else if (local_x >= 16)
 		{
 			chunk = north_chunk->west_chunk;
@@ -235,7 +258,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 			local_z = local_z % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
-			//north_chunk->west_chunk->ReplaceBlock(local_x % 16, block_y, local_z % 16, block, false);
+		//north_chunk->west_chunk->ReplaceBlock(local_x % 16, block_y, local_z % 16, block, false);
 		else
 		{
 			chunk = north_chunk;
@@ -243,7 +266,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 			local_z = local_z % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
-			//north_chunk->ReplaceBlock(local_x, block_y, local_z % 16, block, false);
+		//north_chunk->ReplaceBlock(local_x, block_y, local_z % 16, block, false);
 	}
 	else
 	{
@@ -254,7 +277,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 			local_z = local_z % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
-			//east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z, block, false);
+		//east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z, block, false);
 		else if (local_x >= 16)
 		{
 			chunk = west_chunk;
@@ -262,7 +285,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 			local_z = local_z % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
-			//west_chunk->ReplaceBlock(local_x % 16, block_y, local_z, block, false);
+		//west_chunk->ReplaceBlock(local_x % 16, block_y, local_z, block, false);
 		else
 		{
 			chunk = this;
@@ -404,7 +427,7 @@ void Chunk::RecalculateVisibility()
 				{
 					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
-				else if(blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
+				else if (blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
 				{
 					target_fluid = blocks[y][x][z]->CreateModel(target_fluid, x + 16 * chunk_x, y, z + 16 * chunk_z);;
 				}
@@ -498,7 +521,7 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 	{
 		if (local_x < 0)
 			south_chunk->east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z % 16 + 16, block, false);
-		else if(local_x >= 16)
+		else if (local_x >= 16)
 			south_chunk->west_chunk->ReplaceBlock(local_x % 16, block_y, local_z % 16 + 16, block, false);
 		else
 			south_chunk->ReplaceBlock(local_x, block_y, local_z % 16 + 16, block, false);

@@ -58,7 +58,8 @@ public:
 	static double last_time;
 	static unsigned int fbo_shadow_map;
 	static unsigned int shadow_map_close;
-	static unsigned int shadow_map_far;
+	static unsigned int shadow_map_far_used;
+	static unsigned int shadow_map_far_unused;
 
 	static ParticleSystem* ps;
 private:
@@ -95,7 +96,8 @@ private:
 	static std::vector<unsigned int> vbos_delete_queue;
 	static std::vector<unsigned int> vaos_delete_queue;
 	static glm::mat4 light_space_close_matrix;
-	static glm::mat4 light_space_far_matrix;
+	static glm::mat4 light_space_far_used_matrix;
+	static glm::mat4 light_space_far_unused_matrix;
 	static glm::vec3 light_direction;
 	static glm::vec3 light_color;
 

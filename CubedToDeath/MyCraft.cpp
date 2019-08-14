@@ -1,4 +1,4 @@
-#include "MyCraft.h"
+ï»¿#include "MyCraft.h"
 #include <glm/glm.hpp>
 
 MyCraft::MyCraft()
@@ -51,8 +51,8 @@ void MyCraft::InitializeOpenGL()
 	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
-	glGenTextures(1, &shadow_map_far);
-	glBindTexture(GL_TEXTURE_2D, shadow_map_far);
+	glGenTextures(1, &shadow_map_far_unused);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_far_unused);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
 		4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	//glActiveTexture(GL_TEXTURE1);
@@ -61,6 +61,19 @@ void MyCraft::InitializeOpenGL()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	//glClear(GL_DEPTH_BUFFER_BIT);
+
+	glGenTextures(1, &shadow_map_far_used);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_far_used);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	//glActiveTexture(GL_TEXTURE1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+	//glClear(GL_DEPTH_BUFFER_BIT);
 
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
@@ -88,7 +101,7 @@ bool LineInView(glm::vec2 p1, glm::vec2 p2)
 	return false;
 }
 
-//inicjalizuje i odpala grê
+//inicjalizuje i odpala grÄ™
 void MyCraft::Run()
 {
 	//Loading config file into a map
@@ -174,13 +187,13 @@ void MyCraft::Run()
 		RenderScene();
 		RenderParticles();
 
-		//zezwolenie na usuniêcie nieu¿ywanych bloków i chunków
+		//zezwolenie na usuniÄ™cie nieuÅ¼ywanych blokÃ³w i chunkÃ³w
 		ChunkManager::GiveThreadPermissionToUnloadBlocks(ChunkManager::MAIN);
 		ChunkManager::GiveThreadPermissionToUnloadChunks(ChunkManager::MAIN);
 
 		current_time = glfwGetTime();
 		glClear(GL_DEPTH_BUFFER_BIT);
-		
+
 		crosshair->Draw(width / 2 - 40, height / 2 - 40, 80, 80);
 
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
@@ -190,6 +203,14 @@ void MyCraft::Run()
 			text->RenderText(text_shader, "Input: " + command_input, 25.0f, 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 
 		last_time = current_time;
+
+		post_shader->Use();
+		/*glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBindVertexArray(quadVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, shadow_map_far_unused);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);*/
+
 		glfwSwapBuffers(window);
 
 		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
@@ -198,7 +219,7 @@ void MyCraft::Run()
 		}
 	}
 
-	//³¹czenie w¹tków na koniec programu
+	//Å‚Ä…czenie wÄ…tkÃ³w na koniec programu
 	world_manager.join();
 	chunk_unloader.join();
 }
@@ -254,7 +275,7 @@ void MyCraft::DeleteBuffers()
 	std::lock_guard<std::mutex> lock(buffers_queue_mutex);
 	const int size = vbos_delete_queue.size();
 
-	//usuwanie wszystkich niepotrzebnych buforów naraz
+	//usuwanie wszystkich niepotrzebnych buforÃ³w naraz
 	glDeleteVertexArrays(size, vaos_delete_queue.data());
 	glDeleteBuffers(size, vbos_delete_queue.data());
 
@@ -273,7 +294,7 @@ void MyCraft::RenderScene()
 	basic_shader->Use();
 
 	Shader::SetMat4(basic_shader->light_space_close_location, light_space_close_matrix);
-	Shader::SetMat4(basic_shader->light_space_far_location, light_space_far_matrix);
+	Shader::SetMat4(basic_shader->light_space_far_location, light_space_far_used_matrix);
 	glUniform3f(basic_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -283,7 +304,7 @@ void MyCraft::RenderScene()
 	glBindTexture(GL_TEXTURE_2D, shadow_map_close);
 
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, shadow_map_far);
+	glBindTexture(GL_TEXTURE_2D, shadow_map_far_used);
 
 	basic_shader->SetMat4(basic_shader->view_location, Player::view);
 	basic_shader->SetMat4(basic_shader->projection_location, Player::projection);
@@ -293,6 +314,11 @@ void MyCraft::RenderScene()
 	auto iterator = chunk_map.begin();
 	while (iterator != chunk_map.end())
 	{
+		if (iterator->second == nullptr)
+		{
+			++iterator;
+			continue;
+		}
 		auto chunk = iterator->second;
 
 		//initializing chunks that need to be initialized
@@ -304,7 +330,7 @@ void MyCraft::RenderScene()
 		//chunk->RecalculateComplexVbo();
 		if (chunk->vbos_update_needed)
 			chunk->UpdateVbos();
-		else if(chunk->vbo_complex_update_needed)
+		else if (chunk->vbo_complex_update_needed)
 			chunk->UpdateVboComplex();
 		//draws the chunk
 		chunk->DrawSimple();
@@ -333,6 +359,8 @@ void MyCraft::RenderScene()
 	}
 }
 
+int chunk_offset_x = 1, chunk_offset_z = 1, distance = 1;
+int chunk_shadow_center_x = 0, chunk_shadow_center_z = 0;
 void MyCraft::RenderShadowMaps()
 {
 	//glCullFace(GL_NONE);
@@ -357,7 +385,7 @@ void MyCraft::RenderShadowMaps()
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
-		if (abs(chunk->chunk_x - floorf(Player::position.x/16.0f)) > close_shadow_distance || abs(chunk->chunk_z - floorf(Player::position.z / 16.0f)) > close_shadow_distance)
+		if (abs(chunk->chunk_x - floorf(Player::position.x / 16.0f)) > close_shadow_distance || abs(chunk->chunk_z - floorf(Player::position.z / 16.0f)) > close_shadow_distance)
 		{
 			iterator++;
 			continue;
@@ -378,28 +406,82 @@ void MyCraft::RenderShadowMaps()
 
 	depth_shader->Use();
 	glm::mat4 light_projection_far = glm::ortho(-600.0f, 600.0f, -600.0f, 600.0f, 1.0f, 700.0f);
-	light_space_far_matrix = light_projection_far * light_view;
-	Shader::SetMat4(depth_shader->transform_matrix_location, light_space_far_matrix);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_far, 0);
+	
+	light_space_far_unused_matrix = light_projection_far * glm::lookAt(
+		glm::vec3(chunk_shadow_center_x * 16, 100, chunk_shadow_center_z * 16) + 100.0f * light_direction, glm::vec3(chunk_shadow_center_x * 16, 100, chunk_shadow_center_z * 16), glm::vec3(0,1,0));
+	Shader::SetMat4(depth_shader->transform_matrix_location, light_space_far_unused_matrix);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_far_unused, 0);
 	glViewport(0, 0, 4096, 4096);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	iterator = chunk_map.begin();
-	while (iterator != chunk_map.end())
+
+	bool reset_distance = true;
+	//bool reset_chunk_x = true;
+	//bool reset_chunk_y = true;
+	int draws_per_frame = 0;
+	int max_draws_per_frame = 10;
+	///CURRENT CHUNK
+	//pÄ™tla wczytujÄ…ca chunki dookoÅ‚a gracza zaczynajÄ…c od najbliÅ¼szych
+	while (distance < std::min(20, render_distance))
 	{
-		auto chunk = iterator->second;
-
-		if (abs(chunk->chunk_x - floorf(Player::position.x / 16.0f)) > far_shadow_distance || abs(chunk->chunk_z - floorf(Player::position.z / 16.0f)) > far_shadow_distance)
+		do
 		{
-			iterator++;
-			continue;
-		}
+			draws_per_frame++;
+			if (draws_per_frame > max_draws_per_frame)
+			{
+				reset_distance = false;
+				break;
+			}
+			auto iterator = chunk_map.find(std::make_pair(chunk_shadow_center_x + chunk_offset_x, chunk_shadow_center_z + chunk_offset_z));
+			if (iterator != chunk_map.end())
+				iterator->second->DrawSimple();
 
-		if (!chunk->buffers_initialized)
-			chunk->InitializeBuffers();
-		if (chunk->vbos_update_needed)
-			chunk->UpdateVbos();
-		chunk->DrawSimple();
-		iterator++;
+			//std::cout << c++ << "\n";
+
+			if (chunk_offset_x == distance && chunk_offset_z == distance)
+			{
+				chunk_offset_x--;
+			}
+			else if (chunk_offset_x == distance)
+			{
+				chunk_offset_z++;
+			}
+			else if (chunk_offset_z == -distance)
+			{
+				chunk_offset_x++;
+			}
+			else if (chunk_offset_x == -distance)
+			{
+				chunk_offset_z--;
+			}
+			else if (chunk_offset_z == distance)
+			{
+				chunk_offset_x--;
+			}
+		} while ((chunk_offset_x != distance || chunk_offset_z != distance) && chunk_offset_x >= -distance);
+
+		if (draws_per_frame > max_draws_per_frame)
+		{
+			//we broke out of the loop
+			break;
+		}
+		distance++;
+		chunk_offset_x = distance;
+		chunk_offset_z = distance;
+	}
+	if (reset_distance)
+	{
+		distance = chunk_offset_x = chunk_offset_z = 1;
+
+		std::swap(shadow_map_far_used, shadow_map_far_unused);
+		auto temp = light_space_far_used_matrix;
+		light_space_far_used_matrix = light_space_far_unused_matrix;
+		light_space_far_unused_matrix = temp;
+		//std::swap(light_space_far_used_matrix, light_space_far_unused_matrix);
+		chunk_shadow_center_x = Player::current_chunk_x;
+		chunk_shadow_center_z = Player::current_chunk_z;
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_far_unused, 0);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//std::cout << "Swapping\n";
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -419,7 +501,7 @@ void MyCraft::RenderParticles()
 	particle_shader->Use();
 
 	Shader::SetMat4(particle_shader->light_space_close_location, light_space_close_matrix);
-	Shader::SetMat4(particle_shader->light_space_far_location, light_space_far_matrix);
+	Shader::SetMat4(particle_shader->light_space_far_location, light_space_far_used_matrix);
 	glUniform3f(particle_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
 
 	glActiveTexture(GL_TEXTURE1);
@@ -532,11 +614,13 @@ double MyCraft::current_time = 1;
 double MyCraft::last_time = 1;
 unsigned int MyCraft::fbo_shadow_map;
 unsigned int MyCraft::shadow_map_close;
-unsigned int MyCraft::shadow_map_far;
+unsigned int MyCraft::shadow_map_far_used;
+unsigned int MyCraft::shadow_map_far_unused;
 //Texture* MyCraft::texture_terrain = nullptr;
 TextureArray* MyCraft::texture_terrain_array = nullptr;
 glm::mat4 MyCraft::light_space_close_matrix;
-glm::mat4 MyCraft::light_space_far_matrix;
+glm::mat4 MyCraft::light_space_far_used_matrix;
+glm::mat4 MyCraft::light_space_far_unused_matrix;
 Sprite* MyCraft::crosshair;
 glm::vec3 MyCraft::light_direction = glm::normalize(glm::vec3(0.5, 0.9, 0.1));
 glm::vec3 MyCraft::light_color = glm::vec3(0.9, 0.7, 0.7);

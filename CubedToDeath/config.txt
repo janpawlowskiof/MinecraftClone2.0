@@ -4,9 +4,9 @@ height = 720
 #recommended 0.1
 mouse_sensitivity = 0.1
 
-player_speed = 30
+player_speed = 20
 fov = 90.0
-render_distance = 30
+render_distance = 5
 
 #range between 0 and 16
 anidotropic_filtering = 16

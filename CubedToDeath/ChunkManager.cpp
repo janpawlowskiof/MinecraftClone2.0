@@ -2,6 +2,7 @@
 #include "Player.h"
 #include "MyCraft.h"
 #include <stdlib.h>
+#include "ComplexBlock.h"
 
 ChunkManager::ChunkManager()
 {
@@ -14,9 +15,9 @@ ChunkManager::ChunkManager()
 	test_noise.SetFrequency(0.015);
 	test_noise.SetGradientPerturbAmp(2.0);
 
-	d3_noise.SetNoiseType(FastNoise::Simplex);
-	d3_noise.SetSeed(1337);
-	d3_noise.SetFrequency(0.1);
+	d3_noise.SetNoiseType(FastNoise::Cubic);
+	d3_noise.SetSeed(18797);
+	d3_noise.SetFrequency(0.08);
 	//d3_noise.SetGradientPerturbAmp(2.0);
 
 	tree_noise.SetNoiseType(FastNoise::Value);
@@ -259,11 +260,11 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 			}
 
 			if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z + visibility_distance))
-				if (chunk->visibility_update_needed)
-					chunk->RecalculateVisibility();
+				if (chunk->recalculate_vbos_needed)
+					chunk->RecalculateVbos();
 			if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z - visibility_distance))
-				if (chunk->visibility_update_needed)
-					chunk->RecalculateVisibility();
+				if (chunk->recalculate_vbos_needed)
+					chunk->RecalculateVbos();
 		}
 		for (int chunk_z = -visibility_distance + 1; chunk_z <= visibility_distance - 1; chunk_z++)
 		{
@@ -275,11 +276,11 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 			}
 
 			if (Chunk * chunk = GetChunk(starting_chunk_x - visibility_distance, starting_chunk_z + chunk_z))
-				if (chunk->visibility_update_needed)
-					chunk->RecalculateVisibility();
+				if (chunk->recalculate_vbos_needed)
+					chunk->RecalculateVbos();
 			if (Chunk * chunk = GetChunk(starting_chunk_x + visibility_distance, starting_chunk_z + chunk_z))
-				if (chunk->visibility_update_needed)
-					chunk->RecalculateVisibility();
+				if (chunk->recalculate_vbos_needed)
+					chunk->RecalculateVbos();
 		}
 	}
 
@@ -296,11 +297,11 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 		}
 
 		if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z + visibility_distance))
-			if (chunk->visibility_update_needed)
-				chunk->RecalculateVisibility();
+			if (chunk->recalculate_vbos_needed)
+				chunk->RecalculateVbos();
 		if (Chunk * chunk = GetChunk(starting_chunk_x + chunk_x, starting_chunk_z - visibility_distance))
-			if (chunk->visibility_update_needed)
-				chunk->RecalculateVisibility();
+			if (chunk->recalculate_vbos_needed)
+				chunk->RecalculateVbos();
 	}
 	for (int chunk_z = -visibility_distance + 1; chunk_z <= visibility_distance - 1; chunk_z++)
 	{
@@ -312,11 +313,11 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 		}
 
 		if (Chunk * chunk = GetChunk(starting_chunk_x - visibility_distance, starting_chunk_z + chunk_z))
-			if (chunk->visibility_update_needed)
-				chunk->RecalculateVisibility();
+			if (chunk->recalculate_vbos_needed)
+				chunk->RecalculateVbos();
 		if (Chunk * chunk = GetChunk(starting_chunk_x + visibility_distance, starting_chunk_z + chunk_z))
-			if (chunk->visibility_update_needed)
-				chunk->RecalculateVisibility();
+			if (chunk->recalculate_vbos_needed)
+				chunk->RecalculateVbos();
 	}
 }
 
@@ -337,7 +338,7 @@ void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 
 	//generowanie lub wczytywanie
 	Chunk* chunk = new Chunk(chunk_x, chunk_z);
-	chunk->buffers_update_needed = true;
+	chunk->vbos_update_needed = true;
 
 	//blokada i umieszczenie nowego chunka w mapie
 	std::lock_guard<std::mutex> lock(chunk_map_mutex);

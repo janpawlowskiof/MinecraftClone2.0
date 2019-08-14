@@ -1,6 +1,7 @@
 #include "Chunk.h"
 #include "MyCraft.h"
 #include "SimpleBlock.h"
+#include "ComplexBlock.h"
 
 float clip(float n, float lower, float upper) {
 	return std::max(lower, std::min(n, upper));
@@ -30,8 +31,8 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 					int z = zs * 4 + zb;
 					//int ground_level = height_values[x][z];
 					
-					float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16), 0, 1);
-					//float mountaininess = 1;
+					//float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16)/2.0 + 0.25, 0, 0.5) * 2;
+					float mountaininess = 1;
 
 					for (int ys = 0; ys < 16; ++ys) {
 						for (int yb = 0; yb < 8; ++yb) {
@@ -59,19 +60,27 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 							float c1 = c01 * (1 - yd) + c11 * yd;
 
 							float c = c0 * (1 - zd) + c1 * zd;
-							c = c + (-1 - c) * mountaininess;
+							c = -1 + (c + 1) * mountaininess;
 
 							float height_influence = 0.95;
 							float map_influence = 0.25;
 
 							float density = map_influence * c + height_influence * (128-y)/128.0f;
 
-							if (density > (0.4) * (height_influence + map_influence)) {
+							if (density > (0.33) * (height_influence + map_influence)) {
 								blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
 							}
 							else
 							{
-								blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
+								if (y > 52) {
+									blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
+									if (blocks[y - 1][x][z]->id == blk_id::stone_id) {
+										delete blocks[y - 1][x][z];
+										blocks[y - 1][x][z] = new SimpleBlock(blk_id::grass_id);
+									}
+								}
+								else
+									blocks[y][x][z] = new SimpleBlock(blk_id::water_id);
 							}
 						}
 					}
@@ -81,27 +90,27 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	if (north_chunk)
 	{
 		north_chunk->south_chunk = this;
-		north_chunk->visibility_update_needed = true;
+		north_chunk->recalculate_vbos_needed = true;
 	}
 	south_chunk = ChunkManager::GetChunk(chunk_x, chunk_z - 1);
 	if (south_chunk)
 	{
 		south_chunk->north_chunk = this;
-		south_chunk->visibility_update_needed = true;
+		south_chunk->recalculate_vbos_needed = true;
 	}
 	west_chunk = ChunkManager::GetChunk(chunk_x + 1, chunk_z);
 	if (west_chunk)
 	{
 		west_chunk->east_chunk = this;
-		west_chunk->visibility_update_needed = true;
+		west_chunk->recalculate_vbos_needed = true;
 	}
 	east_chunk = ChunkManager::GetChunk(chunk_x - 1, chunk_z);
 	if (east_chunk)
 	{
 		east_chunk->west_chunk = this;
-		east_chunk->visibility_update_needed = true;
+		east_chunk->recalculate_vbos_needed = true;
 	}
-	RecalculateVisibility();
+	RecalculateVbos();
 
 	//std::cout << "fcon" << chunk_x << " " << chunk_z << std::endl;
 }
@@ -209,7 +218,7 @@ void Chunk::GenerateStructures()
 			}
 		//RecalculateVisibility();
 		structures_generated = true;
-		visibility_update_needed = true;
+		recalculate_vbos_needed = true;
 	}
 }
 
@@ -295,7 +304,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 }
 
 
-void Chunk::RecalculateVisibility()
+void Chunk::RecalculateVbos()
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
 
@@ -436,11 +445,65 @@ void Chunk::RecalculateVisibility()
 					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
 			}
-	buffers_update_needed = true;
-	visibility_update_needed = false;
+	vbos_update_needed = true;
+	recalculate_vbos_needed = false;
 	triangles_count[SIMPLE] = triangles_count_simple;
 	triangles_count[COMPLEX] = triangles_count_complex;
 	triangles_count[FLUID] = triangles_count_fluid;
+}
+
+
+void Chunk::RecalculateComplexVbo()
+{
+	std::lock_guard<std::mutex> lock(blocks_mutex);
+
+	int triangles_count_complex = 0;
+
+	//adding faces to buffors
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
+			{
+				//skipping air
+				if (blocks[y][x][z]->id == blk_id::air_id)
+					continue;
+				//adding simple faces depending on the block position
+				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					//adding complex models
+					triangles_count_complex += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
+				}
+			}
+				
+	if (vertices_complex)
+	{
+		delete[] vertices_complex;
+	}
+	vertices_complex = new float[triangles_count_complex * 3 * 9];
+
+	float* target_complex = vertices_complex;
+
+	for (int y = 0; y < 127; y++)
+		for (int x = 0; x < 16; x++)
+			for (int z = 0; z < 16; z++)
+			{
+				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+				{
+					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+				}
+			}
+	//recalculate_complex_vbo_needed = true;
+	vbo_complex_update_needed = true;
+	triangles_count[COMPLEX] = triangles_count_complex;
+}
+
+void Chunk::UpdateVboComplex()
+{
+	//transfering our data to the gpu
+	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
+	glBindVertexArray(vao[COMPLEX]);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 9 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+	vbo_complex_update_needed = false;
 }
 
 
@@ -457,7 +520,7 @@ void Chunk::UpdateVbos()
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 9 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 9 * sizeof(float), vertices_complex, GL_DYNAMIC_DRAW);
 
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
@@ -468,7 +531,7 @@ void Chunk::UpdateVbos()
 	//delete[] vertices_simple;
 	//delete[] vertices_complex;
 	//vertices_simple = vertices_complex = nullptr;
-	buffers_update_needed = false;
+	vbos_update_needed = false;
 }
 
 void Chunk::DrawSimple()
@@ -545,7 +608,7 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 		{
 			ChunkManager::QueueBlockToUnload(blocks[block_y][local_x][local_z]);
 			blocks[block_y][local_x][local_z] = block;
-			visibility_update_needed = true;
+			recalculate_vbos_needed = true;
 		}
 	}
 }

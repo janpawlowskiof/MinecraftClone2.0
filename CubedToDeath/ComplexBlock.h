@@ -1,27 +1,30 @@
 #pragma once
 #include "SimpleBlock.h"
 #include <iostream>
+#include "Chunk.h"
 
 #define xyz(n) n.x, n.y, n.z
 
 class ComplexBlock : public SimpleBlock
 {
 public:
-	ComplexBlock(glm::vec3 position)
+	ComplexBlock(glm::vec3 position, Chunk* parent_chunk)
 	{
 		SetFlag(OPAQUE, false);
 		SetFlag(COMPLEX, true);
 		this->position = position;
+		this->parent_chunk = parent_chunk;
 	}
 	Direction direction;
-	glm::ivec3 parent_position;
 	glm::ivec3 position;
+	glm::ivec3 parent_position;
+	Chunk* parent_chunk;
 
 	virtual ~ComplexBlock();
 	virtual float* CreateModel(float* target, int world_x, int world_y, int world_z) = 0;
 	virtual int GetNumberOfTriangles() = 0;
 	virtual bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) = 0;
-	//virtual void OnPlayerClick() = 0;
+	virtual void OnPlayerClick() { std::cout << "Default on click\n"; }
 };
 
 namespace blk
@@ -29,7 +32,7 @@ namespace blk
 	class Torch : public ComplexBlock
 	{
 	public:
-		Torch(glm::ivec3 position, glm::ivec3 parent_position) : ComplexBlock(position)
+		Torch(glm::ivec3 position, glm::ivec3 parent_position, Chunk* parent_chunk) : ComplexBlock(position, parent_chunk)
 		{
 			id = blk_id::torch_id;
 			this->parent_position = parent_position;
@@ -41,74 +44,53 @@ namespace blk
 		{
 			return 8;
 		}
-
-		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override
+		void OnPlayerClick() override
 		{
-			return false;
+			std::cout << "TorchClick\n";
 		}
 
-
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override;
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Torch() override
 		{
 			std::cout << "Deleting torch\n";
 		}
 	};
-	/*
-	class Switch : public ComplexBlock
+
+	class Switch: public ComplexBlock
 	{
 	public:
-		Direction direction = BOTTOM;
-
-		Switch() { id = blk_id::switch_id; }
+		Switch(glm::ivec3 position, glm::ivec3 parent_position, Chunk* parent_chunk) : ComplexBlock(position, parent_chunk)
+		{
+			id = blk_id::switch_id;
+			this->parent_position = parent_position;
+			direction = SimpleBlock::GetDirection(parent_position - position);
+		}
 
 		int GetNumberOfTriangles() override
 		{
 			return 20;
 		}
-
-
-		float* CreateModel(float* target, int world_x, int world_y, int world_z) override
+		void OnPlayerClick() override
 		{
-			const float base_width = 1.0f / 16.0f;
-			const float button_width = 1.0f / 16.0f;
-			const float vertices[] = {
-			//base
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.5f + base_width, 0 , (1) , 0, 0, 1, tex_id::torch_side,
-			world_x + 1.0f, world_y + 0.0f, world_z + 0.5f + base_width, (1) , (1) , 0, 0, 1,tex_id::torch_side,
-			world_x + 1.0f, world_y + 1.0f, world_z + 0.5f + base_width, (1) , 0 , 0, 0, 1,tex_id::torch_side,
-
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.5f + base_width, 0 , (1) , 0, 0, 1,tex_id::torch_side,
-			world_x + 1.0f, world_y + 1.0f, world_z + 0.5f + base_width, (1) , 0 , 0, 0, 1,tex_id::torch_side,
-			world_x + 0.0f, world_y + 1.0f, world_z + 0.5f + base_width, 0 , 0 , 0, 0, 1,tex_id::torch_side,
-
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.5f - base_width, 0 , (1) , 0, 0, -1,tex_id::torch_side,
-			world_x + 1.0f, world_y + 1.0f, world_z + 0.5f - base_width, (1) , 0 , 0, 0, -1,tex_id::torch_side,
-			world_x + 1.0f, world_y + 0.0f, world_z + 0.5f - base_width, (1) , (1) , 0, 0, -1,tex_id::torch_side,
-
-			world_x + 0.0f, world_y + 0.0f, world_z + 0.5f - base_width, 0 , (1) , 0, 0, -1,tex_id::torch_side,
-			world_x + 0.0f, world_y + 1.0f, world_z + 0.5f - base_width, 0 , 0 , 0, 0, -1,tex_id::torch_side,
-			world_x + 1.0f, world_y + 1.0f, world_z + 0.5f - base_width, (1) , 0 , 0, 0, -1,tex_id::torch_side,
-
-			world_x + 0.5f + base_width, world_y + 0.0f, world_z + 0.0f, 0 , (1) , 1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f + base_width, world_y + 1.0f, world_z + 1.0f, (1) , 0 , 1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f + base_width, world_y + 0.0f, world_z + 1.0f, (1) , (1) , 1, 0, 0,tex_id::torch_side,
-
-			world_x + 0.5f + base_width, world_y + 0.0f, world_z + 0.0f, 0 , (1) , 1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f + base_width, world_y + 1.0f, world_z + 0.0f, 0 , 0 , 1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f + base_width, world_y + 1.0f, world_z + 1.0f, (1) , 0 , 1, 0, 0,tex_id::torch_side,
-
-			world_x + 0.5f - base_width, world_y + 0.0f, world_z + 0.0f, 0 , (1) , -1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f - base_width, world_y + 0.0f, world_z + 1.0f, (1) , (1) , -1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f - base_width, world_y + 1.0f, 1 + world_z, (1) , 0 , -1, 0, 0,tex_id::torch_side,
-
-			world_x + 0.5f - base_width, world_y + 0.0f, world_z + 0.0f, 0 , (1) , -1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f - base_width, world_y + 1.0f, world_z + 1.0f, (1) , 0 , -1, 0, 0,tex_id::torch_side,
-			world_x + 0.5f - base_width, world_y + 1.0f, world_z + 0.0f, 0 , 0 , -1, 0, 0,tex_id::torch_side,
-			};
-			std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
-			return target + sizeof(vertices) / sizeof(float);
+			std::cout << "SwitchClick\n";
+			turned_on = !turned_on;
+			parent_chunk->RecalculateComplexVbo();
 		}
+
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override;
+		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
+		~Switch() override
+		{
+			std::cout << "Deleting switch\n";
+		}
+
+	private:
+		bool turned_on = false;
+		const float width_base = 5.0f / 16.0f;
+		const float height_base = 0.2;
+
+		const float width_button = 2.0f / 16.0f;
+		const float height_button = 0.3;
 	};
-	*/
 };

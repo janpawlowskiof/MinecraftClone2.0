@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "ComplexBlock.h"
 
 Player::Player()
 {
@@ -83,19 +84,19 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 			{
 				hit_info.hit_chunk->ReplaceBlock(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z, new SimpleBlock(blk_id::air_id), true);
 				//hit_info.chunk->visibility_update_needed;
-				hit_info.hit_chunk->RecalculateVisibility();
+				hit_info.hit_chunk->RecalculateVbos();
 
 				if (hit_info.hit_x % 16 == 0 && hit_info.hit_chunk->east_chunk)
-					hit_info.hit_chunk->east_chunk->RecalculateVisibility();
+					hit_info.hit_chunk->east_chunk->RecalculateVbos();
 
 				if (hit_info.hit_x % 16 == 15 && hit_info.hit_chunk->west_chunk)
-					hit_info.hit_chunk->west_chunk->RecalculateVisibility();
+					hit_info.hit_chunk->west_chunk->RecalculateVbos();
 
 				if (hit_info.hit_z % 16 == 0 && hit_info.hit_chunk->south_chunk)
-					hit_info.hit_chunk->south_chunk->RecalculateVisibility();
+					hit_info.hit_chunk->south_chunk->RecalculateVbos();
 
 				if (hit_info.hit_z % 16 == 15 && hit_info.hit_chunk->north_chunk)
-					hit_info.hit_chunk->north_chunk->RecalculateVisibility();
+					hit_info.hit_chunk->north_chunk->RecalculateVbos();
 
 				if(MyCraft::ps)
 					delete MyCraft::ps;
@@ -117,26 +118,29 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 			HitInfo hit_info;
 			if (GetHitInfo(hit_info))
 			{
-				SimpleBlock* block = SimpleBlock::CreateNew(selected_block_id, hit_info);
-				/*if (block->GetFlag(SimpleBlock::COMPLEX))
+				if (hit_info.hit_block->GetFlag(SimpleBlock::COMPLEX))
 				{
-					((ComplexBlock*)block)->direction = 
-				}*/
-				hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, block, true);
-				//hit_info.chunk->visibility_update_needed;
-				hit_info.place_chunk->RecalculateVisibility();
+					((ComplexBlock*)hit_info.hit_block)->OnPlayerClick();
+				}
+				else
+				{
+					SimpleBlock* block = SimpleBlock::CreateNew(selected_block_id, hit_info);
+					hit_info.place_chunk->ReplaceBlock(hit_info.place_x, hit_info.place_y, hit_info.place_z, block, true);
+					//hit_info.chunk->visibility_update_needed;
+					hit_info.place_chunk->RecalculateVbos();
 
-				if (hit_info.place_x == 0 && hit_info.place_chunk->east_chunk)
-					hit_info.place_chunk->east_chunk->RecalculateVisibility();
+					if (hit_info.place_x == 0 && hit_info.place_chunk->east_chunk)
+						hit_info.place_chunk->east_chunk->RecalculateVbos();
 
-				if (hit_info.place_x == 15 && hit_info.place_chunk->west_chunk)
-					hit_info.place_chunk->west_chunk->RecalculateVisibility();
+					if (hit_info.place_x == 15 && hit_info.place_chunk->west_chunk)
+						hit_info.place_chunk->west_chunk->RecalculateVbos();
 
-				if (hit_info.place_z == 0 && hit_info.place_chunk->south_chunk)
-					hit_info.place_chunk->south_chunk->RecalculateVisibility();
+					if (hit_info.place_z == 0 && hit_info.place_chunk->south_chunk)
+						hit_info.place_chunk->south_chunk->RecalculateVbos();
 
-				if (hit_info.place_z == 15 && hit_info.place_chunk->north_chunk)
-					hit_info.place_chunk->north_chunk->RecalculateVisibility();
+					if (hit_info.place_z == 15 && hit_info.place_chunk->north_chunk)
+						hit_info.place_chunk->north_chunk->RecalculateVbos();
+				}
 			}
 		}
 	}
@@ -207,6 +211,17 @@ bool Player::GetHitInfo(HitInfo& hit_info)
 				else
 				{
 					///				complex block detection				///
+					if (((ComplexBlock*)hit_block)->CheckRayCollision(position, forward, std::floor(position.x + x), std::floor(position.y + y), std::floor(position.z + z), hi))
+					{
+						//check if current hit is better than the best so far
+						if (hi.distance < hit_info.distance)
+						{
+							hit_info = hi;
+							hit_info.hit_block = hit_block;
+							hit_info.hit_chunk = hit_chunk;
+							block_hit = true;
+						}
+					}
 				}
 			}
 	if (!block_hit)
@@ -230,4 +245,4 @@ glm::vec3 Player::forward_flat = glm::vec3(0, 0, 1);
 int Player::current_chunk_x, Player::current_chunk_z;
 float Player::pitch = 0;
 float Player::yaw = 0;
-int Player::selected_block_id = blk_id::stone_id;
+int Player::selected_block_id = blk_id::switch_id;

@@ -61,10 +61,14 @@ public:
 	}
 
 	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info);
+	static bool CheckRayVsAABB(glm::vec3 origin, glm::vec3 direction, glm::vec3 position, glm::vec3 dimentions,HitInfo& hit_info);
 	static SimpleBlock* CreateNew(int block_id, HitInfo hit_info);
 	static SimpleBlock* CreateNew(int block_id);
 	static glm::vec3 GetColor(int block_id);
 	static Direction GetDirection(glm::ivec3 vec);
+	static bool ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction);
+	static bool ProjectRayOnPlaneXY(float plane_z, float& hit_x, float& hit_y, glm::vec3 origin, glm::vec3 direction);
+	static bool ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z, glm::vec3 origin, glm::vec3 direction);
 };
 
 namespace blk_id
@@ -99,3 +103,4 @@ namespace tex_id
 	};
 }
 #define m_unit (1.0f)
+inline bool between(float n, float a, float b) { return (n >= a && n <= b)||(n >= b && n <= a); }

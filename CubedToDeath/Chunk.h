@@ -4,7 +4,6 @@
 #include <vector>
 #include <map>
 #include "SimpleBlock.h"
-#include "ComplexBlock.h"
 #include <mutex>
 
 class Chunk
@@ -23,8 +22,10 @@ public:
 	unsigned int vao[3];
 	int chunk_x, chunk_z;
 	bool buffers_initialized = false;
-	bool buffers_update_needed = false;
-	bool visibility_update_needed = true;
+	bool vbos_update_needed = false;
+	bool vbo_complex_update_needed = false;
+	bool recalculate_vbos_needed = true;
+	//bool recalculate_complex_vbo_needed = false;
 	bool structures_generated = false;
 	void InitializeBuffers();
 	void GenerateStructures();
@@ -32,9 +33,10 @@ public:
 	Chunk(int chunk_x, int chunk_y);
 	~Chunk();
 	//void CountVisibleTriangles();
-	void RecalculateVisibility();
-	//void UpdateVboComplex();
+	void RecalculateVbos();
+	void RecalculateComplexVbo();
 	void UpdateVbos();
+	void UpdateVboComplex();
 	void DrawSimple();
 	void DrawComplex();
 	void DrawFluids();

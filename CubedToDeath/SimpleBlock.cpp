@@ -184,90 +184,73 @@ float* SimpleBlock::CreateModel(float* target, int world_x, int world_y, int wor
 
 bool SimpleBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info)
 {
-	//east - west check
-	if (origin.x <= block_x)
+	return CheckRayVsAABB(origin, direction, glm::vec3(block_x, block_y, block_z), glm::vec3(1,1,1), hit_info);
+	/*float hit_x, hit_y, hit_z;
+	if (direction.x > 0 && ProjectRayOnPlaneYZ(block_x, hit_y, hit_z, origin, direction) && between(hit_y, block_y, block_y + 1) && between(hit_z, block_z, block_z + 1))
 	{
-		if(glm::dot(direction, glm::vec3(1, 0, 0)) == 0)
-			return false;
-
-		float hit_y = direction.y / direction.x * (block_x - origin.x) + origin.y;
-		float hit_z = direction.z / direction.x * (block_x - origin.x) + origin.z;
-
-		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_z >= block_z && hit_z <= block_z + 1)
-		{
-			hit_info.Update(block_x, block_y, block_z, block_x - 1, block_y, block_z, glm::length(origin - glm::vec3(block_x, hit_y, hit_z)));
-			return true;
-		}
+		hit_info.Update(block_x, block_y, block_z, block_x - 1, block_y, block_z, glm::length(origin - glm::vec3(block_x, hit_y, hit_z)));
+		return true;
 	}
-	if (origin.x >= block_x + 1)
+	if (direction.x < 0 && ProjectRayOnPlaneYZ(block_x + 1, hit_y, hit_z, origin, direction) && between(hit_y, block_y, block_y + 1) && between(hit_z, block_z, block_z + 1))
 	{
-		if (glm::dot(direction, glm::vec3(-1, 0, 0)) == 0)
-			return false;
-
-		float hit_y = direction.y / direction.x * (block_x + 1 - origin.x) + origin.y;
-		float hit_z = direction.z / direction.x * (block_x + 1 - origin.x) + origin.z;
-
-		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_z >= block_z && hit_z <= block_z + 1)
-		{
-			hit_info.Update(block_x, block_y, block_z, block_x + 1, block_y, block_z, glm::length(origin - glm::vec3(block_x + 1, hit_y, hit_z)));
-			return true;
-		}
+		hit_info.Update(block_x, block_y, block_z, block_x + 1, block_y, block_z, glm::length(origin - glm::vec3(block_x + 1, hit_y, hit_z)));
+		return true;
 	}
-	if (origin.z <= block_z)
+	if (direction.z > 0 && ProjectRayOnPlaneXY(block_z, hit_x, hit_y, origin, direction) && between(hit_y, block_y, block_y + 1) && between(hit_x, block_x, block_x + 1))
 	{
-		if (glm::dot(direction, glm::vec3(0, 0, 1)) == 0)
-			return false;
-
-		float hit_x = direction.x / direction.z * (block_z - origin.z) + origin.x;
-		float hit_y = direction.y / direction.z * (block_z - origin.z) + origin.y;
-
-		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_x >= block_x && hit_x <= block_x + 1)
-		{
-			hit_info.Update(block_x, block_y, block_z, block_x, block_y, block_z - 1, glm::length(origin - glm::vec3(hit_x, hit_y, block_z)));
-			return true;
-		}
+		hit_info.Update(block_x, block_y, block_z, block_x, block_y, block_z - 1, glm::length(origin - glm::vec3(hit_x, hit_y, block_z)));
+		return true;
 	}
-	if (origin.z >= block_z + 1)
+	if (direction.z < 0 && ProjectRayOnPlaneXY(block_z + 1, hit_x, hit_y, origin, direction) && between(hit_y, block_y, block_y + 1) && between(hit_x, block_x, block_x + 1))
 	{
-		if (glm::dot(direction, glm::vec3(0, 0, -1)) == 0)
-			return false;
-
-		float hit_x = direction.x / direction.z * (block_z + 1 - origin.z) + origin.x;
-		float hit_y = direction.y / direction.z * (block_z + 1 - origin.z) + origin.y;
-
-		if (hit_y >= block_y && hit_y <= block_y + 1 && hit_x >= block_x && hit_x <= block_x + 1)
-		{
-			hit_info.Update(block_x, block_y, block_z, block_x, block_y, block_z + 1, glm::length(origin - glm::vec3(hit_x, hit_y, block_z + 1)));
-			return true;
-		}
+		hit_info.Update(block_x, block_y, block_z, block_x, block_y, block_z + 1, glm::length(origin - glm::vec3(hit_x, hit_y, block_z + 1)));
+		return true;
 	}
-	if (origin.y <= block_y)
+	if (direction.y > 0 && ProjectRayOnPlaneXZ(block_y, hit_x, hit_z, origin, direction) && between(hit_z, block_z, block_z + 1) && between(hit_x, block_x, block_x + 1))
 	{
-		if (glm::dot(direction, glm::vec3(0, 1, 0)) == 0)
-			return false;
-
-		float hit_x = direction.x / direction.y * (block_y - origin.y) + origin.x;
-		float hit_z = direction.z / direction.y * (block_y - origin.y) + origin.z;
-
-		if (hit_z >= block_z && hit_z <= block_z + 1 && hit_x >= block_x && hit_x <= block_x + 1)
-		{
-			hit_info.Update(block_x, block_y, block_z, block_x, block_y - 1, block_z, glm::length(origin - glm::vec3(hit_x, block_y, hit_z)));
-			return true;
-		}
+		hit_info.Update(block_x, block_y, block_z, block_x, block_y - 1, block_z, glm::length(origin - glm::vec3(hit_x, block_y, hit_z)));
+		return true;
 	}
-	if (origin.y >= block_y + 1)
+	if (direction.y < 0 && ProjectRayOnPlaneXZ(block_y + 1, hit_x, hit_z, origin, direction) && between(hit_z, block_z, block_z + 1) && between(hit_x, block_x, block_x + 1))
 	{
-		if (glm::dot(direction, glm::vec3(0, -1, 0)) == 0)
-			return false;
+		hit_info.Update(block_x, block_y, block_z, block_x, block_y + 1, block_z, glm::length(origin - glm::vec3(hit_x, block_y + 1, hit_z)));
+		return true;
+	}
+	return false;*/
+}
 
-		float hit_x = direction.x / direction.y * (block_y + 1 - origin.y) + origin.x;
-		float hit_z = direction.z / direction.y * (block_y + 1 - origin.y) + origin.z;
-
-		if (hit_z >= block_z && hit_z <= block_z + 1 && hit_x >= block_x && hit_x <= block_x + 1)
-		{
-			hit_info.Update(block_x, block_y, block_z, block_x, block_y + 1, block_z, glm::length(origin - glm::vec3(hit_x, block_y + 1, hit_z)));
-			return true;
-		}
+bool SimpleBlock::CheckRayVsAABB(glm::vec3 origin, glm::vec3 direction, glm::vec3 position, glm::vec3 dimentions, HitInfo& hit_info)
+{
+	float hit_x, hit_y, hit_z;
+	if (direction.x > 0 && ProjectRayOnPlaneYZ(position.x, hit_y, hit_z, origin, direction) && between(hit_y, position.y, position.y + dimentions.y) && between(hit_z, position.z, position.z + dimentions.z))
+	{
+		hit_info.Update(floor(position.x), floor(position.y), floor(position.z), floor(position.x) - 1, floor(position.y), floor(position.z), glm::length(origin - glm::vec3(position.x, hit_y, hit_z)));
+		return true;
+	}
+	if (direction.x < 0 && ProjectRayOnPlaneYZ(position.x + dimentions.x, hit_y, hit_z, origin, direction) && between(hit_y, position.y, position.y + dimentions.y) && between(hit_z, position.z, position.z + dimentions.z))
+	{
+		hit_info.Update(floor(position.x), floor(position.y), floor(position.z), floor(position.x) + 1, floor(position.y), floor(position.z), glm::length(origin - glm::vec3(position.x + dimentions.x, hit_y, hit_z)));
+		return true;
+	}
+	if (direction.z > 0 && ProjectRayOnPlaneXY(position.z, hit_x, hit_y, origin, direction) && between(hit_y, position.y, position.y + dimentions.y) && between(hit_x, position.x, position.x + dimentions.x))
+	{
+		hit_info.Update(floor(position.x), floor(position.y), floor(position.z), floor(position.x), floor(position.y), floor(position.z) - 1, glm::length(origin - glm::vec3(hit_x, hit_y, position.z)));
+		return true;
+	}
+	if (direction.z < 0 && ProjectRayOnPlaneXY(position.z + dimentions.z, hit_x, hit_y, origin, direction) && between(hit_y, position.y, position.y + dimentions.y) && between(hit_x, position.x, position.x + dimentions.x))
+	{
+		hit_info.Update(floor(position.x), floor(position.y), floor(position.z), floor(position.x), floor(position.y), floor(position.z) + 1, glm::length(origin - glm::vec3(hit_x, hit_y, position.z + dimentions.z)));
+		return true;
+	}
+	if (direction.y > 0 && ProjectRayOnPlaneXZ(position.y, hit_x, hit_z, origin, direction) && between(hit_z, position.z, position.z + dimentions.z) && between(hit_x, position.x, position.x + dimentions.x))
+	{
+		hit_info.Update(floor(position.x), floor(position.y), floor(position.z), floor(position.x), floor(position.y) - 1, floor(position.z), glm::length(origin - glm::vec3(hit_x, position.y, hit_z)));
+		return true;
+	}
+	if (direction.y < 0 && ProjectRayOnPlaneXZ(position.y + dimentions.y, hit_x, hit_z, origin, direction) && between(hit_z, position.z, position.z + dimentions.z) && between(hit_x, position.x, position.x + dimentions.x))
+	{
+		hit_info.Update(floor(position.x), floor(position.y), floor(position.z), floor(position.x), floor(position.y) + 1, floor(position.z), glm::length(origin - glm::vec3(hit_x, position.y + dimentions.y, hit_z)));
+		return true;
 	}
 	return false;
 }
@@ -277,8 +260,9 @@ SimpleBlock* SimpleBlock::CreateNew(int block_id, HitInfo hit_info = HitInfo())
 	switch (block_id)
 	{
 	case blk_id::torch_id:
-		return new blk::Torch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z));
-
+		return new blk::Torch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
+	case blk_id::switch_id:
+		return new blk::Switch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	default:
 		return new SimpleBlock(block_id);
 	}
@@ -325,4 +309,35 @@ SimpleBlock::Direction SimpleBlock::GetDirection(glm::ivec3 vec)
 		return TOP;
 	if (vec.y <= -1)
 		return BOTTOM;
+}
+
+bool SimpleBlock::ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction)
+{
+		if (glm::dot(direction, glm::vec3(0, 1, 0)) == 0)
+			return false;
+
+		hit_x = direction.x / direction.y * (plane_y - origin.y) + origin.x;
+		hit_z = direction.z / direction.y * (plane_y - origin.y) + origin.z;
+		return true;
+}
+
+bool SimpleBlock::ProjectRayOnPlaneXY(float plane_z, float& hit_x, float& hit_y, glm::vec3 origin, glm::vec3 direction)
+{
+	if (glm::dot(direction, glm::vec3(0, 0, 1)) == 0)
+		return false;
+
+	hit_x = direction.x / direction.z * (plane_z - origin.z) + origin.x;
+	hit_y = direction.y / direction.z * (plane_z - origin.z) + origin.y;
+	return true;
+}
+
+bool SimpleBlock::ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z, glm::vec3 origin, glm::vec3 direction)
+{
+	if (glm::dot(direction, glm::vec3(1, 0, 0)) == 0)
+		return false;
+
+	hit_y = direction.y / direction.x * (plane_x - origin.x) + origin.y;
+	hit_z = direction.z / direction.x * (plane_x - origin.x) + origin.z;
+
+	return true;
 }

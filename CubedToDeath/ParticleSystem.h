@@ -13,11 +13,11 @@ public:
 	void Render();
 	void RenderShadowMap();
 	~ParticleSystem();
+	double time = 0;
 private:
 	int grid_size = 6;
 	float life_length = 1;
 	double start_time;
-	double time;
 	bool initialized = false;
 	unsigned int vbo, vao;
 	glm::vec3 color = glm::vec3(1, 0, 0);

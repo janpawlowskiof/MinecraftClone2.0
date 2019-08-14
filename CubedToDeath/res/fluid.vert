@@ -3,10 +3,12 @@
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTex;
 layout (location = 2) in vec3 aNorm;
+layout (location = 3) in float aTextureID;
 
 out vec2 tex_coords;
 out vec3 normal;
 out vec3 frag_pos;
+out float textureID;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -19,4 +21,5 @@ void main()
 	tex_coords = aTex;
 	normal = aNorm;
 	frag_pos = aPos;
+	textureID = aTextureID;
 }

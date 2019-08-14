@@ -301,8 +301,11 @@ void MyCraft::RenderScene()
 		//if (chunk->visibility_update_needed)
 		//	chunk->RecalculateVisibility();
 		//updates vbos on chunks that reqire doing so
-		if (chunk->buffers_update_needed)
+		//chunk->RecalculateComplexVbo();
+		if (chunk->vbos_update_needed)
 			chunk->UpdateVbos();
+		else if(chunk->vbo_complex_update_needed)
+			chunk->UpdateVboComplex();
 		//draws the chunk
 		chunk->DrawSimple();
 		chunk->DrawComplex();
@@ -322,7 +325,7 @@ void MyCraft::RenderScene()
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
 		//updates vbos on chunks that reqire doing so
-		if (chunk->buffers_update_needed)
+		if (chunk->vbos_update_needed)
 			chunk->UpdateVbos();
 		//draws the chunk
 		chunk->DrawFluids();
@@ -361,7 +364,7 @@ void MyCraft::RenderShadowMaps()
 		}
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
-		if (chunk->buffers_update_needed)
+		if (chunk->vbos_update_needed)
 			chunk->UpdateVbos();
 		chunk->DrawSimple();
 		chunk->DrawComplex();
@@ -393,7 +396,7 @@ void MyCraft::RenderShadowMaps()
 
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
-		if (chunk->buffers_update_needed)
+		if (chunk->vbos_update_needed)
 			chunk->UpdateVbos();
 		chunk->DrawSimple();
 		iterator++;
@@ -407,6 +410,12 @@ void MyCraft::RenderParticles()
 {
 	if (ps == nullptr)
 		return;
+	if (ps->time > 1.0)
+	{
+		delete ps;
+		ps = nullptr;
+		return;
+	}
 	particle_shader->Use();
 
 	Shader::SetMat4(particle_shader->light_space_close_location, light_space_close_matrix);

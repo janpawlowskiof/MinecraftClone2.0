@@ -6,7 +6,7 @@ mouse_sensitivity = 0.1
 
 player_speed = 80
 fov = 90.0
-render_distance = 20
+render_distance = 15
 
 #range between 0 and 16
 anidotropic_filtering = 16

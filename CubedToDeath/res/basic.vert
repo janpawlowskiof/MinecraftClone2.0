@@ -11,6 +11,7 @@ out vec3 frag_pos;
 out vec4 light_space_close_frag;
 out vec4 light_space_far_frag;
 out float textureID;
+out vec4 view_space;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -27,4 +28,5 @@ void main()
 	light_space_close_frag = light_space_close_matrix * vec4(aPos, 1.0);
 	light_space_far_frag = light_space_far_matrix * vec4(aPos, 1.0);
 	textureID = aTextureID;
+	view_space = view * vec4(aPos, 1.0);
 }

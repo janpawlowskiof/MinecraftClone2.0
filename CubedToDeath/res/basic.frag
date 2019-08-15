@@ -7,6 +7,7 @@ in vec3 frag_pos;
 in vec4 light_space_close_frag;
 in vec4 light_space_far_frag;
 in float textureID;
+in vec4 view_space;
 
 uniform sampler2DArray texture_terrain;
 uniform sampler2D shadow_map_close;
@@ -66,8 +67,23 @@ float CalculateShadow()
 	return result;
 }
 
+float zNear = 0.1;
+float zFar = 1000.0;
+
+// depthSample from depthTexture.r, for instance
+float linearDepth(float depthSample)
+{
+    depthSample = 2.0 * depthSample - 1.0;
+    float zLinear = 2.0 * zNear * zFar / (zFar + zNear - depthSample * (zFar - zNear));
+    return zLinear;
+}
+
 void main()
 {
+	float fog_density = 0.0015;
+	float dist = length(view_space);
+	float fog_factor = 1.0 /exp(dist*dist * fog_density *fog_density );
+    fog_factor = clamp( fog_factor, 0.0, 1.0 );
 	vec3 light_color = vec3(0.95, 0.9, 0.9);
 	float ambient_strength = 0.5;
     vec3 ambient = ambient_strength * light_color;
@@ -79,13 +95,15 @@ void main()
 	vec3 view_dir = normalize(view_pos - frag_pos);
 	vec3 reflect_dir = reflect(-light_direction, normal); 
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
-	vec3 specular = specular_strength * spec * light_color;  
+	vec3 specular = specular_strength * spec * light_color;
+	//vec3 specular = vec3(0);
 
 	//vec4 color = normal;
 	vec4 color = texture(texture_terrain, vec3(tex_coords, textureID));
 	if(color.a < 0.5) discard;
 	float shadow = CalculateShadow();
     vec3 result = (ambient + (diffuse + specular) * (1.0f - shadow)) * color.rgb;
+	result = mix(vec3(135, 206, 235)/256.0, result, fog_factor);
 	frag = vec4(result, 1.0);
-	//frag = vec4(normal, 1.0);
+	//frag = vec4(view_space.z, fog_factor, fog_factor, 1.0);
 }

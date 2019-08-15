@@ -88,6 +88,7 @@ void MyCraft::InitializeOpenGL()
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	//glEnable(GL_MULTISAMPLE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
@@ -165,7 +166,7 @@ void MyCraft::Run()
 	auto light_rotation_axis = glm::cross(light_default_position, glm::vec3(0, 0, 1));
 	light_direction = glm::angleAxis(glm::radians(-20.0f), light_rotation_axis) * light_default_position;
 
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClearColor(135.0 / 256.0, 206.0 / 256.0, 235/256.0, 1);
 	last_time = glfwGetTime();
 	current_time;
 	vbos_delete_queue.reserve(3000);
@@ -420,7 +421,7 @@ void MyCraft::RenderShadowMaps()
 	int max_draws_per_frame = 10;
 	///CURRENT CHUNK
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
-	while (distance < std::min(20, render_distance))
+	while (distance < std::min(30, render_distance))
 	{
 		do
 		{

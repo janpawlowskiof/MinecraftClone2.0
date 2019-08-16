@@ -324,7 +324,24 @@ float* blk::Switch::CreateModel(float* target, int world_x, int world_y, int wor
 
 bool blk::Door::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info)
 {
-	switch (this->direction)
+	Direction current_direction = NORTH;
+	if (opened)
+	{
+		if (this->direction == NORTH)
+			current_direction = EAST;
+		else if (this->direction == EAST)
+			current_direction = SOUTH;
+		else if (this->direction == SOUTH)
+			current_direction = WEST;
+		else if (this->direction == WEST)
+			current_direction = NORTH;
+	}
+	else
+	{
+		current_direction = this->direction;
+	}
+
+	switch (current_direction)
 	{
 	case SOUTH:
 		return CheckRayVsAABB(origin, direction, glm::vec3(block_x, block_y, block_z + depth/2), glm::vec3(1, 1, depth), hit_info);
@@ -355,7 +372,25 @@ float* blk::Door::CreateModel(float* target, int world_x, int world_y, int world
 
 	glm::mat4 translate = glm::mat4(1);
 	glm::mat4 rotate = glm::mat4(1);
-	switch (direction)
+
+	Direction current_direction = NORTH;
+	if (opened)
+	{
+		if (direction == NORTH)
+			current_direction = EAST;
+		else if (direction == EAST)
+			current_direction = SOUTH;
+		else if (direction == SOUTH)
+			current_direction = WEST;
+		else if (direction == WEST)
+			current_direction = NORTH;
+	}
+	else
+	{
+		current_direction = direction;
+	}
+
+	switch (current_direction)
 	{
 	case NORTH:
 		rotate = glm::rotate(glm::radians(180.0f), glm::vec3(0, 1.0f, 0.0f));

@@ -25,8 +25,14 @@ public:
 	virtual float* CreateModel(float* target, int world_x, int world_y, int world_z) = 0;
 	virtual int GetNumberOfTriangles() = 0;
 	virtual bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) = 0;
-	virtual void OnTick() { std::cout << "Default on tick\n"; };
+	virtual void OnTick() { /*std::cout << "Default on tick\n";*/ };
 	virtual void OnPlayerClick() { std::cout << "Default on click\n"; }
+	virtual void OnDestroy() { std::cout << "Default on destroy\n"; }
+	virtual void SelfDestruct()
+	{
+		std::cout << "Default SelfDestruct\n";
+		parent_chunk->ReplaceBlock(position.x, position.y, position.z, SimpleBlock::CreateNew(blk_id::air_id));
+	}
 };
 
 namespace blk
@@ -55,7 +61,7 @@ namespace blk
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Torch() override
 		{
-			std::cout << "Deleting torch\n";
+			std::cout << "Unloading torch\n";
 		}
 	};
 
@@ -84,7 +90,7 @@ namespace blk
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Switch() override
 		{
-			std::cout << "Deleting switch\n";
+			std::cout << "Unloading switch\n";
 		}
 
 	private:
@@ -125,29 +131,37 @@ namespace blk
 		void OnPlayerClick() override
 		{
 			std::cout << "DoorClick\n";
-			if (direction == NORTH)
-				direction = EAST;
-			else if (direction == EAST)
-				direction = SOUTH;
-			else if (direction == SOUTH)
-				direction = WEST;
-			else if (direction == WEST)
-				direction = NORTH;
+			opened = !opened;
 
-			other->direction = direction;
+			other->opened = opened;
 			parent_chunk->RecalculateComplexVbo();
+		}
+
+		void OnDestroy() override
+		{
+			std::cout << "Door Destroy\n";
+			if (other != nullptr)
+			{
+				other->other = nullptr;
+				other->SelfDestruct();
+			}
+			else
+			{
+				parent_chunk->RecalculateComplexVbo();
+			}
 		}
 
 		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override;
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Door() override
 		{
-			std::cout << "Deleting door\n";
+			std::cout << "Unloading door\n";
 		}
 
 		Door* other;
 	private:
 		const float depth = 2.0f / 16.0f;
 		bool top = true;
+		bool opened = false;
 	};
 };

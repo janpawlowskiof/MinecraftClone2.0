@@ -255,7 +255,7 @@ bool SimpleBlock::CheckRayVsAABB(glm::vec3 origin, glm::vec3 direction, glm::vec
 	return false;
 }
 
-SimpleBlock* SimpleBlock::CreateNew(int block_id, HitInfo hit_info = HitInfo())
+SimpleBlock* SimpleBlock::CreateNew(int block_id, HitInfo hit_info)
 {
 	switch (block_id)
 	{

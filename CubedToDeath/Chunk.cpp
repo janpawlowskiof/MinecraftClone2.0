@@ -568,7 +568,8 @@ bool Chunk::InView()
 
 void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates)
 {
-	std::lock_guard<std::mutex> lock(blocks_mutex);
+	std::unique_lock<std::mutex> lock(blocks_mutex);
+	//blocks_mutex.lock();
 
 	//We cannot just delete the block do we queue it for unloading
 	//replacing the block
@@ -611,8 +612,14 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 			west_chunk->ReplaceBlock(local_x % 16, block_y, local_z, block, false);
 		else
 		{
-			ChunkManager::QueueBlockToUnload(blocks[block_y][local_x][local_z]);
+			auto destroyed_block = blocks[block_y][local_x][local_z];
 			blocks[block_y][local_x][local_z] = block;
+			ChunkManager::QueueBlockToUnload(destroyed_block);
+			if (destroyed_block->GetFlag(SimpleBlock::COMPLEX))
+			{
+				lock.unlock();
+				((ComplexBlock*)destroyed_block)->OnDestroy();
+			}
 			recalculate_vbos_needed = true;
 		}
 	}

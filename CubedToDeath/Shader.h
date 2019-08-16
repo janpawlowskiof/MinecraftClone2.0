@@ -12,6 +12,7 @@ class Shader
 {
 public:
 	Shader(std::string vertex_path, std::string fragment_path);
+	Shader(std::string vertex_path, std::string geometry_path ,std::string fragment_path);
 	//sets float uniform
 	static void SetFloat(const int uniform_location, const float value);
 	//sets mat4 uniform
@@ -34,5 +35,6 @@ public:
 	int transform_matrix_location;
 private:
 	unsigned int shader_id;
+	void InitializeUniforms();
 };
 

@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BlockUpdater.cpp" />
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="ChunkManager.cpp" />
     <ClCompile Include="Command.cpp" />
@@ -181,6 +182,7 @@
     <ClCompile Include="TextureArray.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BlockUpdater.h" />
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="ChunkManager.h" />
     <ClInclude Include="Command.h" />
@@ -213,6 +215,7 @@
     <None Include="res\depth.frag" />
     <None Include="res\depth.vert" />
     <None Include="res\fluid.frag" />
+    <None Include="res\fluid.geom" />
     <None Include="res\fluid.vert" />
     <None Include="res\particle.frag" />
     <None Include="res\particle.vert" />

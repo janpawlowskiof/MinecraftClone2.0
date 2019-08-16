@@ -1,11 +1,29 @@
 ﻿#include "MyCraft.h"
 #include <glm/glm.hpp>
+#include <chrono>
+#include <thread>
+#include "BlockUpdater.h"
 
 MyCraft::MyCraft()
 {
 }
 
 bool program_should_close = false;
+
+void GLAPIENTRY
+MessageCallback(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar* message,
+	const void* userParam)
+{
+	fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
+	std::cout << "Type: " << type << "\n";
+}
 
 void MyCraft::InitializeOpenGL()
 {
@@ -91,6 +109,9 @@ void MyCraft::InitializeOpenGL()
 
 	//glEnable(GL_MULTISAMPLE);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	//glEnable(GL_DEBUG_OUTPUT);
+	//glDebugMessageCallback(MessageCallback, 0);
 }
 
 bool LineInView(glm::vec2 p1, glm::vec2 p2)
@@ -123,7 +144,7 @@ void MyCraft::Run()
 	basic_shader = new Shader("res/basic.vert", "res/basic.frag");
 	text_shader = new Shader("res/text.vert", "res/text.frag");
 	sprite_shader = new Shader("res/sprite.vert", "res/sprite.frag");
-	fluid_shader = new Shader("res/fluid.vert", "res/fluid.frag");
+	fluid_shader = new Shader("res/fluid.vert", "res/fluid.geom", "res/fluid.frag");
 	depth_shader = new Shader("res/depth.vert", "res/depth.frag");
 	post_shader = new Shader("res/post_process.vert", "res/post_process.frag");
 	particle_shader = new Shader("res/particle.vert", "res/particle.frag");
@@ -157,6 +178,7 @@ void MyCraft::Run()
 	crosshair = new Sprite("res/crosshair.png");
 	world_manager = std::thread(WorldManagerFunction);
 	chunk_unloader = std::thread(ChunkUnloaderFunction);
+	block_updater = std::thread(BlockUpdaterFunction);
 
 	///					test				///
 
@@ -270,6 +292,16 @@ void MyCraft::ChunkUnloaderFunction()
 		ChunkManager::UnloadChunks();
 }
 
+void MyCraft::BlockUpdaterFunction()
+{
+	auto time = std::chrono::system_clock::now;
+	while (!program_should_close)
+	{
+		BlockUpdater::Update();
+		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+	}
+}
+
 void MyCraft::DeleteBuffers()
 {
 	//blokada na bufory (vbo i vao)
@@ -344,6 +376,8 @@ void MyCraft::RenderScene()
 	fluid_shader->SetMat4(fluid_shader->view_location, Player::view);
 	fluid_shader->SetMat4(fluid_shader->projection_location, Player::projection);
 	glUniform3f(fluid_shader->view_position_location, Player::position.x, Player::position.y, Player::position.z);
+	glUniform3f(fluid_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
+
 	iterator = chunk_map.begin();
 	while (iterator != chunk_map.end())
 	{
@@ -418,7 +452,7 @@ void MyCraft::RenderShadowMaps()
 	//bool reset_chunk_x = true;
 	//bool reset_chunk_y = true;
 	int draws_per_frame = 0;
-	int max_draws_per_frame = 10;
+	int max_draws_per_frame = 7;
 	///CURRENT CHUNK
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
 	while (distance < std::min(30, render_distance))

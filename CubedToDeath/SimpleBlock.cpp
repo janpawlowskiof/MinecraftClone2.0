@@ -263,6 +263,8 @@ SimpleBlock* SimpleBlock::CreateNew(int block_id, HitInfo hit_info = HitInfo())
 		return new blk::Torch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	case blk_id::switch_id:
 		return new blk::Switch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
+	case blk_id::door_id:
+		return new blk::Door(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	default:
 		return new SimpleBlock(block_id);
 	}
@@ -309,6 +311,8 @@ SimpleBlock::Direction SimpleBlock::GetDirection(glm::ivec3 vec)
 		return TOP;
 	if (vec.y <= -1)
 		return BOTTOM;
+
+	return NORTH;
 }
 
 bool SimpleBlock::ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction)

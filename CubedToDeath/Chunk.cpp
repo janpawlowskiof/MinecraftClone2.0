@@ -407,6 +407,8 @@ void Chunk::RecalculateVbos()
 					triangles_count_simple += 2 * visible;
 				}
 			}
+
+	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
 	if (vertices_simple)
 	{
 		delete[] vertices_simple;
@@ -474,7 +476,8 @@ void Chunk::RecalculateComplexVbo()
 					triangles_count_complex += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
 				}
 			}
-				
+			
+	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
 	if (vertices_complex)
 	{
 		delete[] vertices_complex;
@@ -499,6 +502,7 @@ void Chunk::RecalculateComplexVbo()
 
 void Chunk::UpdateVboComplex()
 {
+	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
@@ -509,6 +513,7 @@ void Chunk::UpdateVboComplex()
 
 void Chunk::UpdateVbos()
 {
+	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
 	assert(vertices_complex);
 	assert(vertices_simple);
 	assert(vertices_fluid);

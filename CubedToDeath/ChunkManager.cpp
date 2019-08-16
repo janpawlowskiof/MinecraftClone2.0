@@ -76,7 +76,7 @@ void ChunkManager::UnloadBlocks()
 		while (iterator != block_unload_queue.end())
 		{
 			//deleting block if each flag is set to true
-			if ((*iterator).flags[0] && (*iterator).flags[1])
+			if ((*iterator).flags[0] && (*iterator).flags[1] && (*iterator).flags[2])
 			{
 				if(iterator->item->GetFlag(SimpleBlock::COMPLEX))
 					delete (ComplexBlock*)(iterator->item);
@@ -137,7 +137,7 @@ void ChunkManager::UnloadChunks()
 		while (iterator != chunk_unload_queue.end())
 		{
 			//deleting block if each flag is set to true
-			if ((*iterator).flags[0] && (*iterator).flags[1])
+			if ((*iterator).flags[0] && (*iterator).flags[1] && (*iterator).flags[2])
 			{
 				//removing element form original queue and pasting it into the new one
 				chunks_to_delete.push_back(iterator->item);

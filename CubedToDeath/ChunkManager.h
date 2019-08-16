@@ -40,6 +40,7 @@ public:
 	{
 		MAIN = 0,
 		WORLD_MANAGER = 1,
+		BLOCK_UPDATER = 2,
 	};
 
 	//give permission to delete removed blocks
@@ -61,10 +62,11 @@ private:
 			//no permission by default
 			this->flags[0] = false;
 			this->flags[1] = false;
+			this->flags[2] = false;
 		}
 		T* item;
 		//permission from each thread
-		bool flags[2];
+		bool flags[3];
 	};
 	//mutex for queue of blocks waiting to be unloaded
 	static std::mutex block_unload_queue_mutex;

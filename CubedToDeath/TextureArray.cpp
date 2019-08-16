@@ -74,6 +74,8 @@ TextureArray::TextureArray(std::string path)
 	LoadLayer(tex_id::leaves, "res/block/spruce_leaves.png");
 	LoadLayer(tex_id::torch_side, "res/block/torch.png");
 	LoadLayer(tex_id::water, "res/block/tnt_top.png");
+	LoadLayer(tex_id::door_top, "res/block/oak_door_top.png");
+	LoadLayer(tex_id::door_bottom, "res/block/oak_door_bottom.png");
 
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 }

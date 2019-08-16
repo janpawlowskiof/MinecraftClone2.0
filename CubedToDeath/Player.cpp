@@ -245,4 +245,4 @@ glm::vec3 Player::forward_flat = glm::vec3(0, 0, 1);
 int Player::current_chunk_x, Player::current_chunk_z;
 float Player::pitch = 0;
 float Player::yaw = 0;
-int Player::selected_block_id = blk_id::switch_id;
+int Player::selected_block_id = blk_id::door_id;

@@ -9,7 +9,7 @@ public:
 private:
 	unsigned int texture_id;
 	const int texture_size = 16;
-	const int layer_count = 10;
+	const int layer_count = 20;
 	void LoadLayer(int layer, std::string path);
 };
 

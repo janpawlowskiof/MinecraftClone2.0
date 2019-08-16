@@ -80,9 +80,10 @@ float linearDepth(float depthSample)
 
 void main()
 {
-	float fog_density = 0.0015;
+	//float fog_density = 0.0015;
 	float dist = length(view_space);
-	float fog_factor = 1.0 /exp(dist*dist * fog_density *fog_density );
+	//float fog_factor = 1.0 /exp(dist*dist * fog_density *fog_density );
+	float fog_factor = (240-dist)/(240-200);
     fog_factor = clamp( fog_factor, 0.0, 1.0 );
 	vec3 light_color = vec3(0.95, 0.9, 0.9);
 	float ambient_strength = 0.5;

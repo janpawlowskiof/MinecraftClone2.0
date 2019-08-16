@@ -66,6 +66,9 @@
     <ClCompile Include="TextureArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BlockUpdater.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -117,6 +120,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextureArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockUpdater.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -181,6 +187,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="res\particle_depth.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="res\fluid.geom">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -5,10 +5,15 @@ layout (location = 1) in vec2 aTex;
 layout (location = 2) in vec3 aNorm;
 layout (location = 3) in float aTextureID;
 
-out vec2 tex_coords;
-out vec3 normal;
-out vec3 frag_pos;
-out float textureID;
+struct vData
+{
+	vec2 tex_coords;
+	vec3 normal;
+	vec3 frag_pos;
+	float textureID;
+};
+
+out vData vertex;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -17,9 +22,9 @@ uniform float time;
 
 void main()
 {
-    gl_Position = projection * view * vec4(aPos - vec3(0, 0.3 + 0.15 * sin(time + 0.2 * aPos.x + aPos.z * 0.5), 0), 1.0);
-	tex_coords = aTex;
-	normal = aNorm;
-	frag_pos = aPos;
-	textureID = aTextureID;
+	vertex.tex_coords = aTex;
+	vertex.normal = aNorm;
+	vertex.frag_pos = aPos - vec3(0, 0.3 + 0.15 * sin(time + 0.46 * aPos.x + aPos.z * 1.5), 0);
+	vertex.textureID = aTextureID;
+    gl_Position = projection * view * vec4(vertex.frag_pos, 1.0);
 }

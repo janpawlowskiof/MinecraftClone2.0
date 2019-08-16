@@ -84,6 +84,7 @@ namespace blk_id
 		torch_id,
 		switch_id,
 		water_id,
+		door_id,
 	};
 }
 
@@ -100,6 +101,8 @@ namespace tex_id
 		leaves,
 		torch_side,
 		water,
+		door_top,
+		door_bottom,
 	};
 }
 #define m_unit (1.0f)

@@ -70,6 +70,7 @@ private:
 	//function of world manager thread
 	static void WorldManagerFunction();
 	static void ChunkUnloaderFunction();
+	static void BlockUpdaterFunction();
 
 	static void DeleteBuffers();
 	static void Update();
@@ -88,6 +89,7 @@ private:
 	//thread responsible for managing world
 	std::thread world_manager;
 	std::thread chunk_unloader;
+	std::thread block_updater;
 	//crosshair sprite
 	static Sprite* crosshair;
 	static Command command;

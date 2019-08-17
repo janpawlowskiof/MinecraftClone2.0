@@ -345,3 +345,15 @@ bool SimpleBlock::ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z,
 
 	return true;
 }
+
+void SimpleBlock::SaveBlockToFile(SimpleBlock* block, std::ofstream &save_file)
+{
+	save_file << block->id;
+}
+
+SimpleBlock* SimpleBlock::LoadBlockFromFile(std::ifstream &save_file)
+{
+	unsigned char id = 255;
+	save_file >> id;
+	return CreateNew(id);
+}

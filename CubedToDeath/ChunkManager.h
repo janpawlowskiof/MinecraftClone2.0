@@ -25,6 +25,7 @@ public:
 	void Update();
 	//loads given chunk
 	static void LoadChunk(int chunk_x, int chunk_z);
+	static Chunk* GenerateChunk(int chunk_x, int chunk_z);
 
 	//return a copy of a current version of chunk_map
 	static chunk_hash_map GetChunkMap();
@@ -49,7 +50,7 @@ public:
 	static void GiveThreadPermissionToUnloadChunks(ThreadId thread);
 	//queues a block to be unloaded once it is certaint that no thread uses this block
 	static void QueueBlockToUnload(SimpleBlock* block);
-	///should be private
+	static void CleanUp();
 	//helper struct
 	static void UnloadChunks();
 private:

@@ -126,6 +126,7 @@ bool LineInView(glm::vec2 p1, glm::vec2 p2)
 //inicjalizuje i odpala grę
 void MyCraft::Run()
 {
+	std::cout << "Turbo Minecraft 2.0\n";
 	//Loading config file into a map
 	LoadConfig("config.txt");
 	height = std::stoi(config_map["height"]);
@@ -191,11 +192,12 @@ void MyCraft::Run()
 	glClearColor(135.0 / 256.0, 206.0 / 256.0, 235/256.0, 1);
 	last_time = glfwGetTime();
 	current_time;
-	vbos_delete_queue.reserve(3000);
-	vaos_delete_queue.reserve(3000);
+	vbos_delete_queue.reserve(6000);
+	vaos_delete_queue.reserve(6000);
 
 	//main loop
-	while (!(program_should_close = glfwWindowShouldClose(window)))
+	//program_should_close = glfwWindowShouldClose(window) && glfwGetKey(window, GLFW_KEY_F12) == GLFW_RELEASE
+	while (!(program_should_close = glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS))
 	{
 		glfwPollEvents();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -238,13 +240,17 @@ void MyCraft::Run()
 
 		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 		{
-			std::cout << "Break time!" << std::endl;
+			//std::cout << "Break time!" << std::endl;
+			program_should_close = true;
 		}
 	}
-
+	std::cout << "exit\n";
 	//łączenie wątków na koniec programu
 	world_manager.join();
 	chunk_unloader.join();
+	block_updater.join();
+	ChunkManager::CleanUp();
+	DeleteBuffers();
 }
 
 void MyCraft::QueueBuffersToDelete(unsigned int vbo, unsigned int vao)
@@ -611,7 +617,7 @@ MyCraft::~MyCraft()
 	delete depth_shader;
 	delete post_shader;
 	delete player;
-	delete window;
+	glfwDestroyWindow(window);
 	//delete texture_terrain;
 	delete texture_terrain_array;
 	delete text;

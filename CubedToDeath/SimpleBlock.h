@@ -1,5 +1,6 @@
 #pragma once
 #include <glm\glm.hpp>
+#include <fstream>
 //#include "HitInfo.h"
 
 class HitInfo;
@@ -19,9 +20,9 @@ public:
 		NORTH = 1,
 		//	z-
 		SOUTH = 2,
-		//	x+
-		EAST = 4,
 		//	x-
+		EAST = 4,
+		//	x+
 		WEST = 8,
 		//	y+
 		TOP = 16,
@@ -69,6 +70,8 @@ public:
 	static bool ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction);
 	static bool ProjectRayOnPlaneXY(float plane_z, float& hit_x, float& hit_y, glm::vec3 origin, glm::vec3 direction);
 	static bool ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z, glm::vec3 origin, glm::vec3 direction);
+	static void SaveBlockToFile(SimpleBlock* block, std::ofstream &save_file);
+	static SimpleBlock* LoadBlockFromFile(std::ifstream &save_file);
 };
 
 namespace blk_id

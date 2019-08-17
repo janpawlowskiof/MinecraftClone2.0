@@ -193,6 +193,7 @@
     <ClInclude Include="MyCraft.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Save.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SimpleBlock.h" />
     <ClInclude Include="Sprite.h" />

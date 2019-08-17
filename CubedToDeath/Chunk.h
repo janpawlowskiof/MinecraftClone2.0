@@ -29,6 +29,7 @@ public:
 	//bool recalculate_complex_vbo_needed = false;
 	bool structures_generated = false;
 	void InitializeBuffers();
+	void GenerateTerrain();
 	void GenerateStructures();
 	SimpleBlock* GetBlockInArea(int &local_x, int &local_y, int& local_z, Chunk*&chunk);
 	Chunk(int chunk_x, int chunk_y);
@@ -41,7 +42,9 @@ public:
 	void DrawSimple();
 	void DrawComplex();
 	void DrawFluids();
+	void FindNeighbours();
 	bool InView();
+	static int sea_level;
 	void ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates = true);
 	enum Type
 	{

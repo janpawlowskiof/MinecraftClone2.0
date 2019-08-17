@@ -3,116 +3,17 @@
 #include "SimpleBlock.h"
 #include "ComplexBlock.h"
 
+
+
 float clip(float n, float lower, float upper) {
 	return std::max(lower, std::min(n, upper));
 }
 
 Chunk::Chunk(int chunk_x, int chunk_z)
 {
-	//std::cout << "scon" << chunk_x << " " << chunk_z << std::endl;
-
 	//init
 	this->chunk_x = chunk_x;
 	this->chunk_z = chunk_z;
-
-	float noiseValues[5][17][5];
-
-	for (int x = 0; x < 5; ++x)
-		for (int y = 0; y < 17; ++y)
-			for (int z = 0; z < 5; ++z)
-				noiseValues[x][y][z] = ChunkManager::d3_noise.GetValue(x + chunk_x * 4, y * 2, z + chunk_z * 4);
-
-	//3d terrain generation
-	for (int xs = 0; xs < 4; ++xs) //each subchunk
-		for (int zs = 0; zs < 4; ++zs)
-			for (int xb = 0; xb < 4; ++xb) //each block in subchunk
-				for (int zb = 0; zb < 4; ++zb) {
-					int x = xs * 4 + xb;
-					int z = zs * 4 + zb;
-					//int ground_level = height_values[x][z];
-					
-					//float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16)/2.0 + 0.25, 0, 0.5) * 2;
-					float mountaininess = 1;
-
-					for (int ys = 0; ys < 16; ++ys) {
-						for (int yb = 0; yb < 8; ++yb) {
-							int y = 8 * ys + yb;
-
-							float xd = xb / 4.0;
-							float yd = yb / 8.0;
-							float zd = zb / 4.0;
-
-							float c000 = noiseValues[xs][ys][zs];
-							float c001 = noiseValues[xs][ys][zs + 1];
-							float c010 = noiseValues[xs][ys + 1][zs];
-							float c011 = noiseValues[xs][ys + 1][zs + 1];
-							float c100 = noiseValues[xs + 1][ys][zs];
-							float c101 = noiseValues[xs + 1][ys][zs + 1];
-							float c110 = noiseValues[xs + 1][ys + 1][zs];
-							float c111 = noiseValues[xs + 1][ys + 1][zs + 1];
-
-							float c00 = c000 * (1 - xd) + c100 * xd;
-							float c01 = c001 * (1 - xd) + c101 * xd;
-							float c10 = c010 * (1 - xd) + c110 * xd;
-							float c11 = c011 * (1 - xd) + c111 * xd;
-
-							float c0 = c00 * (1 - yd) + c10 * yd;
-							float c1 = c01 * (1 - yd) + c11 * yd;
-
-							float c = c0 * (1 - zd) + c1 * zd;
-							c = -1 + (c + 1) * mountaininess;
-
-							float height_influence = 0.95;
-							float map_influence = 0.25;
-
-							float density = map_influence * c + height_influence * (128-y)/128.0f;
-
-							if (density > (0.33) * (height_influence + map_influence)) {
-								blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
-							}
-							else
-							{
-								if (y > 52) {
-									blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
-									if (blocks[y - 1][x][z]->id == blk_id::stone_id) {
-										delete blocks[y - 1][x][z];
-										blocks[y - 1][x][z] = new SimpleBlock(blk_id::grass_id);
-									}
-								}
-								else
-									blocks[y][x][z] = new SimpleBlock(blk_id::water_id);
-							}
-						}
-					}
-				}
-
-	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
-	if (north_chunk)
-	{
-		north_chunk->south_chunk = this;
-		north_chunk->recalculate_vbos_needed = true;
-	}
-	south_chunk = ChunkManager::GetChunk(chunk_x, chunk_z - 1);
-	if (south_chunk)
-	{
-		south_chunk->north_chunk = this;
-		south_chunk->recalculate_vbos_needed = true;
-	}
-	west_chunk = ChunkManager::GetChunk(chunk_x + 1, chunk_z);
-	if (west_chunk)
-	{
-		west_chunk->east_chunk = this;
-		west_chunk->recalculate_vbos_needed = true;
-	}
-	east_chunk = ChunkManager::GetChunk(chunk_x - 1, chunk_z);
-	if (east_chunk)
-	{
-		east_chunk->west_chunk = this;
-		east_chunk->recalculate_vbos_needed = true;
-	}
-	RecalculateVbos();
-
-	//std::cout << "fcon" << chunk_x << " " << chunk_z << std::endl;
 }
 
 void Chunk::InitializeBuffers()
@@ -170,6 +71,86 @@ void Chunk::InitializeBuffers()
 	buffers_initialized = true;
 }
 
+void Chunk::GenerateTerrain()
+{
+	float noiseValues[5][17][5];
+
+	for (int x = 0; x < 16; x++)
+		for (int z = 0; z < 16; z++)
+			height_values[x][z] = 0;
+
+	for (int x = 0; x < 5; ++x)
+		for (int y = 0; y < 17; ++y)
+			for (int z = 0; z < 5; ++z)
+				noiseValues[x][y][z] = ChunkManager::d3_noise.GetValue(x + chunk_x * 4, y * 2, z + chunk_z * 4);
+
+	//3d terrain generation
+	for (int xs = 0; xs < 4; ++xs) //each subchunk
+		for (int zs = 0; zs < 4; ++zs)
+			for (int xb = 0; xb < 4; ++xb) //each block in subchunk
+				for (int zb = 0; zb < 4; ++zb) {
+					int x = xs * 4 + xb;
+					int z = zs * 4 + zb;
+					//int ground_level = height_values[x][z];
+
+					//float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16)/2.0 + 0.25, 0, 0.5) * 2;
+					float mountaininess = 1;
+
+					for (int ys = 0; ys < 16; ++ys) {
+						for (int yb = 0; yb < 8; ++yb) {
+							int y = 8 * ys + yb;
+
+							float xd = xb / 4.0;
+							float yd = yb / 8.0;
+							float zd = zb / 4.0;
+
+							float c000 = noiseValues[xs][ys][zs];
+							float c001 = noiseValues[xs][ys][zs + 1];
+							float c010 = noiseValues[xs][ys + 1][zs];
+							float c011 = noiseValues[xs][ys + 1][zs + 1];
+							float c100 = noiseValues[xs + 1][ys][zs];
+							float c101 = noiseValues[xs + 1][ys][zs + 1];
+							float c110 = noiseValues[xs + 1][ys + 1][zs];
+							float c111 = noiseValues[xs + 1][ys + 1][zs + 1];
+
+							float c00 = c000 * (1 - xd) + c100 * xd;
+							float c01 = c001 * (1 - xd) + c101 * xd;
+							float c10 = c010 * (1 - xd) + c110 * xd;
+							float c11 = c011 * (1 - xd) + c111 * xd;
+
+							float c0 = c00 * (1 - yd) + c10 * yd;
+							float c1 = c01 * (1 - yd) + c11 * yd;
+
+							float c = c0 * (1 - zd) + c1 * zd;
+							c = -1 + (c + 1) * mountaininess;
+
+							float height_influence = 0.95;
+							float map_influence = 0.25;
+
+							float density = map_influence * c + height_influence * (128 - y) / 128.0f;
+
+							if (density > (0.33) * (height_influence + map_influence)) {
+								blocks[y][x][z] = new SimpleBlock(blk_id::stone_id);
+								height_values[x][z] = std::max(height_values[x][z], y);
+							}
+							else
+							{
+								if (y > sea_level) {
+									blocks[y][x][z] = new SimpleBlock(blk_id::air_id);
+									if (blocks[y - 1][x][z]->id == blk_id::stone_id)
+									{
+										delete blocks[y - 1][x][z];
+										blocks[y - 1][x][z] = new SimpleBlock(blk_id::grass_id);
+									}
+								}
+								else
+									blocks[y][x][z] = new SimpleBlock(blk_id::water_id);
+							}
+						}
+					}
+				}
+}
+
 void Chunk::GenerateStructures()
 {
 	if (north_chunk && south_chunk && west_chunk && east_chunk &&
@@ -193,7 +174,7 @@ void Chunk::GenerateStructures()
 					tree_values[x + 1][z + 1] > tree_values[x + 1][z])
 				{
 					float tree_placement_value = clip(ChunkManager::tree_placement_noise.GetValue(chunk_x * 16 + x, chunk_z * 16 + z), 0.0f, 0.6f) / (0.6f);
-					if (tree_values[x + 1][z + 1] > tree_placement_value)
+					if (tree_values[x + 1][z + 1] > tree_placement_value || height_values[x+1][z+1] < sea_level)
 						continue;
 
 					int ground_level = height_values[x][z];
@@ -561,6 +542,34 @@ void Chunk::DrawFluids()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[FLUID] * 3);
 }
 
+void Chunk::FindNeighbours()
+{
+	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
+	if (north_chunk)
+	{
+		north_chunk->south_chunk = this;
+		north_chunk->recalculate_vbos_needed = true;
+	}
+	south_chunk = ChunkManager::GetChunk(chunk_x, chunk_z - 1);
+	if (south_chunk)
+	{
+		south_chunk->north_chunk = this;
+		south_chunk->recalculate_vbos_needed = true;
+	}
+	west_chunk = ChunkManager::GetChunk(chunk_x + 1, chunk_z);
+	if (west_chunk)
+	{
+		west_chunk->east_chunk = this;
+		west_chunk->recalculate_vbos_needed = true;
+	}
+	east_chunk = ChunkManager::GetChunk(chunk_x - 1, chunk_z);
+	if (east_chunk)
+	{
+		east_chunk->west_chunk = this;
+		east_chunk->recalculate_vbos_needed = true;
+	}
+}
+
 bool Chunk::InView()
 {
 	return false;
@@ -654,3 +663,5 @@ Chunk::~Chunk()
 			}
 	//std::cout << "fdest " << chunk_x << " " << chunk_z << '\n';
 }
+
+int Chunk::sea_level = 51;

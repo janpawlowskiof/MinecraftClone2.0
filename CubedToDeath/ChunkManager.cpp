@@ -3,6 +3,7 @@
 #include "MyCraft.h"
 #include <stdlib.h>
 #include "ComplexBlock.h"
+#include "Save.h"
 
 ChunkManager::ChunkManager()
 {
@@ -157,6 +158,7 @@ void ChunkManager::UnloadChunks()
 	{
 		//deleting block if each flag is set to true
 		{
+			save::SaveChunk(iterator->item);
 			delete iterator->item;
 			iterator = chunks_to_delete.erase(iterator);
 		}
@@ -168,6 +170,9 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 {
 	//loading chunk player is standing on
 	LoadChunk(starting_chunk_x, starting_chunk_z);
+
+	//save::
+
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
 	for (int distance = 1; distance < MyCraft::render_distance; distance++)
 	{
@@ -328,21 +333,30 @@ void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 		auto iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z));
 		if (iterator != chunk_map.end())
 		{
-			if (!iterator->second->structures_generated)
-			{
-				iterator->second->GenerateStructures();
-			}
 			return;
 		}
 	}
 
-	//generowanie lub wczytywanie
-	Chunk* chunk = new Chunk(chunk_x, chunk_z);
-	chunk->vbos_update_needed = true;
+	Chunk* chunk = save::LoadChunkFromFile(chunk_x, chunk_z);
+	if (chunk == nullptr)
+	{
+		chunk = GenerateChunk(chunk_x, chunk_z);
+	}
+
+	chunk->FindNeighbours();
+	chunk->RecalculateVbos();
 
 	//blokada i umieszczenie nowego chunka w mapie
 	std::lock_guard<std::mutex> lock(chunk_map_mutex);
 	chunk_map.emplace(std::make_pair(chunk_x, chunk_z), chunk);
+}
+
+Chunk* ChunkManager::GenerateChunk(int chunk_x, int chunk_z)
+{
+	//generowanie lub wczytywanie
+	Chunk* chunk = new Chunk(chunk_x, chunk_z);
+	chunk->GenerateTerrain();
+	return chunk;
 }
 
 chunk_hash_map ChunkManager::GetChunkMap()
@@ -379,6 +393,16 @@ void ChunkManager::QueueBlockToUnload(SimpleBlock* block)
 {
 	std::lock_guard<std::mutex> lock(block_unload_queue_mutex);
 	block_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<SimpleBlock>(block));
+}
+
+void ChunkManager::CleanUp()
+{
+	for (auto iterator : chunk_map)
+	{
+		auto chunk = iterator.second;
+		save::SaveChunk(chunk);
+		delete chunk;
+	}
 }
 
 void ChunkManager::QueueChunkToUnload(Chunk* chunk)

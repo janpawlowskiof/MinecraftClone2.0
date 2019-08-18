@@ -60,7 +60,7 @@ public:
 	static unsigned int shadow_map_close;
 	static unsigned int shadow_map_far_used;
 	static unsigned int shadow_map_far_unused;
-
+	static bool program_should_close;
 	static ParticleSystem* ps;
 private:
 	//initializes opengl

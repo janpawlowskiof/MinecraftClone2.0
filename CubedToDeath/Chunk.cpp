@@ -632,6 +632,8 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 			recalculate_vbos_needed = true;
 		}
 	}
+
+	save_needed = true;
 }
 
 Chunk::~Chunk()

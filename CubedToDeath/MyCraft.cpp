@@ -8,7 +8,6 @@ MyCraft::MyCraft()
 {
 }
 
-bool program_should_close = false;
 
 void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -240,17 +239,20 @@ void MyCraft::Run()
 
 		if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
 		{
-			//std::cout << "Break time!" << std::endl;
-			program_should_close = true;
+			std::cout << "Break time!" << std::endl;
 		}
 	}
-	std::cout << "exit\n";
+	std::cout << "Saving world...\n";
+	text->RenderText(text_shader, "Saving World...", width/2 - 100, height/2 - 100, 0.7, glm::vec3(0.9, 0.9, 0.9));
+	glfwSwapBuffers(window);
+
 	//łączenie wątków na koniec programu
 	world_manager.join();
 	chunk_unloader.join();
 	block_updater.join();
 	ChunkManager::CleanUp();
 	DeleteBuffers();
+	std::cout << "World Saved!\n";
 }
 
 void MyCraft::QueueBuffersToDelete(unsigned int vbo, unsigned int vao)
@@ -665,7 +667,7 @@ glm::mat4 MyCraft::light_space_far_unused_matrix;
 Sprite* MyCraft::crosshair;
 glm::vec3 MyCraft::light_direction = glm::normalize(glm::vec3(0.5, 0.9, 0.1));
 glm::vec3 MyCraft::light_color = glm::vec3(0.9, 0.7, 0.7);
-
+bool MyCraft::program_should_close = false;
 
 ///testing
 unsigned int MyCraft::quadVAO;

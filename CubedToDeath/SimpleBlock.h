@@ -70,8 +70,10 @@ public:
 	static bool ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction);
 	static bool ProjectRayOnPlaneXY(float plane_z, float& hit_x, float& hit_y, glm::vec3 origin, glm::vec3 direction);
 	static bool ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z, glm::vec3 origin, glm::vec3 direction);
-	static void SaveBlockToFile(SimpleBlock* block, std::ofstream &save_file);
-	static SimpleBlock* LoadBlockFromFile(std::ifstream &save_file);
+	static void SaveBlockToFile(SimpleBlock* block, std::ofstream& save_file);
+	static char* SaveBlockToFile(SimpleBlock* block, char* data);
+	static SimpleBlock* LoadBlockFromFile(std::ifstream& save_file);
+	static SimpleBlock* LoadBlockFromFile(char*& data);
 };
 
 namespace blk_id

@@ -28,6 +28,7 @@ public:
 	bool recalculate_vbos_needed = true;
 	//bool recalculate_complex_vbo_needed = false;
 	bool structures_generated = false;
+	bool save_needed = false;
 	void InitializeBuffers();
 	void GenerateTerrain();
 	void GenerateStructures();

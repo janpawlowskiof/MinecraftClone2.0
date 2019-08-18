@@ -158,7 +158,8 @@ void ChunkManager::UnloadChunks()
 	{
 		//deleting block if each flag is set to true
 		{
-			save::SaveChunk(iterator->item);
+			if(iterator->item->save_needed)
+				save::SaveChunk(iterator->item);
 			delete iterator->item;
 			iterator = chunks_to_delete.erase(iterator);
 		}
@@ -176,6 +177,8 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
 	for (int distance = 1; distance < MyCraft::render_distance; distance++)
 	{
+		if (MyCraft::program_should_close)
+			return;
 		//wczytywanie chunków
 		for (int chunk_x = -distance; chunk_x <= distance; chunk_x++)
 		{
@@ -356,6 +359,7 @@ Chunk* ChunkManager::GenerateChunk(int chunk_x, int chunk_z)
 	//generowanie lub wczytywanie
 	Chunk* chunk = new Chunk(chunk_x, chunk_z);
 	chunk->GenerateTerrain();
+	save::SaveChunk(chunk);
 	return chunk;
 }
 
@@ -400,7 +404,8 @@ void ChunkManager::CleanUp()
 	for (auto iterator : chunk_map)
 	{
 		auto chunk = iterator.second;
-		save::SaveChunk(chunk);
+		if(chunk->save_needed)
+			save::SaveChunk(chunk);
 		delete chunk;
 	}
 }

@@ -351,9 +351,22 @@ void SimpleBlock::SaveBlockToFile(SimpleBlock* block, std::ofstream &save_file)
 	save_file << block->id;
 }
 
+char* SimpleBlock::SaveBlockToFile(SimpleBlock* block, char* data)
+{
+	*data = block->id;
+	return data+1;
+}
+
 SimpleBlock* SimpleBlock::LoadBlockFromFile(std::ifstream &save_file)
 {
 	unsigned char id = 255;
 	save_file >> id;
+	return CreateNew(id);
+}
+
+SimpleBlock* SimpleBlock::LoadBlockFromFile(char*& data)
+{
+	unsigned char id = data[0];
+	data++;
 	return CreateNew(id);
 }

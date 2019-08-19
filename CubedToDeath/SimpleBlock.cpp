@@ -2,6 +2,7 @@
 #include <iostream>
 #include "HitInfo.h"
 #include "ComplexBlock.h"
+#include "Chunk.h"
 
 SimpleBlock::SimpleBlock(unsigned char id)
 {
@@ -357,16 +358,20 @@ char* SimpleBlock::SaveBlockToFile(SimpleBlock* block, char* data)
 	return data+1;
 }
 
-SimpleBlock* SimpleBlock::LoadBlockFromFile(std::ifstream &save_file)
-{
-	unsigned char id = 255;
-	save_file >> id;
-	return CreateNew(id);
-}
 
-SimpleBlock* SimpleBlock::LoadBlockFromFile(char*& data)
+SimpleBlock* SimpleBlock::LoadBlockFromFile(glm::ivec3 position, Chunk* parent_chunk, char*& data)
 {
-	unsigned char id = data[0];
+	char block_id = *data;
 	data++;
-	return CreateNew(id);
+	switch (block_id)
+	{
+	case blk_id::torch_id:
+		return new blk::Torch(position, parent_chunk, data);
+	case blk_id::switch_id:
+		return new blk::Switch(position, parent_chunk, data);
+	case blk_id::door_id:
+		return new blk::Door(position, parent_chunk, data);
+	default:
+		return new SimpleBlock(block_id);
+	}
 }

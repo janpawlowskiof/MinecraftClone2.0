@@ -1,5 +1,6 @@
 #pragma once
 #include "SimpleBlock.h"
+#include "ComplexBlock.h"
 #include <algorithm>
 #include <string>
 #include "MyCraft.h"
@@ -7,6 +8,7 @@
 #include <iterator>
 
 #define HEADERSIZE sizeof(save::SaveHeader)
+#define cpx(x) ((ComplexBlock*)x)
 
 namespace save
 {
@@ -24,6 +26,7 @@ namespace save
 		return filename;
 	}
 
+
 	void SaveChunk(Chunk* chunk)
 	{
 		SaveHeader header;
@@ -39,8 +42,18 @@ namespace save
 		save_file.open(GetSavePath(chunk->chunk_x, chunk->chunk_z), std::ios::out | std::ios::trunc | std::ios::binary);
 		save_file.write(reinterpret_cast<const char*>(&header), HEADERSIZE);
 
+		const int block_save_data_size = 1;
+
 		///counting buffer size
-		int blocks_data_size = 16 * 16 * 128;
+		int blocks_data_size = 0;
+		for (int y = 0; y < 128; y++)
+			for (int x = 0; x < 16; x++)
+				for (int z = 0; z < 16; z++)
+					if (!chunk->blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+						blocks_data_size += block_save_data_size;
+					else
+						blocks_data_size += block_save_data_size + cpx(chunk->blocks[y][x][z])->GetBlockSpecificMetaSize();
+
 		std::vector<char> blocks_data;
 		blocks_data.resize(blocks_data_size);
 		char* blocks_data_pointer = blocks_data.data();
@@ -48,7 +61,13 @@ namespace save
 		for (int y = 0; y < 128; y++)
 			for (int x = 0; x < 16; x++)
 				for (int z = 0; z < 16; z++)
+				{
 					blocks_data_pointer = SimpleBlock::SaveBlockToFile(chunk->blocks[y][x][z], blocks_data_pointer);
+					if (chunk->blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+					{
+						cpx(chunk->blocks[y][x][z])->WriteBlockSpecificMeta(blocks_data_pointer);
+					}
+				}
 
 		save_file.write(blocks_data.data(), blocks_data_size);
 		save_file.close();
@@ -75,19 +94,23 @@ namespace save
 		for (int y = 0; y < 128; y++)
 			for (int x = 0; x < 16; x++)
 				for (int z = 0; z < 16; z++)
-					chunk->blocks[y][x][z] = SimpleBlock::LoadBlockFromFile(blocks_data_pointer);
-		/*for (int y = header.max_height + 1; y < 127; y++)
+					chunk->blocks[y][x][z] = nullptr;
+		for (int y = 0; y < 128; y++)
 			for (int x = 0; x < 16; x++)
 				for (int z = 0; z < 16; z++)
-					chunk->blocks[y][x][z] = SimpleBlock::CreateNew(blk_id::air_id);*/
+				{
+					if (chunk->blocks[y][x][z] != nullptr)
+					{
+						blocks_data_pointer++;
+					}
+					else
+					{
+						chunk->blocks[y][x][z] = SimpleBlock::LoadBlockFromFile(glm::ivec3(x + 16 * chunk->chunk_x,y,z + 16 * chunk->chunk_z), chunk, blocks_data_pointer);
+					}
+				}
 
 		save_file.close();
-		//memcpy(chunk->height_values, header.height_values, 16 * 16 * sizeof(int));
-		//chunk->structures_generated = header.structures_generated;
-
-		//chunk->GenerateTerrain();
 		chunk->RecalculateVbos();
-
 		//std::cout << "Loading chunk " << chunk_x << " x " << chunk_z <<"\n";
 		return chunk;
 	}

@@ -623,11 +623,14 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 		{
 			auto destroyed_block = blocks[block_y][local_x][local_z];
 			blocks[block_y][local_x][local_z] = block;
-			ChunkManager::QueueBlockToUnload(destroyed_block);
-			if (destroyed_block->GetFlag(SimpleBlock::COMPLEX))
+			if (destroyed_block != nullptr)
 			{
-				lock.unlock();
-				((ComplexBlock*)destroyed_block)->OnDestroy();
+				ChunkManager::QueueBlockToUnload(destroyed_block);
+				if (destroyed_block->GetFlag(SimpleBlock::COMPLEX))
+				{
+					lock.unlock();
+					((ComplexBlock*)destroyed_block)->OnDestroy();
+				}
 			}
 			recalculate_vbos_needed = true;
 		}

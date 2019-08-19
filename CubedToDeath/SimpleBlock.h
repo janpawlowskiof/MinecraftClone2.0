@@ -4,6 +4,7 @@
 //#include "HitInfo.h"
 
 class HitInfo;
+class Chunk;
 
 class SimpleBlock
 {
@@ -72,8 +73,7 @@ public:
 	static bool ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z, glm::vec3 origin, glm::vec3 direction);
 	static void SaveBlockToFile(SimpleBlock* block, std::ofstream& save_file);
 	static char* SaveBlockToFile(SimpleBlock* block, char* data);
-	static SimpleBlock* LoadBlockFromFile(std::ifstream& save_file);
-	static SimpleBlock* LoadBlockFromFile(char*& data);
+	static SimpleBlock* LoadBlockFromFile(glm::ivec3 position, Chunk* parent_chunk, char*& data);
 };
 
 namespace blk_id

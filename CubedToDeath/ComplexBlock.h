@@ -18,7 +18,7 @@ public:
 	}
 	Direction direction;
 	glm::ivec3 position;
-	glm::ivec3 parent_position;
+	//glm::ivec3 parent_position;
 	Chunk* parent_chunk;
 
 	virtual ~ComplexBlock();
@@ -28,6 +28,12 @@ public:
 	virtual void OnTick() { /*std::cout << "Default on tick\n";*/ };
 	virtual void OnPlayerClick() { std::cout << "Default on click\n"; }
 	virtual void OnDestroy() { std::cout << "Default on destroy\n"; }
+	virtual int GetBlockSpecificMetaSize() { return 1; }
+	virtual void WriteBlockSpecificMeta(char*& save_data_pointer)
+	{
+		save_data_pointer[0] = (char)direction;
+		save_data_pointer++;
+	}
 	virtual void SelfDestruct()
 	{
 		std::cout << "Default SelfDestruct\n";
@@ -43,11 +49,17 @@ namespace blk
 		Torch(glm::ivec3 position, glm::ivec3 parent_position, Chunk* parent_chunk) : ComplexBlock(position, parent_chunk)
 		{
 			id = blk_id::torch_id;
-			this->parent_position = parent_position;
+			//this->parent_position = parent_position;
 
 			direction = SimpleBlock::GetDirection(parent_position - position);
 		}
-
+		Torch(glm::ivec3 position, Chunk* parent_chunk, char*& save_data_pointer) : ComplexBlock(position, parent_chunk)
+		{
+			id = blk_id::torch_id;
+			//this->parent_position = parent_position;
+			direction = (SimpleBlock::Direction)save_data_pointer[0];
+			save_data_pointer++;
+		}
 		int GetNumberOfTriangles() override
 		{
 			return 8;
@@ -71,10 +83,23 @@ namespace blk
 		Switch(glm::ivec3 position, glm::ivec3 parent_position, Chunk* parent_chunk) : ComplexBlock(position, parent_chunk)
 		{
 			id = blk_id::switch_id;
-			this->parent_position = parent_position;
+			//this->parent_position = parent_position;
 			direction = SimpleBlock::GetDirection(parent_position - position);
 		}
-
+		Switch(glm::ivec3 position, Chunk* parent_chunk, char*& save_data_pointer) : ComplexBlock(position, parent_chunk)
+		{
+			id = blk_id::switch_id;
+			direction = (SimpleBlock::Direction)save_data_pointer[0];
+			turned_on = (bool)save_data_pointer[1];
+			save_data_pointer+=2;
+		}
+		int GetBlockSpecificMetaSize() override { return 2; }
+		void WriteBlockSpecificMeta(char*& save_data_pointer) override
+		{
+			save_data_pointer[0] = (char)direction;
+			save_data_pointer[1] = (char)turned_on;
+			save_data_pointer+=2;
+		}
 		int GetNumberOfTriangles() override
 		{
 			return 20;
@@ -82,6 +107,8 @@ namespace blk
 		void OnPlayerClick() override
 		{
 			std::cout << "SwitchClick\n";
+			parent_chunk->save_needed = true;
+
 			turned_on = !turned_on;
 			parent_chunk->RecalculateComplexVbo();
 		}
@@ -108,22 +135,55 @@ namespace blk
 		Door(glm::ivec3 position, glm::ivec3 parent_position, Chunk* parent_chunk, bool top = false) : ComplexBlock(position, parent_chunk)
 		{
 			id = blk_id::door_id;
-			this->parent_position = parent_position;
-			this->parent_chunk = parent_chunk;
+			//this->parent_position = parent_position;
+			//this->parent_chunk = parent_chunk;
 			direction = SimpleBlock::GetDirection(glm::ivec3(Player::position) - position);
 			if (direction == BOTTOM || direction == TOP)
 				direction = NORTH;
-			this->other = other;
+			//this->other = other;
 			this->top = top;
 
 			if (!top)
 			{
 				other = new Door(glm::ivec3(position.x, position.y + 1, position.z), position, parent_chunk, true);
+				other->direction = direction;
 				parent_chunk->ReplaceBlock(position.x, position.y + 1, position.z, other);
 				other->other = this;
 			}
 		}
+		Door(glm::ivec3 position, Chunk* parent_chunk, char*& save_data_pointer) : ComplexBlock(position, parent_chunk)
+		{
+			id = blk_id::door_id;
 
+			direction = (Direction)save_data_pointer[0];
+			opened = (char)save_data_pointer[1];
+			save_data_pointer+=2;
+
+			top = false;
+			other = new Door(glm::ivec3(position.x, position.y + 1, position.z), position, parent_chunk, true);
+			other->direction = direction;
+			other->opened = opened;
+			parent_chunk->ReplaceBlock(position.x, position.y + 1, position.z, other);
+			other->other = this;
+		}
+
+
+		int GetBlockSpecificMetaSize() override
+		{
+			if (!top)
+				return 2;
+			else
+				return 0;
+		}
+		void WriteBlockSpecificMeta(char*& save_data_pointer) override
+		{
+			if (!top)
+			{
+				save_data_pointer[0] = (char)direction;
+				save_data_pointer[1] = (char)opened;
+				save_data_pointer+=2;
+			}
+		}
 		int GetNumberOfTriangles() override
 		{
 			return 12;
@@ -131,6 +191,7 @@ namespace blk
 		void OnPlayerClick() override
 		{
 			std::cout << "DoorClick\n";
+			parent_chunk->save_needed = true;
 			opened = !opened;
 
 			other->opened = opened;

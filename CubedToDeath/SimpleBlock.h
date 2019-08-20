@@ -42,7 +42,6 @@ public:
 	~SimpleBlock();
 
 
-	float* CreateModel(float* target, int world_x, int world_y, int world_z);
 	//returns if given face is currently visible
 	bool GetFaceVisible(Direction direction)
 	{
@@ -62,6 +61,8 @@ public:
 		if (value) flags |= flag; else flags &= ~flag;
 	}
 
+	float* CreateSolidModel(float* target, int world_x, int world_y, int world_z);
+	float* CreateFluidModel(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11);
 	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info);
 	static bool CheckRayVsAABB(glm::vec3 origin, glm::vec3 direction, glm::vec3 position, glm::vec3 dimentions,HitInfo& hit_info);
 	static SimpleBlock* CreateNew(int block_id, HitInfo hit_info);

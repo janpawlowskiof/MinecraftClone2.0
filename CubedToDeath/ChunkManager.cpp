@@ -29,14 +29,14 @@ ChunkManager::ChunkManager()
 	tree_placement_noise.SetFrequency(0.005);
 	tree_placement_noise.SetSeed(427);
 
-	mountain_placement_noise.SetNoiseType(FastNoise::Cubic);
+	moisture_noise.SetNoiseType(FastNoise::Simplex);
 	//mountain_placement_noise.SetFractalOctaves(2);
-	mountain_placement_noise.SetFrequency(0.003);
-	mountain_placement_noise.SetSeed(1543676);
+	moisture_noise.SetFrequency(0.003);
+	moisture_noise.SetSeed(1543676);
 
 	tectonical_noise.SetNoiseType(FastNoise::Simplex);
 	tectonical_noise.SetFrequency(0.005);
-	mountain_placement_noise.SetSeed(847593);
+	moisture_noise.SetSeed(847593);
 
 	ocean_noise.SetFrequency(0.001);
 	ocean_noise.SetSeed(55645);
@@ -436,7 +436,7 @@ chunk_hash_map ChunkManager::chunk_map;
 FastNoise ChunkManager::test_noise;
 FastNoise ChunkManager::tree_noise;
 FastNoise ChunkManager::tree_placement_noise;
-FastNoise ChunkManager::mountain_placement_noise;
+FastNoise ChunkManager::moisture_noise;
 FastNoise ChunkManager::tectonical_noise;
 FastNoise ChunkManager::ocean_noise;
 FastNoise ChunkManager::d3_noise;

@@ -355,12 +355,20 @@ void MyCraft::RenderScene()
 	auto iterator = chunk_map.begin();
 	while (iterator != chunk_map.end())
 	{
-		if (iterator->second == nullptr)
+		auto chunk = iterator->second;
+
+		if (glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16 + 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16 + 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 128, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 128, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 128, chunk->chunk_z * 16 + 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 128, chunk->chunk_z * 16 + 16) - Player::position) < 0 )
 		{
 			++iterator;
 			continue;
 		}
-		auto chunk = iterator->second;
 
 		//initializing chunks that need to be initialized
 		if (!chunk->buffers_initialized)
@@ -390,6 +398,18 @@ void MyCraft::RenderScene()
 	while (iterator != chunk_map.end())
 	{
 		auto chunk = iterator->second;
+		if (glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 0, chunk->chunk_z * 16 + 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 0, chunk->chunk_z * 16 + 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 128, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 128, chunk->chunk_z * 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16 + 16, 128, chunk->chunk_z * 16 + 16) - Player::position) < 0 &&
+			glm::dot(Player::forward, glm::vec3(chunk->chunk_x * 16, 128, chunk->chunk_z * 16 + 16) - Player::position) < 0)
+		{
+			++iterator;
+			continue;
+		}
 		//initializing chunks that need to be initialized
 		if (!chunk->buffers_initialized)
 			chunk->InitializeBuffers();
@@ -404,6 +424,7 @@ void MyCraft::RenderScene()
 
 int chunk_offset_x = 1, chunk_offset_z = 1, distance = 1;
 int chunk_shadow_center_x = 0, chunk_shadow_center_z = 0;
+
 void MyCraft::RenderShadowMaps()
 {
 	//glCullFace(GL_NONE);

@@ -121,7 +121,34 @@ static float* CreateEastFace(float* target, int world_x, int world_y, int world_
 	return target + sizeof(vertices) / sizeof(float);
 }
 
-float* SimpleBlock::CreateModel(float* target, int world_x, int world_y, int world_z)
+static float* CreateTopFluidFace(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11)
+{
+	const float vertices[] = {
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0 * m_unit, (0) * m_unit, 0, 1, 0, xyz(color00),
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (0) * m_unit, (0 + 1) * m_unit, 0, 1, 0, xyz(color01),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) * m_unit, (0 + 1) * m_unit, 0, 1, 0, xyz(color11),
+
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0 * m_unit, (0) * m_unit, 0, 1, 0, xyz(color00),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) * m_unit, (0 + 1) * m_unit, 0, 1, 0, xyz(color11),
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1) * m_unit, 0 * m_unit, 0, 1, 0, xyz(color10),
+	};
+	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
+	return target + sizeof(vertices) / sizeof(float);
+}
+
+float* SimpleBlock::CreateFluidModel(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11)
+{
+	if (face_visible == 0)
+		return target;
+	glm::vec3 color = glm::vec3(0, 1, 1);
+	if (GetFaceVisible(TOP))
+	{
+		target = CreateTopFluidFace(target, world_x, world_y, world_z, color00, color01, color10, color11);
+	}
+	return target;
+}
+
+float* SimpleBlock::CreateSolidModel(float* target, int world_x, int world_y, int world_z)
 {
 	if (face_visible == 0)
 		return target;

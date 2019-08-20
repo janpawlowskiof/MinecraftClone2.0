@@ -8,7 +8,8 @@ struct vData
 	vec2 tex_coords;
 	vec3 normal;
 	vec3 frag_pos;
-	float textureID;
+	vec3 color;
+	vec4 view_space;
 };
 
 in vData vertex[];
@@ -26,7 +27,8 @@ void main()
 		gl_Position = gl_in[index].gl_Position;
 		frag.tex_coords = vertex[index].tex_coords;
 		frag.frag_pos = vertex[index].frag_pos;
-		frag.textureID= vertex[index].textureID;
+		frag.color= vertex[index].color;
+		frag.view_space = vertex[index].view_space;
 		//frag.normal = vec3(vertex[index].frag_pos.y - floor(vertex[index].frag_pos.y));
 		frag.normal = normal;
 		EmitVertex();

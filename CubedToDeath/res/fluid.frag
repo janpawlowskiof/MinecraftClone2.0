@@ -6,7 +6,8 @@ struct vData
 	vec2 tex_coords;
 	vec3 normal;
 	vec3 frag_pos;
-	float textureID;
+	vec3 color;
+	vec4 view_space;
 };
 
 in vData frag;
@@ -21,6 +22,11 @@ uniform vec3 light_direction;
 
 void main()
 {
+	float fog_density = 0.0020;
+	float dist = length(frag.view_space);
+	float fog_factor = 1.0 /exp(dist*dist * fog_density *fog_density );
+	//float fog_factor = (240-dist)/(240-200);
+    fog_factor = clamp( fog_factor, 0.0, 1.0 );
 	//vec3 light_dir = normalize(vec3(0.3, 0.9, 0.55));
 	vec3 light_color = vec3(0.95, 0.9, 0.9);
 	vec3 specular_color = vec3(1,1,1);
@@ -38,9 +44,10 @@ void main()
 
 	//vec4 color = texture(texture_terrain, vec3(frag.tex_coords, frag.textureID));
 	//vec4 color = vec4(frag.normal, 1);
-	vec4 color = vec4(0,0,1, 0.75);
+	vec4 color = vec4(frag.color, 0.75);
 	//color.a = 0.4;
     vec4 result = vec4(ambient + diffuse, 1) * color + spec * vec4(specular_color, 0.18);
+	result = mix(vec4(135, 206, 235, 255)/255.0, result, fog_factor);
 	frag_color = result;
 	//frag_color = vec4(frag.normal, 1);
 }

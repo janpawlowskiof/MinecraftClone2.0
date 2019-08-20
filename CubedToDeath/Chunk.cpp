@@ -14,8 +14,13 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 	//init
 	this->chunk_x = chunk_x;
 	this->chunk_z = chunk_z;
+
+	for (int x = 0; x < 17; x++)
+		for (int z = 0; z < 17; z++)
+			moisture_values[x][z] = ChunkManager::moisture_noise.GetValue(x + 16 * chunk_x, z + 16 * chunk_z)/2.0 + 0.5;
 }
 
+const int fluid_stride = 11 * sizeof(float);
 void Chunk::InitializeBuffers()
 {
 	//generating vbo that belongs to chunk
@@ -56,16 +61,17 @@ void Chunk::InitializeBuffers()
 	//generating vao that belongs to chunk
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	glBindVertexArray(vao[FLUID]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+	//position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, fluid_stride, (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+	//tex coords
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, fluid_stride, (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
+	//normal
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, fluid_stride, (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
+	//color
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, fluid_stride, (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
 	buffers_initialized = true;
@@ -408,7 +414,7 @@ void Chunk::RecalculateVbos()
 	}
 	vertices_simple = new float[triangles_count_simple * 3 * 9];
 	vertices_complex = new float[triangles_count_complex * 3 * 9];
-	vertices_fluid = new float[triangles_count_fluid * 3 * 9];
+	vertices_fluid = new float[triangles_count_fluid * 3 * fluid_stride];
 
 	//target adress that we will insert our data into
 	float* target_simple = vertices_simple;
@@ -425,11 +431,15 @@ void Chunk::RecalculateVbos()
 				}
 				else if (blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
 				{
-					target_fluid = blocks[y][x][z]->CreateModel(target_fluid, x + 16 * chunk_x, y, z + 16 * chunk_z);;
+					glm::vec3 color00(0, 1 - moisture_values[x][z], 0.9);
+					glm::vec3 color01(0, 1 - moisture_values[x][z+1], 0.9);
+					glm::vec3 color10(0, 1 - moisture_values[x+1][z], 0.9);
+					glm::vec3 color11(0, 1 - moisture_values[x+1][z+1], 0.9);
+					target_fluid = blocks[y][x][z]->CreateFluidModel(target_fluid, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11);
 				}
 				else
 				{
-					target_simple = blocks[y][x][z]->CreateModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
+					target_simple = blocks[y][x][z]->CreateSolidModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
 			}
 	vbos_update_needed = true;
@@ -517,7 +527,7 @@ void Chunk::UpdateVbos()
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
 	glBindVertexArray(vao[FLUID]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[FLUID] * 3 * 9 * sizeof(float), vertices_fluid, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[FLUID] * 3 * fluid_stride, vertices_fluid, GL_STATIC_DRAW);
 
 	//deleting vertices array now that we're done
 	//delete[] vertices_simple;

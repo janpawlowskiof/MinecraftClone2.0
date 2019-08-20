@@ -104,7 +104,7 @@ void main()
 	if(color.a < 0.5) discard;
 	float shadow = CalculateShadow();
     vec3 result = (ambient + (diffuse + specular) * (1.0f - shadow)) * color.rgb;
-	result = mix(vec3(135, 206, 235)/256.0, result, fog_factor);
+	result = mix(vec3(135, 206, 235)/255.0, result, fog_factor);
 	frag = vec4(result, 1.0);
 	//frag = vec4(view_space.z, fog_factor, fog_factor, 1.0);
 }

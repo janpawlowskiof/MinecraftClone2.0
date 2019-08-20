@@ -18,6 +18,7 @@ private:
 public:
 	SimpleBlock* blocks[128][16][16];
 	int height_values[16][16];
+	float moisture_values[17][17];
 	Chunk* north_chunk = nullptr, * south_chunk = nullptr, * west_chunk = nullptr, * east_chunk = nullptr;
 	unsigned int vbo[3];
 	unsigned int vao[3];

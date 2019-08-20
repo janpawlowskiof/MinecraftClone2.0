@@ -14,7 +14,7 @@ public:
 	ChunkManager();
 	//noise maps for terrain generation
 	static FastNoise test_noise;
-	static FastNoise mountain_placement_noise;
+	static FastNoise moisture_noise;
 	static FastNoise tectonical_noise;
 	static FastNoise ocean_noise;
 	static FastNoise tree_noise;

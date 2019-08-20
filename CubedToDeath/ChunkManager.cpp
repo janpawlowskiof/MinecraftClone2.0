@@ -172,8 +172,6 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 	//loading chunk player is standing on
 	LoadChunk(starting_chunk_x, starting_chunk_z);
 
-	//save::
-
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
 	for (int distance = 1; distance < MyCraft::render_distance; distance++)
 	{
@@ -332,6 +330,7 @@ void ChunkManager::LoadWorld(int starting_chunk_x, int starting_chunk_z)
 void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 {
 	{
+		//check if block has been alreade loaded, and return if thats the case
 		std::lock_guard<std::mutex> lock(chunk_map_mutex);
 		auto iterator = chunk_map.find(std::make_pair(chunk_x, chunk_z));
 		if (iterator != chunk_map.end())
@@ -340,12 +339,15 @@ void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 		}
 	}
 
+	//check if chunk has been saved previously
 	Chunk* chunk = save::LoadChunkFromFile(chunk_x, chunk_z);
 	if (chunk == nullptr)
 	{
+		//generating chunk if not
 		chunk = GenerateChunk(chunk_x, chunk_z);
 	}
 
+	//finding neighbours and recalculating visibility
 	chunk->FindNeighbours();
 	chunk->RecalculateVbos();
 
@@ -356,13 +358,14 @@ void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 
 Chunk* ChunkManager::GenerateChunk(int chunk_x, int chunk_z)
 {
-	//generowanie lub wczytywanie
+	//generowanie chunka oraz stworzenie jego zapisu
 	Chunk* chunk = new Chunk(chunk_x, chunk_z);
 	chunk->GenerateTerrain();
 	save::SaveChunk(chunk);
 	return chunk;
 }
 
+//returns A COPY of chunk map
 chunk_hash_map ChunkManager::GetChunkMap()
 {
 	std::lock_guard<std::mutex> lock(chunk_map_mutex);
@@ -399,6 +402,7 @@ void ChunkManager::QueueBlockToUnload(SimpleBlock* block)
 	block_unload_queue.push_back(ChunkManager::ItemQueuedToUnload<SimpleBlock>(block));
 }
 
+//saves all of the loaded chunks if they need to be saved
 void ChunkManager::CleanUp()
 {
 	for (auto iterator : chunk_map)
@@ -410,6 +414,7 @@ void ChunkManager::CleanUp()
 	}
 }
 
+//queues all of the chunks to be unloaded
 void ChunkManager::QueueChunkToUnload(Chunk* chunk)
 {
 	std::lock_guard<std::mutex> lock(chunk_unload_queue_mutex);

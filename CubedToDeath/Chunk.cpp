@@ -93,8 +93,8 @@ void Chunk::GenerateTerrain()
 					int z = zs * 4 + zb;
 					//int ground_level = height_values[x][z];
 
-					//float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16)/2.0 + 0.25, 0, 0.5) * 2;
-					float mountaininess = 1;
+					float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16)/2.0 + 0.25, 0, 0.5) * 2;
+					//float mountaininess = 1;
 
 					for (int ys = 0; ys < 16; ++ys) {
 						for (int yb = 0; yb < 8; ++yb) {
@@ -125,7 +125,7 @@ void Chunk::GenerateTerrain()
 							c = -1 + (c + 1) * mountaininess;
 
 							float height_influence = 0.95;
-							float map_influence = 0.25;
+							float map_influence = 0.2;
 
 							float density = map_influence * c + height_influence * (128 - y) / 128.0f;
 
@@ -151,12 +151,13 @@ void Chunk::GenerateTerrain()
 				}
 }
 
+//generates structures
 void Chunk::GenerateStructures()
 {
+	//only if all neighbour and diagonal chunks are loaded
 	if (north_chunk && south_chunk && west_chunk && east_chunk &&
 		north_chunk->west_chunk && west_chunk->south_chunk && south_chunk->east_chunk && east_chunk->north_chunk)
 	{
-		//std::cout << "GenSTR " << chunk_x << " " << chunk_z << std::endl;
 		//GENERATING STRUCTURES HERE
 		float tree_values[18][18];
 		for (int x = -1; x < 17; x++)
@@ -168,6 +169,7 @@ void Chunk::GenerateStructures()
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
+				//tree is generated only on a local extremums of tree noise map
 				if (tree_values[x + 1][z + 1] > tree_values[x][z + 1] &&
 					tree_values[x + 1][z + 1] > tree_values[x + 2][z + 1] &&
 					tree_values[x + 1][z + 1] > tree_values[x + 1][z + 2] &&
@@ -203,6 +205,8 @@ void Chunk::GenerateStructures()
 	}
 }
 
+//returns a block in the area of the chunk (in it or in its neighbours or diagonals)
+//also set the chunk to the parent chunk of returned block
 SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chunk*& chunk)
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
@@ -284,7 +288,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 	}
 }
 
-
+//recalculates all of the vbos WITHOUT submitting them to the gpu
 void Chunk::RecalculateVbos()
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
@@ -435,7 +439,7 @@ void Chunk::RecalculateVbos()
 	triangles_count[FLUID] = triangles_count_fluid;
 }
 
-
+//recalculates the complex blocks vbo WITHOUT submitting it to the gpu
 void Chunk::RecalculateComplexVbo()
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
@@ -481,6 +485,7 @@ void Chunk::RecalculateComplexVbo()
 	triangles_count[COMPLEX] = triangles_count_complex;
 }
 
+//resubmits the vertex data of complex blocks only to the gpu
 void Chunk::UpdateVboComplex()
 {
 	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
@@ -492,6 +497,7 @@ void Chunk::UpdateVboComplex()
 }
 
 
+//resubmits the vertex data to the gpu
 void Chunk::UpdateVbos()
 {
 	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
@@ -520,6 +526,7 @@ void Chunk::UpdateVbos()
 	vbos_update_needed = false;
 }
 
+//draws simple blocks
 void Chunk::DrawSimple()
 {
 	//binds its vao and draw itself
@@ -528,6 +535,7 @@ void Chunk::DrawSimple()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[SIMPLE] * 3);
 }
 
+//draws complex blocks
 void Chunk::DrawComplex()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
@@ -535,6 +543,7 @@ void Chunk::DrawComplex()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[COMPLEX] * 3);
 }
 
+//draws fluids
 void Chunk::DrawFluids()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
@@ -542,6 +551,7 @@ void Chunk::DrawFluids()
 	glDrawArrays(GL_TRIANGLES, 0, triangles_count[FLUID] * 3);
 }
 
+//finds all neighbour blocks
 void Chunk::FindNeighbours()
 {
 	north_chunk = ChunkManager::GetChunk(chunk_x, chunk_z + 1);
@@ -570,6 +580,7 @@ void Chunk::FindNeighbours()
 	}
 }
 
+//why its here idk
 bool Chunk::InView()
 {
 	return false;

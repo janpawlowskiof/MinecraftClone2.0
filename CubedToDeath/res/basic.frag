@@ -16,6 +16,7 @@ uniform sampler2D shadow_map_close;
 uniform sampler2D shadow_map_far;
 uniform vec3 view_pos;
 uniform vec3 light_direction;
+uniform bool use_colorization = false;
 
 //uniform vec3 light_dir;
 //uniform vec3 light_color;
@@ -115,7 +116,7 @@ void main()
 	}
 	else
 	{
-		if(overlay_colorization.x >= 0)
+		if(overlay_colorization.x >= 0 && use_colorization)
 		{
 			texture_color *= vec4(overlay_colorization, 1);
 		}

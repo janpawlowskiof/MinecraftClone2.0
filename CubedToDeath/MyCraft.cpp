@@ -383,8 +383,13 @@ void MyCraft::RenderScene()
 		else if (chunk->vbo_complex_update_needed)
 			chunk->UpdateVboComplex();
 		//draws the chunk
+		glUniform1i(basic_shader->use_colorization_location, true);
 		chunk->DrawSimple();
-		chunk->DrawComplex();
+		if (chunk->triangles_count[Chunk::COMPLEX] > 0)
+		{
+			glUniform1i(basic_shader->use_colorization_location, false);
+			chunk->DrawComplex();
+		}
 
 		iterator++;
 	}
@@ -463,6 +468,10 @@ void MyCraft::RenderShadowMaps()
 		if (chunk->vbos_update_needed)
 			chunk->UpdateVbos();
 		chunk->DrawSimple();
+		if (chunk->triangles_count[Chunk::COMPLEX] > 0)
+		{
+			chunk->DrawComplex();
+		}
 		chunk->DrawComplex();
 		iterator++;
 	}

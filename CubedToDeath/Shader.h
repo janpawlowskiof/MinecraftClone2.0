@@ -33,6 +33,7 @@ public:
 	int light_direction_location;
 	int light_color_location;
 	int transform_matrix_location;
+	int use_colorization_location;
 private:
 	unsigned int shader_id;
 	void InitializeUniforms();

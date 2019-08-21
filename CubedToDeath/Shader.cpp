@@ -209,6 +209,7 @@ void Shader::InitializeUniforms()
 	light_direction_location = glad_glGetUniformLocation(shader_id, "light_direction");
 	light_color_location = glad_glGetUniformLocation(shader_id, "light_color");
 	transform_matrix_location = glad_glGetUniformLocation(shader_id, "transform_matrix");
+	use_colorization_location = glad_glGetUniformLocation(shader_id, "use_colorization");
 
 	int texture_terrain_location = glad_glGetUniformLocation(shader_id, "texture_terrain");
 	int shadow_map_close_location = glad_glGetUniformLocation(shader_id, "shadow_map_close");

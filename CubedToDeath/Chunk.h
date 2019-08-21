@@ -9,13 +9,13 @@
 class Chunk
 {
 private:
-	int triangles_count[3];
 	float* vertices_simple = nullptr;
 	float* vertices_complex = nullptr;
 	float* vertices_fluid = nullptr;
 	std::mutex blocks_mutex;
 	std::mutex vertices_mutex;
 public:
+	int triangles_count[3];
 	SimpleBlock* blocks[128][16][16];
 	int height_values[16][16];
 	float moisture_values[17][17];

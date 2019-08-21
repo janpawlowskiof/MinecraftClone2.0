@@ -31,7 +31,7 @@ ChunkManager::ChunkManager()
 
 	moisture_noise.SetNoiseType(FastNoise::Simplex);
 	//mountain_placement_noise.SetFractalOctaves(2);
-	moisture_noise.SetFrequency(0.003);
+	moisture_noise.SetFrequency(0.006);
 	moisture_noise.SetSeed(1543676);
 
 	tectonical_noise.SetNoiseType(FastNoise::Simplex);

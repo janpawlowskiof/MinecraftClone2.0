@@ -25,7 +25,7 @@ void main()
 {
 	vertex.tex_coords = aTex;
 	vertex.normal = aNorm;
-	vertex.frag_pos = aPos - vec3(0, 0.3 + 0.15 * sin(time + 0.46 * aPos.x + aPos.z * 1.5), 0);
+	vertex.frag_pos = aPos - vec3(0, 0.3 + 0.15 * sin(time + 0.46 * aPos.x + aPos.z * 1.5) + 0.07 * cos(1.2 * time + 0.7 * aPos.x), 0);
 	vertex.color = aColor;
 	vertex.view_space = view * vec4(vertex.frag_pos, 1.0);
     gl_Position = projection * vertex.view_space;

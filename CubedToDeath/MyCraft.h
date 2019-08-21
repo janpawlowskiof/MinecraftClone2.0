@@ -84,6 +84,7 @@ private:
 	//main texture
 	//static Texture* texture_terrain;
 	static TextureArray* texture_terrain_array;
+	static Texture* texture_water_animated;
 	//chunk manager
 	static ChunkManager chunk_manager;
 	//thread responsible for managing world

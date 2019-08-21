@@ -141,6 +141,7 @@ void MyCraft::Run()
 
 	//texture_terrain = new Texture(config_map["texture_terrain_path"], 0);
 	texture_terrain_array = new TextureArray("res");
+	texture_water_animated = new Texture(config_map["texture_water_path"], 0);
 	basic_shader = new Shader("res/basic.vert", "res/basic.frag");
 	text_shader = new Shader("res/text.vert", "res/text.frag");
 	sprite_shader = new Shader("res/sprite.vert", "res/sprite.frag");
@@ -393,6 +394,9 @@ void MyCraft::RenderScene()
 	fluid_shader->SetMat4(fluid_shader->projection_location, Player::projection);
 	glUniform3f(fluid_shader->view_position_location, Player::position.x, Player::position.y, Player::position.z);
 	glUniform3f(fluid_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
+	
+	glActiveTexture(GL_TEXTURE0);
+	texture_water_animated->Bind();
 
 	iterator = chunk_map.begin();
 	while (iterator != chunk_map.end())
@@ -482,7 +486,6 @@ void MyCraft::RenderShadowMaps()
 	//bool reset_chunk_y = true;
 	int draws_per_frame = 0;
 	int max_draws_per_frame = 7;
-	///CURRENT CHUNK
 	//pętla wczytująca chunki dookoła gracza zaczynając od najbliższych
 	while (distance < std::min(30, render_distance))
 	{
@@ -542,7 +545,9 @@ void MyCraft::RenderShadowMaps()
 		//std::swap(light_space_far_used_matrix, light_space_far_unused_matrix);
 		chunk_shadow_center_x = Player::current_chunk_x;
 		chunk_shadow_center_z = Player::current_chunk_z;
-
+		auto iterator = chunk_map.find(std::make_pair(chunk_shadow_center_x, chunk_shadow_center_z));
+		if (iterator != chunk_map.end())
+			iterator->second->DrawSimple();
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_map_far_unused, 0);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		//std::cout << "Swapping\n";
@@ -643,6 +648,7 @@ MyCraft::~MyCraft()
 	glfwDestroyWindow(window);
 	//delete texture_terrain;
 	delete texture_terrain_array;
+	delete texture_water_animated;
 	delete text;
 	delete crosshair;
 }
@@ -682,6 +688,7 @@ unsigned int MyCraft::shadow_map_far_used;
 unsigned int MyCraft::shadow_map_far_unused;
 //Texture* MyCraft::texture_terrain = nullptr;
 TextureArray* MyCraft::texture_terrain_array = nullptr;
+Texture* MyCraft::texture_water_animated = nullptr;
 glm::mat4 MyCraft::light_space_close_matrix;
 glm::mat4 MyCraft::light_space_far_used_matrix;
 glm::mat4 MyCraft::light_space_far_unused_matrix;

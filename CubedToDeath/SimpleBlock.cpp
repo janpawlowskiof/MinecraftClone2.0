@@ -32,90 +32,90 @@ SimpleBlock::~SimpleBlock()
 //	world_x, world_y, world_z,		texture_x, texture_y,		normal_x, normal_y, normal_z,		texture_id	//
 
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-static float* CreateNorthFace(float* target, int world_x, int world_y, int world_z, int texture_id)
+static float* CreateNorthFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color01, glm::vec3 color11)
 {
 	const float vertices[] = {
-		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, 0 *m_unit, (0 + 1) *m_unit, 0, 0, 1, texture_id,
-		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1) *m_unit, (0 + 1) *m_unit, 0, 0, 1,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) *m_unit, 0 *m_unit, 0, 0, 1,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, 0 *m_unit, (0 + 1) *m_unit, 0, 0, 1, texture_id, overlay_id,xyz(color01),
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1) *m_unit, (0 + 1) *m_unit, 0, 0, 1,texture_id, overlay_id,xyz(color11),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) *m_unit, 0 *m_unit, 0, 0, 1,texture_id, overlay_id,xyz(color11),
 
-		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, 0 *m_unit, (0 + 1) *m_unit, 0, 0, 1,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) *m_unit, 0 *m_unit, 0, 0, 1,texture_id,
-		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, 0 *m_unit, 0 *m_unit, 0, 0, 1,texture_id, };
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, 0 *m_unit, (0 + 1) *m_unit, 0, 0, 1,texture_id, overlay_id,xyz(color01),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) *m_unit, 0 *m_unit, 0, 0, 1,texture_id, overlay_id,xyz(color11),
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, 0 *m_unit, 0 *m_unit, 0, 0, 1,texture_id, overlay_id, xyz(color01) };
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
 }
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-static float* CreateSouthFace(float* target, int world_x, int world_y, int world_z, int texture_id)
+static float* CreateSouthFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color00, glm::vec3 color10)
 {
 	const float vertices[] = {
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0 + 1)*m_unit, 0, 0, -1,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1) *m_unit, 0*m_unit, 0, 0, -1,texture_id,
-		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (0 + 1) *m_unit, (0 + 1)*m_unit, 0, 0, -1,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0 + 1)*m_unit, 0, 0, -1,texture_id,overlay_id,xyz(color00),
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1) *m_unit, 0*m_unit, 0, 0, -1,texture_id,overlay_id,xyz(color10),
+		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (0 + 1) *m_unit, (0 + 1)*m_unit, 0, 0, -1,texture_id,overlay_id,xyz(color10),
 
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0 *m_unit, (0 + 1)*m_unit, 0, 0, -1,texture_id,
-		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0 *m_unit, 0*m_unit, 0, 0, -1,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1) *m_unit, 0*m_unit, 0, 0, -1,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0 *m_unit, (0 + 1)*m_unit, 0, 0, -1,texture_id,overlay_id,xyz(color00),
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0 *m_unit, 0*m_unit, 0, 0, -1,texture_id,overlay_id,xyz(color00),
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1) *m_unit, 0*m_unit, 0, 0, -1,texture_id,overlay_id,xyz(color10),
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
 }
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-static float* CreateTopFace(float* target, int world_x, int world_y, int world_z, int texture_id)
+static float* CreateTopFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11)
 {
 	const float vertices[] = {
-		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, 1, 0,texture_id,
-		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (0)*m_unit, (0 + 1)*m_unit, 0, 1, 0,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 0, 1, 0,texture_id,
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, 1, 0,texture_id,overlay_id,xyz(color00),
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (0)*m_unit, (0 + 1)*m_unit, 0, 1, 0,texture_id,overlay_id,xyz(color01),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 0, 1, 0,texture_id,overlay_id,xyz(color11),
 
-		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, 1, 0,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 0, 1, 0,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1)*m_unit, 0*m_unit, 0, 1, 0,texture_id,
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, 1, 0,texture_id,overlay_id,xyz(color00),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 0, 1, 0,texture_id,overlay_id,xyz(color11),
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, (0 + 1)*m_unit, 0*m_unit, 0, 1, 0,texture_id,overlay_id,xyz(color10),
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
 }
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-static float* CreateBottomFace(float* target, int world_x, int world_y, int world_z, int texture_id)
+static float* CreateBottomFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11)
 {
 	const float vertices[] = {
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, -1, 0,texture_id,
-		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 0, -1, 0,texture_id,
-		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (0)*m_unit, (0 + 1)*m_unit, 0, -1, 0,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, -1, 0,texture_id,overlay_id,xyz(color00),
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 0, -1, 0,texture_id,overlay_id,xyz(color11),
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (0)*m_unit, (0 + 1)*m_unit, 0, -1, 0,texture_id,overlay_id,xyz(color01),
 
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, -1, 0,texture_id,
-		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (0 + 1)*m_unit, 0*m_unit, 0, -1, 0,texture_id,
-		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1) *m_unit, (0 + 1)*m_unit, 0, -1, 0,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0)*m_unit, 0, -1, 0,texture_id,overlay_id,xyz(color00),
+		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, (0 + 1)*m_unit, 0*m_unit, 0, -1, 0,texture_id,overlay_id,xyz(color10),
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1) *m_unit, (0 + 1)*m_unit, 0, -1, 0,texture_id,overlay_id,xyz(color11),
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
 }
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-static float* CreateWestFace(float* target, int world_x, int world_y, int world_z, int texture_id)
+static float* CreateWestFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color10, glm::vec3 color11)
 {
 	const float vertices[] = {
-		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0 + 1)*m_unit, 1, 0, 0,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, 0*m_unit, 1, 0, 0,texture_id,
-		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 1, 0, 0,texture_id,
+		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0 + 1)*m_unit, 1, 0, 0,texture_id,overlay_id,xyz(color10),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, 0*m_unit, 1, 0, 0,texture_id,overlay_id,xyz(color11),
+		world_x + 1.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1)*m_unit, (0 + 1)*m_unit, 1, 0, 0,texture_id,overlay_id,xyz(color11),
 
-		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0 + 1)*m_unit, 1, 0, 0,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, 0*m_unit, 0*m_unit, 1, 0, 0,texture_id,
-		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, 0*m_unit, 1, 0, 0,texture_id,
+		world_x + 1.0f, world_y + 0.0f, world_z + 0.0f, 0*m_unit, (0 + 1)*m_unit, 1, 0, 0,texture_id,overlay_id,xyz(color10),
+		world_x + 1.0f, world_y + 1.0f, world_z + 0.0f, 0*m_unit, 0*m_unit, 1, 0, 0,texture_id,overlay_id,xyz(color10),
+		world_x + 1.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1)*m_unit, 0*m_unit, 1, 0, 0,texture_id,overlay_id,xyz(color11),
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
 }
 //wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-static float* CreateEastFace(float* target, int world_x, int world_y, int world_z, int texture_id)
+static float* CreateEastFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color00, glm::vec3 color01)
 {
 	const float vertices[] = {
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0 *m_unit, (0 + 1)*m_unit, -1, 0, 0,texture_id,
-		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1) *m_unit, (0 + 1)*m_unit, -1, 0, 0,texture_id,
-		world_x + 0.0f, world_y + 1.0f, 1 + world_z, (0 + 1) *m_unit, 0*m_unit, -1, 0, 0,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0 *m_unit, (0 + 1)*m_unit, -1, 0, 0,texture_id,overlay_id,xyz(color00),
+		world_x + 0.0f, world_y + 0.0f, world_z + 1.0f, (0 + 1) *m_unit, (0 + 1)*m_unit, -1, 0, 0,texture_id,overlay_id,xyz(color01),
+		world_x + 0.0f, world_y + 1.0f, 1 + world_z, (0 + 1) *m_unit, 0*m_unit, -1, 0, 0,texture_id,overlay_id,xyz(color01),
 
-		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0 *m_unit, (0 + 1)*m_unit, -1, 0, 0,texture_id,
-		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) *m_unit, 0*m_unit, -1, 0, 0,texture_id,
-		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0 *m_unit, 0*m_unit, -1, 0, 0,texture_id,
+		world_x + 0.0f, world_y + 0.0f, world_z + 0.0f, 0 *m_unit, (0 + 1)*m_unit, -1, 0, 0,texture_id,overlay_id,xyz(color00),
+		world_x + 0.0f, world_y + 1.0f, world_z + 1.0f, (0 + 1) *m_unit, 0*m_unit, -1, 0, 0,texture_id,overlay_id,xyz(color01),
+		world_x + 0.0f, world_y + 1.0f, world_z + 0.0f, 0 *m_unit, 0*m_unit, -1, 0, 0,texture_id,overlay_id,xyz(color00),
 	};
 	std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
 	return target + sizeof(vertices) / sizeof(float);
@@ -148,36 +148,36 @@ float* SimpleBlock::CreateFluidModel(float* target, int world_x, int world_y, in
 	return target;
 }
 
-float* SimpleBlock::CreateSolidModel(float* target, int world_x, int world_y, int world_z)
+float* SimpleBlock::CreateSolidModel(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11)
 {
 	if (face_visible == 0)
 		return target;
 
-	int side_id = 0, top_id = 0;
+	int tex_side_id = -1, tex_top_id = -1, overlay_side_id = -1, overlay_top_id = -1;
+	const glm::vec3 no_colorization(-1, -1, -1);
+
 	switch (id)
 	{
 	case blk_id::dirt_id:
-		side_id = top_id = tex_id::dirt;
+		tex_side_id = tex_top_id = tex_id::dirt;
+		color00 = color01 = color10 = color11 = no_colorization;
 		break;
 	case blk_id::stone_id:
-		side_id = top_id = tex_id::stone;
+		tex_side_id = tex_top_id = tex_id::stone;
+		color00 = color01 = color10 = color11 = no_colorization;
 		break;
 	case blk_id::wood_id:
-		side_id = tex_id::wood_side;
-		top_id = tex_id::wood_top;
+		tex_side_id = tex_id::wood_side;
+		tex_top_id = tex_id::wood_top;
+		color00 = color01 = color10 = color11 = no_colorization;
 		break;
 	case blk_id::grass_id:
-		side_id = tex_id::grass_side;
-		top_id = tex_id::grass_top;
+		tex_side_id = tex_id::dirt;
+		overlay_side_id = tex_id::grass_side_overlay;
+		overlay_top_id = tex_id::grass_top;
 		break;
 	case blk_id::leaves_id:
-		side_id = top_id = tex_id::leaves;
-		break;
-	case blk_id::water_id:
-		if (GetFaceVisible(TOP))
-			return CreateTopFace(target, world_x, world_y, world_z, tex_id::water);
-		else
-			return target;
+		tex_side_id = tex_top_id = tex_id::leaves;
 		break;
 	case blk_id::air_id:
 	default:
@@ -185,27 +185,27 @@ float* SimpleBlock::CreateSolidModel(float* target, int world_x, int world_y, in
 	}
 	if (GetFaceVisible(NORTH))
 	{
-		target = CreateNorthFace(target, world_x, world_y, world_z, side_id);
+			target = CreateNorthFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color01, color11);
 	}
 	if (GetFaceVisible(SOUTH))
 	{
-		target = CreateSouthFace(target, world_x, world_y, world_z, side_id);
+			target = CreateSouthFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color00, color10);
 	}
 	if (GetFaceVisible(WEST))
 	{
-		target = CreateWestFace(target, world_x, world_y, world_z, side_id);
+			target = CreateWestFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color10, color11);
 	}
 	if (GetFaceVisible(EAST))
 	{
-		target = CreateEastFace(target, world_x, world_y, world_z, side_id);
+			target = CreateEastFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color00, color01);
 	}
 	if (GetFaceVisible(TOP))
 	{
-		target = CreateTopFace(target, world_x, world_y, world_z, top_id);
+			target = CreateTopFace(target, world_x, world_y, world_z, tex_top_id, overlay_top_id, color00, color01, color10, color11);
 	}
 	if (GetFaceVisible(BOTTOM))
 	{
-		target = CreateBottomFace(target, world_x, world_y, world_z, top_id);
+			target = CreateBottomFace(target, world_x, world_y, world_z, tex_top_id, overlay_top_id, color00, color01, color10, color11);
 	}
 	return target;
 }

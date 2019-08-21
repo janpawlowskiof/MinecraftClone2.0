@@ -68,6 +68,7 @@ TextureArray::TextureArray(std::string path)
 	LoadLayer(tex_id::stone, "res/block/cobblestone.png");
 	LoadLayer(tex_id::grass_side, "res/block/grass_block_side.png");
 	LoadLayer(tex_id::grass_top, "res/block/grass_block_top.png");
+	LoadLayer(tex_id::grass_side_overlay, "res/block/grass_block_side_overlay.png");
 	LoadLayer(tex_id::wood_side, "res/block/spruce_log.png");
 	LoadLayer(tex_id::wood_top, "res/block/spruce_log_top.png");
 	LoadLayer(tex_id::wood_top, "res/block/spruce_log_top.png");

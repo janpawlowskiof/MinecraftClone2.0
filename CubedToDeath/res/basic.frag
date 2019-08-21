@@ -8,6 +8,8 @@ in vec4 light_space_close_frag;
 in vec4 light_space_far_frag;
 in float textureID;
 in vec4 view_space;
+in float overlayID;
+in vec3 overlay_colorization;
 
 uniform sampler2DArray texture_terrain;
 uniform sampler2D shadow_map_close;
@@ -92,7 +94,7 @@ void main()
 	float diff = max(dot(normal, light_direction), 0.0);
 	vec3 diffuse = diff * light_color;
 
-	float specular_strength = 0.2;
+	float specular_strength = 0.1;
 	vec3 view_dir = normalize(view_pos - frag_pos);
 	vec3 reflect_dir = reflect(-light_direction, normal); 
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
@@ -100,11 +102,29 @@ void main()
 	//vec3 specular = vec3(0);
 
 	//vec4 color = normal;
-	vec4 color = texture(texture_terrain, vec3(tex_coords, textureID));
-	if(color.a < 0.5) discard;
+	vec4 texture_color = texture(texture_terrain, vec3(tex_coords, textureID));
+	vec4 result_color;
+	if(overlayID > 0)
+	{
+		vec4 overlay_color = texture(texture_terrain, vec3(tex_coords, overlayID));
+		if(overlay_colorization.x >= 0)
+		{
+			overlay_color *= vec4(overlay_colorization, 1);
+		}
+		result_color = vec4(mix(texture_color.rgb, overlay_color.rgb, overlay_color.a), 1); 
+	}
+	else
+	{
+		if(overlay_colorization.x >= 0)
+		{
+			texture_color *= vec4(overlay_colorization, 1);
+		}
+		result_color = texture_color;
+	}
+
+	if(result_color.a < 0.5) discard;
 	float shadow = CalculateShadow();
-    vec3 result = (ambient + (diffuse + specular) * (1.0f - shadow)) * color.rgb;
-	result = mix(vec3(135, 206, 235)/255.0, result, fog_factor);
-	frag = vec4(result, 1.0);
-	//frag = vec4(view_space.z, fog_factor, fog_factor, 1.0);
+    result_color = vec4((ambient + diffuse * (1.0f - shadow)) * result_color.rgb + specular, 1);
+	result_color = mix(vec4(135, 206, 235, 255)/255.0, result_color, fog_factor);
+	frag = result_color;
 }

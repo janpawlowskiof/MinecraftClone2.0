@@ -12,10 +12,11 @@ struct vData
 
 in vData frag;
 
-uniform sampler2DArray texture_terrain;
+uniform sampler2D texture_terrain;
 
 uniform vec3 view_pos;
 uniform vec3 light_direction;
+uniform float time;
 
 //uniform vec3 light_dir;
 //uniform vec3 light_color;
@@ -36,16 +37,18 @@ void main()
 	float diff = max(dot(frag.normal, light_direction), 0.0);
 	vec3 diffuse = diff * light_color;
 
-	float specular_strength = 0.2;
+	int image_index = int(4 * time);
+	vec2 tex_coords = vec2(frag.tex_coords.x, (frag.tex_coords.y + image_index) / 32.0);
+	vec4 texture_color = texture2D(texture_terrain, tex_coords);
+	texture_color.a += 0.1;
+	vec4 color = texture_color * vec4(frag.color, 1);
+
+	float specular_strength = 0.1;
 	vec3 view_dir = normalize(view_pos - frag.frag_pos);
 	vec3 reflect_dir = reflect(-light_direction, frag.normal); 
 	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 8);
 	//vec3 specular = specular_strength * spec * light_color;  
 
-	//vec4 color = texture(texture_terrain, vec3(frag.tex_coords, frag.textureID));
-	//vec4 color = vec4(frag.normal, 1);
-	vec4 color = vec4(frag.color, 0.75);
-	//color.a = 0.4;
     vec4 result = vec4(ambient + diffuse, 1) * color + spec * vec4(specular_color, 0.18);
 	result = mix(vec4(135, 206, 235, 255)/255.0, result, fog_factor);
 	frag_color = result;

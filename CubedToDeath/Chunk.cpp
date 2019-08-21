@@ -21,40 +21,49 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 }
 
 const int fluid_stride = 11 * sizeof(float);
+const int simple_stride = 13 * sizeof(float);
+
 void Chunk::InitializeBuffers()
 {
 	//generating vbo that belongs to chunk
 	glGenBuffers(3, vbo);
 	glGenVertexArrays(3, vao);
 
-
 	//generating vao that belongs to chunk
+	//pos
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, simple_stride, (void*)0);
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+	//tex coords
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, simple_stride, (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
+	//normal
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, simple_stride, (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
+	//tex id
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, simple_stride, (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
+	//overlay id
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, simple_stride, (void*)(9 * sizeof(float)));
+	glEnableVertexAttribArray(4);
+	//overlay color
+	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, simple_stride, (void*)(10 * sizeof(float)));
+	glEnableVertexAttribArray(5);
 
 	//generating vao that belongs to chunk
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
+	//pos
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-
+	//tex coords
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-
+	//normal
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
+	//tex id
 	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
 
@@ -412,9 +421,9 @@ void Chunk::RecalculateVbos()
 	{
 		delete[] vertices_fluid;
 	}
-	vertices_simple = new float[triangles_count_simple * 3 * 9];
+	vertices_simple = new float[triangles_count_simple * 3 * simple_stride / sizeof(float)];
 	vertices_complex = new float[triangles_count_complex * 3 * 9];
-	vertices_fluid = new float[triangles_count_fluid * 3 * fluid_stride];
+	vertices_fluid = new float[triangles_count_fluid * 3 * fluid_stride / sizeof(float)];
 
 	//target adress that we will insert our data into
 	float* target_simple = vertices_simple;
@@ -432,14 +441,18 @@ void Chunk::RecalculateVbos()
 				else if (blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
 				{
 					glm::vec3 color00(0, 1 - moisture_values[x][z], 0.9);
-					glm::vec3 color01(0, 1 - moisture_values[x][z+1], 0.9);
-					glm::vec3 color10(0, 1 - moisture_values[x+1][z], 0.9);
-					glm::vec3 color11(0, 1 - moisture_values[x+1][z+1], 0.9);
+					glm::vec3 color01(0, 1 - moisture_values[x][z + 1], 0.9);
+					glm::vec3 color10(0, 1 - moisture_values[x + 1][z], 0.9);
+					glm::vec3 color11(0, 1 - moisture_values[x + 1][z + 1], 0.9);
 					target_fluid = blocks[y][x][z]->CreateFluidModel(target_fluid, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11);
 				}
 				else
 				{
-					target_simple = blocks[y][x][z]->CreateSolidModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z);
+					glm::vec3 color00(0.6 * (moisture_values[x][z]), 0.6, 0.3*(1 - moisture_values[x][z]));
+					glm::vec3 color01(0.6 * (moisture_values[x][z + 1]), 0.6, 0.3 * (1 - moisture_values[x][z + 1]));
+					glm::vec3 color10(0.6 * (moisture_values[x + 1][z]), 0.6, 0.3 * (1 - moisture_values[x + 1][z]));
+					glm::vec3 color11(0.6 * (moisture_values[x + 1][z + 1]), 0.6, 0.3 * (1 - moisture_values[x + 1][z + 1]));
+					target_simple = blocks[y][x][z]->CreateSolidModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11);
 				}
 			}
 	vbos_update_needed = true;
@@ -517,7 +530,7 @@ void Chunk::UpdateVbos()
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[SIMPLE]);
 	glBindVertexArray(vao[SIMPLE]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[SIMPLE] * 3 * 9 * sizeof(float), vertices_simple, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, triangles_count[SIMPLE] * 3 * simple_stride, vertices_simple, GL_STATIC_DRAW);
 
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);

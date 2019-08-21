@@ -6,7 +6,7 @@ mouse_sensitivity = 0.1
 
 player_speed = 60
 fov = 90.0
-render_distance = 30
+render_distance = 15
 
 #range between 0 and 16
 anidotropic_filtering = 16
@@ -15,4 +15,5 @@ anidotropic_filtering = 16
 mipmap_count = 4
 
 texture_terrain_path = res/block
+texture_water_path = res/block/water_still.png
 world_path = world

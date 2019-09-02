@@ -24,7 +24,7 @@ public:
 	virtual ~ComplexBlock();
 	virtual float* CreateModel(float* target, int world_x, int world_y, int world_z) = 0;
 	virtual int GetNumberOfTriangles() = 0;
-	virtual bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) = 0;
+	virtual bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) = 0;
 	virtual void OnTick() { /*std::cout << "Default on tick\n";*/ };
 	virtual void OnPlayerClick() { std::cout << "Default on click\n"; }
 	virtual void OnDestroy() { std::cout << "Default on destroy\n"; }
@@ -69,7 +69,7 @@ namespace blk
 			std::cout << "TorchClick\n";
 		}
 
-		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override;
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Torch() override
 		{
@@ -113,7 +113,7 @@ namespace blk
 			parent_chunk->RecalculateComplexVbo();
 		}
 
-		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override;
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Switch() override
 		{
@@ -212,7 +212,7 @@ namespace blk
 			}
 		}
 
-		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info) override;
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
 		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
 		~Door() override
 		{

@@ -7,7 +7,7 @@
 class Chunk;
 class SimpleBlock;
 
-struct HitInfo
+struct RayHitInfo
 {
 	int hit_x = 0;
 	int hit_y = 0;
@@ -47,3 +47,17 @@ struct HitInfo
 
 };
 
+struct CollisionInfo
+{
+	CollisionInfo(int x, int y, int z, SimpleBlock* block, glm::vec3 closest_point)
+	{
+		this->x = x;
+		this->y = y;
+		this->z = z;
+		this->block = block;
+		this->closest_point = closest_point;
+	}
+	int x, y, z;
+	SimpleBlock* block;
+	glm::vec3 closest_point;
+};

@@ -4,6 +4,8 @@
 #include <thread>
 #include "BlockUpdater.h"
 
+#include "Test.h"
+
 MyCraft::MyCraft()
 {
 }
@@ -183,9 +185,10 @@ void MyCraft::Run()
 
 	///					test				///
 
+	//init_test();
 
 	///											
-	auto light_default_position = glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)) * glm::vec3(0, 1, 0);
+	auto light_default_position = glm::angleAxis(glm::radians(-10.0f), glm::vec3(0, 0, 1)) * glm::vec3(0, 1, 0);
 	auto light_rotation_axis = glm::cross(light_default_position, glm::vec3(0, 0, 1));
 	light_direction = glm::angleAxis(glm::radians(-20.0f), light_rotation_axis) * light_default_position;
 
@@ -223,13 +226,14 @@ void MyCraft::Run()
 
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+		text->RenderText(text_shader, "Colliding: " + std::to_string(Player::colliding_id), 25.0f, height - 75.0f, 0.5f, Player::coliding ? glm::vec3(1, 0.1, 0.1) : glm::vec3(0.1, 1, 0.1));
 
 		if (command_input_enabled)
 			text->RenderText(text_shader, "Input: " + command_input, 25.0f, 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-
+		
 		last_time = current_time;
 
-		post_shader->Use();
+		//post_shader->Use();
 		/*glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
 		glBindVertexArray(quadVAO);
 		glActiveTexture(GL_TEXTURE0);
@@ -350,7 +354,9 @@ void MyCraft::RenderScene()
 
 	basic_shader->SetMat4(basic_shader->view_location, Player::view);
 	basic_shader->SetMat4(basic_shader->projection_location, Player::projection);
-	glUniform3f(basic_shader->view_position_location, Player::position.x, Player::position.y, Player::position.z);
+	glUniform3f(basic_shader->view_position_location, Player::camera_position.x, Player::camera_position.y, Player::camera_position.z);
+
+	//draw_test();
 
 	//iterates over every loaded chunk
 	auto iterator = chunk_map.begin();
@@ -397,7 +403,7 @@ void MyCraft::RenderScene()
 	fluid_shader->SetFloat(fluid_shader->time_location, current_time);
 	fluid_shader->SetMat4(fluid_shader->view_location, Player::view);
 	fluid_shader->SetMat4(fluid_shader->projection_location, Player::projection);
-	glUniform3f(fluid_shader->view_position_location, Player::position.x, Player::position.y, Player::position.z);
+	glUniform3f(fluid_shader->view_position_location, Player::camera_position.x, Player::camera_position.y, Player::camera_position.z);
 	glUniform3f(fluid_shader->light_direction_location, light_direction.x, light_direction.y, light_direction.z);
 	
 	glActiveTexture(GL_TEXTURE0);
@@ -587,7 +593,7 @@ void MyCraft::RenderParticles()
 
 	particle_shader->SetMat4(particle_shader->view_location, Player::view);
 	particle_shader->SetMat4(particle_shader->projection_location, Player::projection);
-	glUniform3f(particle_shader->view_position_location, Player::position.x, Player::position.y, Player::position.z);
+	glUniform3f(particle_shader->view_position_location, Player::camera_position.x, Player::camera_position.y, Player::camera_position.z);
 
 	ps->Update();
 	ps->Render();

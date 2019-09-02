@@ -8,8 +8,8 @@ public:
 	void Bind();
 private:
 	unsigned int texture_id;
-	const int texture_size = 16;
-	const int layer_count = 20;
+	const int texture_size = 64;
+	const int layer_count = 40;
 	void LoadLayer(int layer, std::string path);
 };
 

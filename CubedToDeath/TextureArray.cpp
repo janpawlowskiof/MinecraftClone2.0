@@ -65,14 +65,27 @@ TextureArray::TextureArray(std::string path)
 
 
 	LoadLayer(tex_id::dirt, "res/block/dirt.png");
-	LoadLayer(tex_id::stone, "res/block/cobblestone.png");
-	LoadLayer(tex_id::grass_side, "res/block/grass_block_side.png");
+	LoadLayer(tex_id::dirt_n, "res/block/dirt_n.png");
+	LoadLayer(tex_id::stone, "res/block/stone.png");
+	LoadLayer(tex_id::stone_n, "res/block/stone_n.png");
 	LoadLayer(tex_id::grass_top, "res/block/grass_block_top.png");
+	LoadLayer(tex_id::grass_top_n, "res/block/grass_top_n.png");
 	LoadLayer(tex_id::grass_side_overlay, "res/block/grass_block_side_overlay.png");
-	LoadLayer(tex_id::wood_side, "res/block/spruce_log.png");
-	LoadLayer(tex_id::wood_top, "res/block/spruce_log_top.png");
-	LoadLayer(tex_id::wood_top, "res/block/spruce_log_top.png");
+	LoadLayer(tex_id::grass_side_overlay_n, "res/block/grass_block_side_overlay_n.png");
+	LoadLayer(tex_id::wood_side, "res/block/birch_log.png");
+	LoadLayer(tex_id::wood_side_n, "res/block/birch_log_n.png");
+	LoadLayer(tex_id::wood_side_s, "res/block/birch_log_s.png");
+	LoadLayer(tex_id::planks, "res/block/birch_planks.png");
+	LoadLayer(tex_id::planks_n, "res/block/birch_planks_n.png");
+	LoadLayer(tex_id::planks_s, "res/block/birch_planks_s.png");
+	LoadLayer(tex_id::gold_ore, "res/block/gold_ore.png");
+	LoadLayer(tex_id::gold_ore_n, "res/block/gold_ore_n.png");
+	LoadLayer(tex_id::gold_ore_s, "res/block/gold_ore_s.png");
+	LoadLayer(tex_id::wood_top, "res/block/birch_log_top.png");
+	LoadLayer(tex_id::wood_top_n, "res/block/birch_log_top_n.png");
+	LoadLayer(tex_id::wood_top_s, "res/block/birch_log_top_s.png");
 	LoadLayer(tex_id::leaves, "res/block/spruce_leaves.png");
+	LoadLayer(tex_id::leaves_n, "res/block/orange_concrete_n.png");
 	LoadLayer(tex_id::torch_side, "res/block/torch.png");
 	LoadLayer(tex_id::water, "res/block/tnt_top.png");
 	LoadLayer(tex_id::door_top, "res/block/oak_door_top.png");

@@ -9,7 +9,8 @@
 class Chunk
 {
 private:
-	float* vertices_simple = nullptr;
+	std::vector<Vertex> vertices_simple;
+	//float* vertices_simple = nullptr;
 	float* vertices_complex = nullptr;
 	float* vertices_fluid = nullptr;
 	std::mutex blocks_mutex;

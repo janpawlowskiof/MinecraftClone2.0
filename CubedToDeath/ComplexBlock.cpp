@@ -12,7 +12,7 @@ ComplexBlock::~ComplexBlock()
 {
 }
 
-bool blk::Torch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info)
+bool blk::Torch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
 {
 	float width = 1.0 / 16.0;
 	float hit_x, hit_y, hit_z;
@@ -142,7 +142,7 @@ float* blk::Torch::CreateModel(float* target, int world_x, int world_y, int worl
 	return target + sizeof(vertices) / sizeof(float);
 }
 
-bool blk::Switch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info)
+bool blk::Switch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
 {
 	switch (this->direction)
 	{
@@ -322,7 +322,7 @@ float* blk::Switch::CreateModel(float* target, int world_x, int world_y, int wor
 	return target + sizeof(vertices) / sizeof(float);
 }
 
-bool blk::Door::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, HitInfo& hit_info)
+bool blk::Door::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
 {
 	Direction current_direction = NORTH;
 	if (opened)

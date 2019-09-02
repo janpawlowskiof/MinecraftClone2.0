@@ -1,23 +1,30 @@
 #version 450 core
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aTex;
-layout (location = 2) in vec3 aNorm;
-layout (location = 3) in float aTextureID;
-layout (location = 4) in float aOverlayID;
-layout (location = 5) in vec3 aColor;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec2 texture_coords;
+layout (location = 2) in vec3 normal;
+layout (location = 3) in vec3 tangent;
+layout (location = 4) in vec3 texture_info;
+layout (location = 5) in vec3 overlay_info;
+layout (location = 6) in vec3 color;
 
-out vec2 tex_coords;
-out vec3 normal;
-out vec3 frag_pos;
-out vec4 light_space_close_frag;
-out vec4 light_space_far_frag;
-out float textureID;
-out vec4 view_space;
-out float overlayID;
-out vec3 overlay_colorization;
+out Vertex
+{
+	vec2 texture_coords;
+	vec4 light_space_close_frag;
+	vec4 light_space_far_frag;
+	float texture_color;
+	float texture_normal;
+	float texture_specular;
+	float overlay_color;
+	float overlay_normal;
+	float overlay_specular;
+	vec3 position;
+	vec4 view_space;
+	vec3 colorization;
+	mat3 TBN;
+}vertex;
 
-uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 light_space_close_matrix;
@@ -25,14 +32,22 @@ uniform mat4 light_space_far_matrix;
 
 void main()
 {
-    gl_Position = projection * view * vec4(aPos, 1.0);
-	tex_coords = aTex;
-	normal = aNorm;
-	frag_pos = aPos;
-	overlay_colorization = aColor;
-	overlayID = aOverlayID;
-	light_space_close_frag = light_space_close_matrix * vec4(aPos, 1.0);
-	light_space_far_frag = light_space_far_matrix * vec4(aPos, 1.0);
-	textureID = aTextureID;
-	view_space = view * vec4(aPos, 1.0);
+    gl_Position = projection * view * vec4(position, 1.0);
+	vertex.texture_coords = texture_coords;
+	//frag_pos = aPos;
+	vertex.colorization = color;
+
+	vertex.texture_color = texture_info.x;
+	vertex.texture_normal = texture_info.y;
+	vertex.texture_specular = texture_info.z;
+
+	vertex.overlay_color = overlay_info.x;
+	vertex.overlay_normal = overlay_info.y;
+	vertex.overlay_specular = overlay_info.z;
+
+	vertex.light_space_close_frag = light_space_close_matrix * vec4(position, 1.0);
+	vertex.light_space_far_frag = light_space_far_matrix * vec4(position, 1.0);
+	vertex.view_space = view * vec4(position, 1.0);
+	vertex.position = position;
+	vertex.TBN = mat3(tangent, cross(tangent, normal), normal);
 }

@@ -1,15 +1,22 @@
 #version 450 core
 out vec4 frag;
 
-in vec2 tex_coords;
-in vec3 normal;
-in vec3 frag_pos;
-in vec4 light_space_close_frag;
-in vec4 light_space_far_frag;
-in float textureID;
-in vec4 view_space;
-in float overlayID;
-in vec3 overlay_colorization;
+in Vertex
+{
+	vec2 texture_coords;
+	vec4 light_space_close_frag;
+	vec4 light_space_far_frag;
+	float texture_color;
+	float texture_normal;
+	float texture_specular;
+	float overlay_color;
+	float overlay_normal;
+	float overlay_specular;
+	vec3 position;
+	vec4 view_space;
+	vec3 colorization;
+	mat3 TBN;
+}fragment;
 
 uniform sampler2DArray texture_terrain;
 uniform sampler2D shadow_map_close;
@@ -23,7 +30,7 @@ uniform bool use_colorization = false;
 
 float CalculateFarShadow()
 {
-	vec3 projection_coords = light_space_far_frag.xyz/light_space_far_frag.w;
+	vec3 projection_coords = fragment.light_space_far_frag.xyz/fragment.light_space_far_frag.w;
 	projection_coords = projection_coords * 0.5 + 0.5;
 	//float closestDepth = texture(shadow_map, projection_coords.xy).r;
 	float currentDepth = projection_coords.z;
@@ -49,7 +56,7 @@ float CalculateShadow()
 	if(light_direction.y < 0)
 	return 1;
 
-	vec3 projection_coords = light_space_close_frag.xyz/light_space_close_frag.w;
+	vec3 projection_coords = fragment.light_space_close_frag.xyz/fragment.light_space_close_frag.w;
 	projection_coords = projection_coords * 0.5 + 0.5;
 	//float closestDepth = texture(shadow_map, projection_coords.xy).r;
 	float currentDepth = projection_coords.z;
@@ -63,7 +70,7 @@ float CalculateShadow()
 		for(int y = -1; y <= 1; ++y)
 		{
 			float pcfDepth = texture(shadow_map_close, projection_coords.xy + vec2(x, y) * texelSize).r; 
-			result += currentDepth - 0.0004 > pcfDepth ? 1.0 : 0.0;
+			result += currentDepth - 0.0008 > pcfDepth ? 1.0 : 0.0;
 		}    
 	}
 	result /= 9.0;
@@ -84,7 +91,7 @@ float linearDepth(float depthSample)
 void main()
 {
 	float fog_density = 0.0020;
-	float dist = length(view_space);
+	float dist = length(fragment.view_space);
 	float fog_factor = 1.0 /exp(dist*dist * fog_density *fog_density );
 	//float fog_factor = (240-dist)/(240-200);
     fog_factor = clamp( fog_factor, 0.0, 1.0 );
@@ -92,40 +99,59 @@ void main()
 	float ambient_strength = 0.5;
     vec3 ambient = ambient_strength * light_color;
 
-	float diff = max(dot(normal, light_direction), 0.0);
-	vec3 diffuse = diff * light_color;
-
-	float specular_strength = 0.1;
-	vec3 view_dir = normalize(view_pos - frag_pos);
-	vec3 reflect_dir = reflect(-light_direction, normal); 
-	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
-	vec3 specular = specular_strength * spec * light_color;
-	//vec3 specular = vec3(0);
-
-	//vec4 color = normal;
-	vec4 texture_color = texture(texture_terrain, vec3(tex_coords, textureID));
-	vec4 result_color;
-	if(overlayID > 0)
+	vec4 color = vec4(0);
+	vec3 normal;
+	vec3 specular = vec3(0);
+	vec4 overlay_color;
+	
+	if(fragment.overlay_color >= 0 && (overlay_color = texture(texture_terrain, vec3(fragment.texture_coords, fragment.overlay_color))).a > 0.5)
 	{
-		vec4 overlay_color = texture(texture_terrain, vec3(tex_coords, overlayID));
-		if(overlay_colorization.x >= 0)
-		{
-			overlay_color *= vec4(overlay_colorization, 1);
-		}
-		result_color = vec4(mix(texture_color.rgb, overlay_color.rgb, overlay_color.a), 1); 
+		color = overlay_color;
+		if(fragment.colorization.r >= 0)
+			color *= vec4(fragment.colorization, 1);
+
+		if(fragment.overlay_normal >= 0)
+			normal = 2.0 * texture(texture_terrain, vec3(fragment.texture_coords, fragment.overlay_normal)).rgb - 1.0;
+		if(fragment.overlay_specular >= 0)
+			specular = texture(texture_terrain, vec3(fragment.texture_coords, fragment.overlay_specular)).rgb;
 	}
 	else
 	{
-		if(overlay_colorization.x >= 0 && use_colorization)
-		{
-			texture_color *= vec4(overlay_colorization, 1);
-		}
-		result_color = texture_color;
+		if(fragment.texture_color >= 0)
+			color = texture(texture_terrain, vec3(fragment.texture_coords, fragment.texture_color));
+		if(fragment.texture_normal >= 0)
+			normal = 2.0 * texture(texture_terrain, vec3(fragment.texture_coords, fragment.texture_normal)).rgb - 1.0;
+		if(fragment.texture_specular >= 0)
+			specular = texture(texture_terrain, vec3(fragment.texture_coords, fragment.texture_specular)).rgb;
+	}
+	//color = vec4(0.5, 0.5, 0.5, 1);
+
+	normal = fragment.TBN * normal;
+	float diff = max(dot(normal, light_direction), 0.0);
+	vec3 diffuse = diff * light_color;
+	vec3 specular_value = vec3(0);
+	//float specular_strength = 0.1;
+	if(specular.r > 0)
+	{
+		vec3 view_dir = normalize(view_pos - fragment.position);
+		vec3 reflect_dir = reflect(-light_direction, normal); 
+		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
+		specular_value +=  spec * light_color * vec3(specular.r);
+	}
+	if(specular.g > 0)
+	{
+		//specular.g = 1;
+		vec3 view_dir = normalize(view_pos - fragment.position);
+		vec3 reflect_dir = reflect(-light_direction, normal); 
+		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 64);
+		specular_value +=  spec * 10 * light_color * vec3(specular.g);
 	}
 
-	if(result_color.a < 0.5) discard;
+	if(color.a < 0.5) discard;
 	float shadow = CalculateShadow();
-    result_color = vec4((ambient + diffuse * (1.0f - shadow)) * result_color.rgb + specular, 1);
-	result_color = mix(vec4(135, 206, 235, 255)/255.0, result_color, fog_factor);
-	frag = result_color;
+    color = vec4((ambient + diffuse * (1.0f - shadow)) * color.rgb + specular_value, 1);
+	// color = vec4((ambient + diffuse * (1.0f - shadow)) * color.rgb, 1);
+	color = mix(vec4(135, 206, 235, 255)/255.0, color, fog_factor);
+	frag = color;
+	//frag = vec4(0, specular.r, 0, 1);
 }

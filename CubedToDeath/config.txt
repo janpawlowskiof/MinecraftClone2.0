@@ -1,12 +1,12 @@
-width = 1280
-height = 720
+width = 1920
+height = 1080
 
 #recommended 0.1
 mouse_sensitivity = 0.1
 
-player_speed = 60
+player_speed = 20
 fov = 90.0
-render_distance = 15
+render_distance = 10
 
 #range between 0 and 16
 anidotropic_filtering = 16

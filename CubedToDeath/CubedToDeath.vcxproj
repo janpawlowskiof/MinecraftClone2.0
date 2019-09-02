@@ -188,6 +188,9 @@
     <ClInclude Include="Command.h" />
     <ClInclude Include="ComplexBlock.h" />
     <ClInclude Include="FastNoise.h" />
+    <ClInclude Include="Test.h" />
+    <ClInclude Include="TextureInfo.h" />
+    <ClInclude Include="Vertex.h" />
     <ClInclude Include="HitInfo.h" />
     <ClInclude Include="include\ft2build.h" />
     <ClInclude Include="MyCraft.h" />

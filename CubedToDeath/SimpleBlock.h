@@ -63,7 +63,6 @@ public:
 		if (value) flags |= flag; else flags &= ~flag;
 	}
 
-	float* CreateSolidModel(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11, int x_count, int z_count);
 	void CreateSolidModel(std::vector<Vertex> &vertices, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11, int x_count, int z_count);
 	float* CreateFluidModel(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11);
 	static bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info);
@@ -90,13 +89,16 @@ namespace blk_id
 		air_id,
 		dirt_id,
 		stone_id,
+		cobblestone_id,
 		wood_id,
 		grass_id,
 		leaves_id,
 		planks_id,
 		gold_ore_id,
+		iron_block_id,
 		torch_id,
 		switch_id,
+		redstone_id,
 		water_id,
 		door_id,
 	};
@@ -110,6 +112,8 @@ namespace tex_id
 		dirt_n,
 		stone,
 		stone_n,
+		cobblestone,
+		cobblestone_n,
 		wood_side,
 		wood_side_n,
 		wood_side_s,
@@ -122,6 +126,9 @@ namespace tex_id
 		gold_ore,
 		gold_ore_n,
 		gold_ore_s,
+		iron_block,
+		iron_block_n,
+		iron_block_s,
 		grass_side,
 		grass_side_n,
 		grass_side_overlay,
@@ -130,7 +137,13 @@ namespace tex_id
 		grass_top_n,
 		leaves,
 		leaves_n,
-		torch_side,
+		torch,
+		torch_n,
+		torch_s,
+		redstone,
+		redstone_dot,
+		lever_base,
+		lever_base_top,
 		water,
 		door_top,
 		door_top_n,

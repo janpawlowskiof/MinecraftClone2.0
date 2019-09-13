@@ -10,8 +10,9 @@ class Chunk
 {
 private:
 	std::vector<Vertex> vertices_simple;
+	std::vector<Vertex> vertices_complex;
 	//float* vertices_simple = nullptr;
-	float* vertices_complex = nullptr;
+	//float* vertices_complex = nullptr;
 	float* vertices_fluid = nullptr;
 	std::mutex blocks_mutex;
 	std::mutex vertices_mutex;
@@ -46,6 +47,7 @@ public:
 	void DrawComplex();
 	void DrawFluids();
 	void FindNeighbours();
+	void InitializeComplexBlocks();
 	bool InView();
 	static int sea_level;
 	void ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* block, bool world_coordinates = true);

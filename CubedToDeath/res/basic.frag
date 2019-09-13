@@ -70,7 +70,7 @@ float CalculateShadow()
 		for(int y = -1; y <= 1; ++y)
 		{
 			float pcfDepth = texture(shadow_map_close, projection_coords.xy + vec2(x, y) * texelSize).r; 
-			result += currentDepth - 0.0008 > pcfDepth ? 1.0 : 0.0;
+			result += currentDepth - 0.00055 > pcfDepth ? 1.0 : 0.0;
 		}    
 	}
 	result /= 9.0;
@@ -95,12 +95,12 @@ void main()
 	float fog_factor = 1.0 /exp(dist*dist * fog_density *fog_density );
 	//float fog_factor = (240-dist)/(240-200);
     fog_factor = clamp( fog_factor, 0.0, 1.0 );
-	vec3 light_color = vec3(0.95, 0.9, 0.9);
-	float ambient_strength = 0.5;
+	vec3 light_color = 1.0 * vec3(0.95, 0.9, 0.9);
+	float ambient_strength = 0.4;
     vec3 ambient = ambient_strength * light_color;
 
 	vec4 color = vec4(0);
-	vec3 normal;
+	vec3 normal = vec3(0,0,1);
 	vec3 specular = vec3(0);
 	vec4 overlay_color;
 	
@@ -128,7 +128,7 @@ void main()
 
 	normal = fragment.TBN * normal;
 	float diff = max(dot(normal, light_direction), 0.0);
-	vec3 diffuse = diff * light_color;
+	vec3 diffuse = diff * 1.0 * light_color;
 	vec3 specular_value = vec3(0);
 	//float specular_strength = 0.1;
 	if(specular.r > 0)
@@ -138,20 +138,21 @@ void main()
 		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 4);
 		specular_value +=  spec * light_color * vec3(specular.r);
 	}
+	//specular.g = 1;
 	if(specular.g > 0)
 	{
 		//specular.g = 1;
 		vec3 view_dir = normalize(view_pos - fragment.position);
 		vec3 reflect_dir = reflect(-light_direction, normal); 
 		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 64);
-		specular_value +=  spec * 10 * light_color * vec3(specular.g);
+		specular_value +=  spec * light_color * vec3(specular.g);
 	}
 
 	if(color.a < 0.5) discard;
 	float shadow = CalculateShadow();
-    color = vec4((ambient + diffuse * (1.0f - shadow)) * color.rgb + specular_value, 1);
+    color = vec4((ambient + diffuse * (1.0f - shadow)) * color.rgb + (1.0f - shadow) * specular_value, 1);
 	// color = vec4((ambient + diffuse * (1.0f - shadow)) * color.rgb, 1);
 	color = mix(vec4(135, 206, 235, 255)/255.0, color, fog_factor);
 	frag = color;
-	//frag = vec4(0, specular.r, 0, 1);
+	//frag = vec4(normal * 0.5 + 0.5, 1);
 }

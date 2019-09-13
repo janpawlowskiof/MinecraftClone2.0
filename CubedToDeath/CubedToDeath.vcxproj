@@ -188,6 +188,7 @@
     <ClInclude Include="Command.h" />
     <ClInclude Include="ComplexBlock.h" />
     <ClInclude Include="FastNoise.h" />
+    <ClInclude Include="Models.h" />
     <ClInclude Include="Test.h" />
     <ClInclude Include="TextureInfo.h" />
     <ClInclude Include="Vertex.h" />

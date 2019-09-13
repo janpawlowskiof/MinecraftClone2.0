@@ -5,6 +5,7 @@
 #include "Chunk.h"
 #include "Vertex.h"
 #include "TextureInfo.h"
+#include "Models.h"
 
 SimpleBlock::SimpleBlock(unsigned char id)
 {
@@ -30,87 +31,6 @@ SimpleBlock::~SimpleBlock()
 {
 }
 
-//											vertex format														//
-//	world_x, world_y, world_z,		texture_x, texture_y,		normal_x, normal_y, normal_z,		texture_id,		overlay_id,			colorization.rgb	//
-
-//wpisuje swoje widoczne vertices w miejsce gdzie wskazuje target i zwraca pierwszy adres za wpisanymi danymi
-
-static void CreateNorthFace(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, TextureInfo texture_info, TextureInfo overlay_info, glm::vec3 color01, glm::vec3 color11, float count = 1)
-{
-	const glm::vec3 normal(0, 0, 1);
-	const glm::vec3 tangent(1, 0, 0);
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + count), glm::vec2(0 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color01));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + count), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + count), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + count), glm::vec2(0 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color01));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + count), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 1.0f, world_z + count), glm::vec2(0 * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color01));
-	//std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
-	//return target + sizeof(vertices) / sizeof(float);
-}
-
-static void CreateTopFace(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, TextureInfo texture_info, TextureInfo overlay_info, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11, float count = 1)
-{
-	const glm::vec3 normal(0, 1, 0);
-	const glm::vec3 tangent(0, 0, 1);
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 1.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0) * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 1.0f, world_z + count), glm::vec2((0) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color01));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + count), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 1.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0) * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + count), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + 0.0f), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color10));
-}
-
-static void CreateBottomFace(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, TextureInfo texture_info, TextureInfo overlay_info, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11, float count = 1)
-{
-	const glm::vec3 normal(0, -1, 0);
-	const glm::vec3 tangent(0, 0, -1);
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0) * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + count), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + count), glm::vec2((0) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color01));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0) * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + 0.0f), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + count), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-}
-
-static void CreateSouthFace(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, TextureInfo texture_info, TextureInfo overlay_info, glm::vec3 color00, glm::vec3 color10, float count = 1)
-{
-	const glm::vec3 normal(0, 0, -1);
-	const glm::vec3 tangent(-1, 0, 0);
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + 0.0f), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + 0.0f), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color10));
-
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 0.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + 0.0f, world_y + 1.0f, world_z + 0.0f), glm::vec2(0 * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color00));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + 0.0f), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color10));
-}
-
-static void CreateWestFace(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, TextureInfo texture_info, TextureInfo overlay_info, glm::vec3 color10, glm::vec3 color11, float count = 1)
-{
-	const glm::vec3 normal(1, 0, 0);
-	const glm::vec3 tangent(0, -1, 0);
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + count), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + count), glm::vec2((0 + 1) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 0.0f, world_z + 0.0f), glm::vec2(0 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + 0.0f), glm::vec2(0 * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x + count, world_y + 1.0f, world_z + count), glm::vec2((0 + 1) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color11));
-}
-
-static void CreateEastFace(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, TextureInfo texture_info, TextureInfo overlay_info, glm::vec3 color10, glm::vec3 color11, float count = 1)
-{
-	const glm::vec3 normal(-1, 0, 0);
-	const glm::vec3 tangent(0, 1, 0);
-	vertices.push_back(Vertex(glm::vec3(world_x, world_y + 0.0f, world_z + 0.0f), glm::vec2(1 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x, world_y + 0.0f, world_z + count), glm::vec2((0) * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x, world_y + 1.0f, world_z + count), glm::vec2((0) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color11));
-
-	vertices.push_back(Vertex(glm::vec3(world_x, world_y + 0.0f, world_z + 0.0f), glm::vec2(1 * m_unit, (0 + 1) * m_unit), normal, tangent,texture_info, overlay_info, color10));
-	vertices.push_back(Vertex(glm::vec3(world_x, world_y + 1.0f, world_z + count), glm::vec2((0) * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color11));
-	vertices.push_back(Vertex(glm::vec3(world_x, world_y + 1.0f, world_z + 0.0f), glm::vec2(1 * m_unit, 0 * m_unit), normal, tangent,texture_info, overlay_info, color10));
-}
 
 static float* CreateNorthFace(float* target, int world_x, int world_y, int world_z, int texture_id, int overlay_id, glm::vec3 color01, glm::vec3 color11, float count = 1)
 {
@@ -240,68 +160,6 @@ float* SimpleBlock::CreateFluidModel(float* target, int world_x, int world_y, in
 	return target;
 }
 
-float* SimpleBlock::CreateSolidModel(float* target, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11, int x_count, int z_count)
-{
-	if (face_visible == 0)
-		return target;
-
-	int tex_side_id = -1, tex_top_id = -1, overlay_side_id = -1, overlay_top_id = -1;
-	const glm::vec3 no_colorization(-1, -1, -1);
-
-	switch (id)
-	{
-	case blk_id::dirt_id:
-		tex_side_id = tex_top_id = tex_id::dirt;
-		color00 = color01 = color10 = color11 = no_colorization;
-		break;
-	case blk_id::stone_id:
-		tex_side_id = tex_top_id = tex_id::stone;
-		color00 = color01 = color10 = color11 = no_colorization;
-		break;
-	case blk_id::wood_id:
-		tex_side_id = tex_id::wood_side;
-		tex_top_id = tex_id::wood_top;
-		color00 = color01 = color10 = color11 = no_colorization;
-		break;
-	case blk_id::grass_id:
-		tex_side_id = tex_id::dirt;
-		overlay_side_id = tex_id::grass_side_overlay;
-		overlay_top_id = tex_id::grass_top;
-		break;
-	case blk_id::leaves_id:
-		tex_side_id = tex_top_id = tex_id::leaves;
-		break;
-	case blk_id::air_id:
-	default:
-		return target;
-	}
-	if (GetFaceVisible(NORTH))
-	{
-		target = CreateNorthFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color01, color11, z_count);
-	}
-	if (GetFaceVisible(SOUTH))
-	{
-		target = CreateSouthFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color00, color10, z_count);
-	}
-	if (GetFaceVisible(WEST))
-	{
-		target = CreateWestFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color10, color11, x_count);
-	}
-	if (GetFaceVisible(EAST))
-	{
-		target = CreateEastFace(target, world_x, world_y, world_z, tex_side_id, overlay_side_id, color00, color01, x_count);
-	}
-	if (GetFaceVisible(TOP))
-	{
-		target = CreateTopFace(target, world_x, world_y, world_z, tex_top_id, overlay_top_id, color00, color01, color10, color11);
-	}
-	if (GetFaceVisible(BOTTOM))
-	{
-		target = CreateBottomFace(target, world_x, world_y, world_z, tex_top_id, overlay_top_id, color00, color01, color10, color11);
-	}
-	return target;
-}
-
 void SimpleBlock::CreateSolidModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, glm::vec3 color00, glm::vec3 color01, glm::vec3 color10, glm::vec3 color11, int x_count, int z_count)
 {
 	TextureInfo texture_side;
@@ -314,6 +172,7 @@ void SimpleBlock::CreateSolidModel(std::vector<Vertex>& vertices, int world_x, i
 	switch (id)
 	{
 	case blk_id::dirt_id:
+	case blk_id::torch_id:
 		texture_side.texture_id = texture_top.texture_id = tex_id::dirt;
 		texture_side.normal_id = texture_top.normal_id = tex_id::dirt_n;
 		color00 = color01 = color10 = color11 = no_colorization;
@@ -321,6 +180,11 @@ void SimpleBlock::CreateSolidModel(std::vector<Vertex>& vertices, int world_x, i
 	case blk_id::stone_id:
 		texture_side.texture_id = texture_top.texture_id = tex_id::stone;
 		texture_side.normal_id = texture_top.normal_id = tex_id::stone_n;
+		color00 = color01 = color10 = color11 = no_colorization;
+		break;
+	case blk_id::cobblestone_id:
+		texture_side.texture_id = texture_top.texture_id = tex_id::cobblestone;
+		texture_side.normal_id = texture_top.normal_id = tex_id::cobblestone_n;
 		color00 = color01 = color10 = color11 = no_colorization;
 		break;
 	case blk_id::wood_id:
@@ -344,6 +208,12 @@ void SimpleBlock::CreateSolidModel(std::vector<Vertex>& vertices, int world_x, i
 		texture_side.specular_id = texture_top.specular_id = tex_id::gold_ore_s;
 		color00 = color01 = color10 = color11 = no_colorization;
 		break;
+	case blk_id::iron_block_id:
+		texture_side.texture_id = texture_top.texture_id = tex_id::iron_block;
+		texture_side.normal_id = texture_top.normal_id = tex_id::iron_block_n;
+		texture_side.specular_id = texture_top.specular_id = tex_id::iron_block_s;
+		color00 = color01 = color10 = color11 = no_colorization;
+		break;
 	case blk_id::grass_id:
 		texture_side.texture_id = tex_id::dirt;
 		texture_side.normal_id = tex_id::dirt_n;
@@ -362,23 +232,23 @@ void SimpleBlock::CreateSolidModel(std::vector<Vertex>& vertices, int world_x, i
 	}
 	if (GetFaceVisible(NORTH))
 	{
-		CreateNorthFace(vertices, world_x, world_y, world_z, texture_side, overlay_side, color01, color11, z_count);
+		CreateNorthFace(vertices, world_x, world_y, world_z + 1, texture_side, overlay_side, color01, color11);
 	}
 	if (GetFaceVisible(SOUTH))
 	{
-		CreateSouthFace(vertices, world_x, world_y, world_z, texture_side, overlay_side, color00, color10, z_count);
+		CreateSouthFace(vertices, world_x, world_y, world_z, texture_side, overlay_side, color00, color10);
 	}
 	if (GetFaceVisible(WEST))
 	{
-		CreateWestFace(vertices, world_x, world_y, world_z, texture_side, overlay_side, color10, color11, x_count);
+		CreateWestFace(vertices, world_x + 1, world_y, world_z, texture_side, overlay_side, color10, color11);
 	}
 	if (GetFaceVisible(EAST))
 	{
-		CreateEastFace(vertices, world_x, world_y, world_z, texture_side, overlay_side, color00, color01, x_count);
+		CreateEastFace(vertices, world_x, world_y, world_z, texture_side, overlay_side, color00, color01);
 	}
 	if (GetFaceVisible(TOP))
 	{
-		CreateTopFace(vertices, world_x, world_y, world_z, texture_top, overlay_top, color00, color01, color10, color11);
+		CreateTopFace(vertices, world_x, world_y + 1, world_z, texture_top, overlay_top, color00, color01, color10, color11);
 	}
 	if (GetFaceVisible(BOTTOM))
 	{
@@ -502,6 +372,8 @@ SimpleBlock* SimpleBlock::CreateNew(int block_id, RayHitInfo hit_info)
 		return new blk::Torch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	case blk_id::switch_id:
 		return new blk::Switch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
+	case blk_id::redstone_id:
+		return new blk::Redstone(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	case blk_id::door_id:
 		return new blk::Door(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	default:
@@ -609,6 +481,8 @@ SimpleBlock* SimpleBlock::LoadBlockFromFile(glm::ivec3 position, Chunk* parent_c
 		return new blk::Switch(position, parent_chunk, data);
 	case blk_id::door_id:
 		return new blk::Door(position, parent_chunk, data);
+	case blk_id::redstone_id:
+		return new blk::Redstone(position, parent_chunk, data);
 	default:
 		return new SimpleBlock(block_id);
 	}

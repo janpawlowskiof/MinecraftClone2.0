@@ -20,7 +20,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 }
 
 const int fluid_stride = 11 * sizeof(float);
-const int complex_stride = 12 * sizeof(float);
+//const int sizeof(Vertex) = 12 * sizeof(float);
 
 void Chunk::InitializeBuffers()
 {
@@ -58,20 +58,26 @@ void Chunk::InitializeBuffers()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
 	//pos
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, complex_stride, (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 	glEnableVertexAttribArray(0);
 	//tex coords
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, complex_stride, (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex_coords));
 	glEnableVertexAttribArray(1);
 	//normal
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, complex_stride, (void*)(5 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 	glEnableVertexAttribArray(2);
-	//bittangent
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, complex_stride, (void*)(8 * sizeof(float)));
+	//tangent
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
 	glEnableVertexAttribArray(3);
-	//tex id
-	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, complex_stride, (void*)(11 * sizeof(float)));
+	//texture_info
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture_info));
 	glEnableVertexAttribArray(4);
+	//overlay_info
+	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, overlay_info));
+	glEnableVertexAttribArray(5);
+	//overlay color
+	glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+	glEnableVertexAttribArray(6);
 
 	//generating vao that belongs to chunk
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
@@ -217,7 +223,6 @@ void Chunk::GenerateStructures()
 					//ReplaceBlock(x, ground_level + 5, z, SimpleBlock::CreateNew(blk_id::torch_id), false);
 					//ReplaceBlock(x, ground_level + 3, z + 1, new SimpleBlock(blk_id::leaves_id), false);
 					//ReplaceBlock(x, ground_level + 3, z-1, new SimpleBlock(blk_id::leaves_id), false);
-
 				}
 			}
 		//RecalculateVisibility();
@@ -236,6 +241,8 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 	{
 		if (local_x < 0)
 		{
+			if (south_chunk == nullptr || south_chunk->east_chunk == nullptr)
+				return nullptr;
 			chunk = south_chunk->east_chunk;
 			local_x = (local_x % 16 + 16) % 16;
 			local_z = (local_z % 16 + 16) % 16;
@@ -243,15 +250,19 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 		}
 		else if (local_x >= 16)
 		{
+			if (south_chunk == nullptr || south_chunk->west_chunk == nullptr)
+				return nullptr;
 			chunk = south_chunk->west_chunk;
-			local_x = local_x % 16;
+			local_x = (local_x % 16 + 16) % 16;
 			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		else
 		{
+			if (south_chunk == nullptr)
+				return nullptr;
 			chunk = south_chunk;
-			local_x = local_x % 16;
+			local_x = (local_x % 16 + 16) % 16;
 			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
@@ -260,25 +271,31 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 	{
 		if (local_x < 0)
 		{
+			if (north_chunk == nullptr || north_chunk->east_chunk== nullptr)
+				return nullptr;
 			chunk = north_chunk->east_chunk;
 			local_x = (local_x % 16 + 16) % 16;
-			local_z = local_z % 16;
+			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		//north_chunk->east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z % 16, block, false);
 		else if (local_x >= 16)
 		{
+			if (north_chunk == nullptr || north_chunk->west_chunk== nullptr)
+				return nullptr;
 			chunk = north_chunk->west_chunk;
-			local_x = local_x % 16;
-			local_z = local_z % 16;
+			local_x = (local_x % 16 + 16) % 16;
+			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		//north_chunk->west_chunk->ReplaceBlock(local_x % 16, block_y, local_z % 16, block, false);
 		else
 		{
+			if (north_chunk == nullptr)
+				return nullptr;
 			chunk = north_chunk;
-			local_x = local_x % 16;
-			local_z = local_z % 16;
+			local_x = (local_x % 16 + 16) % 16;
+			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		//north_chunk->ReplaceBlock(local_x, block_y, local_z % 16, block, false);
@@ -287,17 +304,21 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 	{
 		if (local_x < 0)
 		{
+			if (east_chunk == nullptr)
+				return nullptr;
 			chunk = east_chunk;
 			local_x = (local_x % 16 + 16) % 16;
-			local_z = local_z % 16;
+			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		//east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z, block, false);
 		else if (local_x >= 16)
 		{
+			if (west_chunk == nullptr)
+				return nullptr;
 			chunk = west_chunk;
-			local_x = local_x % 16;
-			local_z = local_z % 16;
+			local_x = (local_x % 16 + 16) % 16;
+			local_z = (local_z % 16 + 16) % 16;
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 		//west_chunk->ReplaceBlock(local_x % 16, block_y, local_z, block, false);
@@ -494,10 +515,10 @@ void Chunk::RecalculateVbos()
 	{
 		delete[] vertices_simple;
 	}*/
-	if (vertices_complex)
+	/*if (vertices_complex)
 	{
 		delete[] vertices_complex;
-	}
+	}*/
 	if (vertices_fluid)
 	{
 		delete[] vertices_fluid;
@@ -505,12 +526,14 @@ void Chunk::RecalculateVbos()
 	//vertices_simple = new float[triangles_count_simple * 3 * sizeof(Vertex) / sizeof(float)];
 	vertices_simple.clear();
 	vertices_simple.reserve(triangles_count_simple * 3);
-	vertices_complex = new float[triangles_count_complex * 3 * 9];
+	vertices_complex.clear();
+	vertices_complex.reserve(triangles_count_complex * 3);
+	//vertices_complex = new float[triangles_count_complex * 3 * 9];
 	vertices_fluid = new float[triangles_count_fluid * 3 * fluid_stride / sizeof(float)];
 
 	//target adress that we will insert our data into
 	//float* target_simple = vertices_simple;
-	float* target_complex = vertices_complex;
+	//float* target_complex = vertices_complex;
 	float* target_fluid = vertices_fluid;
 
 	bool drawn[128][16][16] = { 0 };
@@ -523,7 +546,7 @@ void Chunk::RecalculateVbos()
 			{
 				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
 				{
-					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+					((ComplexBlock*)blocks[y][x][z])->CreateModel(vertices_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
 				else if (blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
 				{
@@ -537,19 +560,19 @@ void Chunk::RecalculateVbos()
 				{
 					//if (drawn[y][x][z])
 					//	continue;
-					int z_offset = 0;
+					//int z_offset = 0;
 					/*while (z + z_offset + 1 < 16 && blocks[y][x][z]->id == blocks[y][x][z + z_offset]->id)
 					{
 						z_offset++;
 					}*/
 					//triangles_count_simple += 2;
 					glm::vec3 color00(0.6 * (moisture_values[x][z]), 0.6, 0.3*(1 - moisture_values[x][z]));
-					glm::vec3 color01(0.6 * (moisture_values[x][z + 1]), 0.6, 0.3 * (1 - moisture_values[x][z + z_offset + 1]));
+					glm::vec3 color01(0.6 * (moisture_values[x][z + 1]), 0.6, 0.3 * (1 - moisture_values[x][z + 1]));
 					glm::vec3 color10(0.6 * (moisture_values[x + 1][z]), 0.6, 0.3 * (1 - moisture_values[x + 1][z]));
-					glm::vec3 color11(0.6 * (moisture_values[x + 1][z + 1]), 0.6, 0.3 * (1 - moisture_values[x + 1][z + z_offset + 1]));
-					blocks[y][x][z]->CreateSolidModel(vertices_simple, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11, 1, z_offset + 1);
+					glm::vec3 color11(0.6 * (moisture_values[x + 1][z + 1]), 0.6, 0.3 * (1 - moisture_values[x + 1][z + 1]));
+					blocks[y][x][z]->CreateSolidModel(vertices_simple, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11, 1, 1);
 					//target_simple = blocks[y][x][z]->CreateSolidModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11, 1, z_offset + 1);
-					z += z_offset;
+					//z += z_offset;
 				}
 			}
 	vbos_update_needed = true;
@@ -563,6 +586,9 @@ void Chunk::RecalculateVbos()
 void Chunk::RecalculateComplexVbo()
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
+
+	if (chunk_x == 0 && chunk_z == -1)
+		std::cout << "Eyyy\n";
 
 	int triangles_count_complex = 0;
 
@@ -583,13 +609,15 @@ void Chunk::RecalculateComplexVbo()
 			}
 			
 	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
-	if (vertices_complex)
-	{
-		delete[] vertices_complex;
-	}
-	vertices_complex = new float[triangles_count_complex * 3 * 9];
+	//if (vertices_complex)
+	//{
+	//	delete[] vertices_complex;
+	//}
+	//vertices_complex = new float[triangles_count_complex * 3 * 9];
 
-	float* target_complex = vertices_complex;
+	//float* target_complex = vertices_complex;
+	vertices_complex.clear();
+	vertices_complex.reserve(triangles_count_complex);
 
 	for (int y = 0; y < 127; y++)
 		for (int x = 0; x < 16; x++)
@@ -597,7 +625,7 @@ void Chunk::RecalculateComplexVbo()
 			{
 				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
 				{
-					target_complex = ((ComplexBlock*)blocks[y][x][z])->CreateModel(target_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
+					((ComplexBlock*)blocks[y][x][z])->CreateModel(vertices_complex, x + 16 * chunk_x, y, z + 16 * chunk_z);
 				}
 			}
 	//recalculate_complex_vbo_needed = true;
@@ -612,7 +640,7 @@ void Chunk::UpdateVboComplex()
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 9 * sizeof(float), vertices_complex, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices_complex.size() * sizeof(Vertex), vertices_complex.data(), GL_STATIC_DRAW);
 	vbo_complex_update_needed = false;
 }
 
@@ -621,7 +649,7 @@ void Chunk::UpdateVboComplex()
 void Chunk::UpdateVbos()
 {
 	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
-	assert(vertices_complex);
+	//assert(vertices_complex);
 	//assert(vertices_simple);
 	assert(vertices_fluid);
 	//transfering our data to the gpu
@@ -632,7 +660,7 @@ void Chunk::UpdateVbos()
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[COMPLEX]);
 	glBindVertexArray(vao[COMPLEX]);
-	glBufferData(GL_ARRAY_BUFFER, triangles_count[COMPLEX] * 3 * 9 * sizeof(float), vertices_complex, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices_complex.size() * sizeof(Vertex), vertices_complex.data(), GL_DYNAMIC_DRAW);
 
 	//transfering our data to the gpu
 	glBindBuffer(GL_ARRAY_BUFFER, vbo[FLUID]);
@@ -698,6 +726,17 @@ void Chunk::FindNeighbours()
 		east_chunk->west_chunk = this;
 		east_chunk->recalculate_vbos_needed = true;
 	}
+}
+
+void Chunk::InitializeComplexBlocks()
+{
+	for (int y = 0; y < 128; y++)
+		for (int x = 0; x < 16; x++)
+			for(int z = 0; z < 16; z++)
+			{
+				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)blocks[y][x][z])->OnLoadFinalization();
+			}
 }
 
 //why its here idk
@@ -782,9 +821,9 @@ Chunk::~Chunk()
 	}
 
 	/*if (vertices_simple != nullptr)
-		delete[] vertices_simple;*/
+		delete[] vertices_simple;
 	if (vertices_complex != nullptr)
-		delete[] vertices_complex;
+		delete[] vertices_complex;*/
 	if (vertices_fluid != nullptr)
 		delete[] vertices_fluid;
 

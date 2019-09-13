@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Chunk.h"
 #include "Player.h"
+#include "Models.h"
 
 #define xyz(n) n.x, n.y, n.z
 
@@ -22,13 +23,14 @@ public:
 	Chunk* parent_chunk;
 
 	virtual ~ComplexBlock();
-	virtual float* CreateModel(float* target, int world_x, int world_y, int world_z) = 0;
+	virtual void CreateModel(std::vector<Vertex>&, int world_x, int world_y, int world_z) = 0;
 	virtual int GetNumberOfTriangles() = 0;
 	virtual bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) = 0;
 	virtual void OnTick() { /*std::cout << "Default on tick\n";*/ };
 	virtual void OnPlayerClick() { std::cout << "Default on click\n"; }
 	virtual void OnDestroy() { std::cout << "Default on destroy\n"; }
 	virtual int GetBlockSpecificMetaSize() { return 1; }
+	virtual void OnLoadFinalization() { std::cout << "default" << this << "\n"; }
 	virtual void WriteBlockSpecificMeta(char*& save_data_pointer)
 	{
 		save_data_pointer[0] = (char)direction;
@@ -70,7 +72,7 @@ namespace blk
 		}
 
 		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
-		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
+		void CreateModel(std::vector<Vertex>&vertices, int world_x, int world_y, int world_z) override;
 		~Torch() override
 		{
 			std::cout << "Unloading torch\n";
@@ -102,7 +104,7 @@ namespace blk
 		}
 		int GetNumberOfTriangles() override
 		{
-			return 20;
+			return 10;
 		}
 		void OnPlayerClick() override
 		{
@@ -114,7 +116,7 @@ namespace blk
 		}
 
 		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
-		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
+		void CreateModel(std::vector<Vertex>&, int world_x, int world_y, int world_z) override;
 		~Switch() override
 		{
 			std::cout << "Unloading switch\n";
@@ -127,6 +129,81 @@ namespace blk
 
 		const float width_button = 2.0f / 16.0f;
 		const float height_button = 0.3;
+	};
+
+	class Redstone : public ComplexBlock
+	{
+	public:
+		Redstone(glm::ivec3 position, glm::ivec3 parent_position, Chunk* parent_chunk) : ComplexBlock(position, parent_chunk)
+		{
+			id = blk_id::redstone_id;
+			CheckLines();
+		}
+		Redstone(glm::ivec3 position, Chunk* parent_chunk, char*& save_data_pointer) : ComplexBlock(position, parent_chunk)
+		{
+			id = blk_id::redstone_id;
+		}
+		int GetBlockSpecificMetaSize() override { return 0; }
+		void WriteBlockSpecificMeta(char*& save_data_pointer) override{}
+		int GetNumberOfTriangles() override
+		{
+			return 2 * (north_line + south_line + west_line + east_line + 1);
+		}
+		void OnPlayerClick() override
+		{
+			std::cout << "RedstoneClick\n";
+		}
+		void OnLoadFinalization() override
+		{ 
+			std::cout << "Special " << this << "\n";
+			CheckLines();
+		}
+
+		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
+		void CreateModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z) override;
+		~Redstone() override
+		{
+			std::cout << "Unloading redstone\n";
+		}
+		void CheckLines()
+		{
+			int local_x = position.x - 16 * parent_chunk->chunk_x, local_y = position.y, local_z = position.z - parent_chunk->chunk_z * 16 + 1;
+			Chunk* chunk = parent_chunk;
+			SimpleBlock* block;
+			if ((block = parent_chunk->GetBlockInArea(local_x, local_y, local_z, chunk)) != nullptr && block->id == blk_id::redstone_id)
+			{
+				north_line = true;
+				((Redstone*)block)->south_line = true;
+				if (chunk != parent_chunk)
+					chunk->RecalculateComplexVbo();
+			}
+			local_x = position.x - parent_chunk->chunk_x * 16, local_y = position.y, local_z = position.z - parent_chunk->chunk_z * 16 - 1;
+			if ((block = parent_chunk->GetBlockInArea(local_x, local_y, local_z, chunk)) != nullptr && block->id == blk_id::redstone_id)
+			{
+				south_line = true;
+				((Redstone*)block)->north_line = true;
+				if (chunk != parent_chunk)
+					chunk->RecalculateComplexVbo();
+			}
+			local_x = position.x - parent_chunk->chunk_x * 16 + 1, local_y = position.y, local_z = position.z - parent_chunk->chunk_z * 16;
+			if ((block = parent_chunk->GetBlockInArea(local_x, local_y, local_z, chunk)) != nullptr && block->id == blk_id::redstone_id)
+			{
+				west_line = true;
+				((Redstone*)block)->east_line = true;
+				if (chunk != parent_chunk)
+					chunk->RecalculateComplexVbo();
+			}
+			local_x = position.x - parent_chunk->chunk_x * 16 - 1, local_y = position.y, local_z = position.z - parent_chunk->chunk_z * 16;
+			if ((block = parent_chunk->GetBlockInArea(local_x, local_y, local_z, chunk)) != nullptr && block->id == blk_id::redstone_id)
+			{
+				east_line = true;
+				((Redstone*)block)->west_line = true;
+				if (chunk != parent_chunk)
+					chunk->RecalculateComplexVbo();
+			}
+		}
+	private:
+		bool north_line = false, south_line = false, west_line = false, east_line = false;
 	};
 
 	class Door : public ComplexBlock
@@ -213,7 +290,7 @@ namespace blk
 		}
 
 		bool CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info) override;
-		float* CreateModel(float* target, int world_x, int world_y, int world_z) override;
+		void CreateModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z) override;
 		~Door() override
 		{
 			std::cout << "Unloading door\n";

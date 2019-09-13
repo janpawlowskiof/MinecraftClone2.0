@@ -343,13 +343,14 @@ void ChunkManager::LoadChunk(int chunk_x, int chunk_z)
 	Chunk* chunk = save::LoadChunkFromFile(chunk_x, chunk_z);
 	if (chunk == nullptr)
 	{
-		//generating chunk if not
+		//generating chunk if there is no save of that chunk
 		chunk = GenerateChunk(chunk_x, chunk_z);
 	}
 
 	//finding neighbours and recalculating visibility
 	chunk->FindNeighbours();
 	chunk->RecalculateVbos();
+	chunk->InitializeComplexBlocks();
 
 	//blokada i umieszczenie nowego chunka w mapie
 	std::lock_guard<std::mutex> lock(chunk_map_mutex);

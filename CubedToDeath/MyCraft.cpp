@@ -188,9 +188,9 @@ void MyCraft::Run()
 	//init_test();
 
 	///											
-	auto light_default_position = glm::angleAxis(glm::radians(-10.0f), glm::vec3(0, 0, 1)) * glm::vec3(0, 1, 0);
+	auto light_default_position = glm::angleAxis(glm::radians(-30.0f), glm::vec3(0, 0, 1)) * glm::vec3(0, 1, 0);
 	auto light_rotation_axis = glm::cross(light_default_position, glm::vec3(0, 0, 1));
-	light_direction = glm::angleAxis(glm::radians(-20.0f), light_rotation_axis) * light_default_position;
+	light_direction = glm::angleAxis(glm::radians(-25.0f), light_rotation_axis) * light_default_position;
 
 	glClearColor(135.0 / 256.0, 206.0 / 256.0, 235/256.0, 1);
 	last_time = glfwGetTime();
@@ -389,11 +389,11 @@ void MyCraft::RenderScene()
 		else if (chunk->vbo_complex_update_needed)
 			chunk->UpdateVboComplex();
 		//draws the chunk
-		glUniform1i(basic_shader->use_colorization_location, true);
+		//glUniform1i(basic_shader->use_colorization_location, true);
 		chunk->DrawSimple();
 		if (chunk->triangles_count[Chunk::COMPLEX] > 0)
 		{
-			glUniform1i(basic_shader->use_colorization_location, false);
+			//glUniform1i(basic_shader->use_colorization_location, false);
 			chunk->DrawComplex();
 		}
 
@@ -478,7 +478,7 @@ void MyCraft::RenderShadowMaps()
 		{
 			chunk->DrawComplex();
 		}
-		chunk->DrawComplex();
+		//chunk->DrawComplex();
 		iterator++;
 	}
 	//rendering partices to the close depth map

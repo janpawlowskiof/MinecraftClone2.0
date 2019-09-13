@@ -114,16 +114,15 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 				//hit_info.chunk->visibility_update_needed;
 				hit_info.hit_chunk->RecalculateVbos();
 
-				if (hit_info.hit_x % 16 == 0 && hit_info.hit_chunk->east_chunk)
+				if ((hit_info.hit_x % 16 + 16) % 16 == 0 && hit_info.hit_chunk->east_chunk)
 					hit_info.hit_chunk->east_chunk->RecalculateVbos();
-
-				if (hit_info.hit_x % 16 == 15 && hit_info.hit_chunk->west_chunk)
+				if ((hit_info.hit_x % 16 + 16)%16 == 15 && hit_info.hit_chunk->west_chunk)
 					hit_info.hit_chunk->west_chunk->RecalculateVbos();
 
-				if (hit_info.hit_z % 16 == 0 && hit_info.hit_chunk->south_chunk)
+				if ((hit_info.hit_z % 16 + 16)%16 == 0 && hit_info.hit_chunk->south_chunk)
 					hit_info.hit_chunk->south_chunk->RecalculateVbos();
 
-				if (hit_info.hit_z % 16 == 15 && hit_info.hit_chunk->north_chunk)
+				if ((hit_info.hit_z % 16 + 16) % 16 == 15 && hit_info.hit_chunk->north_chunk)
 					hit_info.hit_chunk->north_chunk->RecalculateVbos();
 
 				if (MyCraft::ps)
@@ -350,7 +349,7 @@ glm::vec3 Player::forward_flat = glm::vec3(0, 0, 1);
 int Player::current_chunk_x, Player::current_chunk_z;
 float Player::pitch = 0;
 float Player::yaw = 0;
-int Player::selected_block_id = blk_id::door_id;
+int Player::selected_block_id = blk_id::redstone_id;
 bool Player::coliding = false;
 Chunk* Player::current_chunk = nullptr;
 int Player::colliding_id = -1;

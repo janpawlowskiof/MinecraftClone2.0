@@ -38,6 +38,7 @@ public:
 		COMPLEX = 1,
 		FLUID = 2,
 		OPAQUE = 4,
+		POWERABLE = 8,
 	};
 
 	SimpleBlock(unsigned char id = 0);
@@ -74,12 +75,15 @@ public:
 	static SimpleBlock* CreateNew(int block_id);
 	static glm::vec3 GetColor(int block_id);
 	static Direction GetDirection(glm::ivec3 vec);
+	//static Direction GetOposite(Direction direction);
+	static glm::ivec3 GetOffset(Direction direction);
 	static bool ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction);
 	static bool ProjectRayOnPlaneXY(float plane_z, float& hit_x, float& hit_y, glm::vec3 origin, glm::vec3 direction);
 	static bool ProjectRayOnPlaneYZ(float plane_x, float& hit_y, float& hit_z, glm::vec3 origin, glm::vec3 direction);
 	static void SaveBlockToFile(SimpleBlock* block, std::ofstream& save_file);
 	static char* SaveBlockToFile(SimpleBlock* block, char* data);
 	static SimpleBlock* LoadBlockFromFile(glm::ivec3 position, Chunk* parent_chunk, char*& data);
+	void RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent_chunk);
 };
 
 namespace blk_id
@@ -97,8 +101,10 @@ namespace blk_id
 		gold_ore_id,
 		iron_block_id,
 		torch_id,
+		redstone_torch_id,
 		switch_id,
 		redstone_id,
+		redstone_block_id,
 		water_id,
 		door_id,
 	};
@@ -140,8 +146,16 @@ namespace tex_id
 		torch,
 		torch_n,
 		torch_s,
+		redstone_torch_on,
+		redstone_torch_on_n,
+		redstone_torch_on_s,
+		redstone_torch_off,
+		redstone_torch_off_n,
 		redstone,
 		redstone_dot,
+		redstone_block,
+		redstone_block_n,
+		redstone_block_s,
 		lever_base,
 		lever_base_top,
 		water,

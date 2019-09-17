@@ -6,6 +6,7 @@
 #include "Vertex.h"
 #include "TextureInfo.h"
 #include "Models.h"
+#include <algorithm>
 
 SimpleBlock::SimpleBlock(unsigned char id)
 {
@@ -370,10 +371,14 @@ SimpleBlock* SimpleBlock::CreateNew(int block_id, RayHitInfo hit_info)
 	{
 	case blk_id::torch_id:
 		return new blk::Torch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
+	case blk_id::redstone_torch_id:
+		return new blk::RedstoneTorch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	case blk_id::switch_id:
 		return new blk::Switch(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	case blk_id::redstone_id:
-		return new blk::Redstone(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
+		return new blk::Redstone(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), hit_info.place_chunk);
+	case blk_id::redstone_block_id:
+		return new blk::RedstoneBlock(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), hit_info.place_chunk);
 	case blk_id::door_id:
 		return new blk::Door(glm::ivec3(hit_info.place_x, hit_info.place_y, hit_info.place_z), glm::ivec3(hit_info.hit_x, hit_info.hit_y, hit_info.hit_z), hit_info.place_chunk);
 	default:
@@ -411,9 +416,9 @@ glm::vec3 SimpleBlock::GetColor(int block_id)
 SimpleBlock::Direction SimpleBlock::GetDirection(glm::ivec3 vec)
 {
 	if (vec.x >= 1)
-		return EAST;
-	if (vec.x <= -1)
 		return WEST;
+	if (vec.x <= -1)
+		return EAST;
 	if (vec.z <= -1)
 		return SOUTH;
 	if (vec.z >= 1)
@@ -424,6 +429,27 @@ SimpleBlock::Direction SimpleBlock::GetDirection(glm::ivec3 vec)
 		return BOTTOM;
 
 	return NORTH;
+}
+
+
+glm::ivec3 SimpleBlock::GetOffset(Direction direction)
+{
+	switch (direction)
+	{
+	case NORTH:
+		return glm::ivec3(0, 0, 1);
+	case SOUTH:
+		return glm::ivec3(0, 0, -1);
+	case EAST:
+		return glm::ivec3(-1, 0, 0);
+	case WEST:
+		return glm::ivec3(1, 0, 0);
+	case TOP:
+		return glm::ivec3(0, 1, 0);
+	case BOTTOM:
+		return glm::ivec3(0, -1, 0);
+	}
+	return glm::ivec3(0);
 }
 
 bool SimpleBlock::ProjectRayOnPlaneXZ(float plane_y, float& hit_x, float& hit_z, glm::vec3 origin, glm::vec3 direction)
@@ -477,13 +503,48 @@ SimpleBlock* SimpleBlock::LoadBlockFromFile(glm::ivec3 position, Chunk* parent_c
 	{
 	case blk_id::torch_id:
 		return new blk::Torch(position, parent_chunk, data);
+	case blk_id::redstone_torch_id:
+		return new blk::RedstoneTorch(position, parent_chunk, data);
 	case blk_id::switch_id:
 		return new blk::Switch(position, parent_chunk, data);
 	case blk_id::door_id:
 		return new blk::Door(position, parent_chunk, data);
 	case blk_id::redstone_id:
 		return new blk::Redstone(position, parent_chunk, data);
+	case blk_id::redstone_block_id:
+		return new blk::RedstoneBlock(position, parent_chunk, data);
 	default:
 		return new SimpleBlock(block_id);
 	}
+}
+
+void SimpleBlock::RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent_chunk)
+{
+	if (id == blk_id::air_id)
+	{
+		power_level = 0;
+		return;
+	}
+	if (!GetFlag(POWERABLE))
+		return;
+
+	/*if (GetFlag(COMPLEX))
+	{
+		((ComplexBlock*)this)->RecalculatePowerLevel();
+	}
+	else
+	{*/
+	power_level = 0;
+	for (int i = 1; i <= 32; i *= 2)
+	{
+		const auto neightbour_block = parent_chunk->GetBlockInArea(local_position - GetOffset((Direction)i));
+		if (neightbour_block == nullptr)
+			continue;
+		if (neightbour_block->GetFlag(COMPLEX))
+		{
+			ComplexBlock* complex = (ComplexBlock*)neightbour_block;
+			power_level = std::max(power_level, complex->GetPowerTowards((Direction)i));
+		}
+	}
+	//}
 }

@@ -307,11 +307,11 @@ void MyCraft::ChunkUnloaderFunction()
 
 void MyCraft::BlockUpdaterFunction()
 {
-	auto time = std::chrono::system_clock::now;
+	//auto time = std::chrono::system_clock::now;
 	while (!program_should_close)
 	{
 		BlockUpdater::Update();
-		std::this_thread::sleep_for(std::chrono::microseconds(1000));
+		std::this_thread::sleep_for(std::chrono::microseconds(50000));
 	}
 }
 
@@ -636,12 +636,12 @@ void MyCraft::key_callback(GLFWwindow* window, int key, int scancode, int action
 		else
 		{
 			command_input_enabled = true;
-			command_input = "";
 		}
 	}
 	if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS)
 	{
-		command_input.pop_back();
+		if(command_input.length() > 0)
+			command_input.pop_back();
 	}
 	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS)
 	{

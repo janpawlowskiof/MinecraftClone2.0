@@ -108,7 +108,6 @@ void ChunkManager::UnloadChunks()
 			const auto chunk = iterator->second;
 			if ((chunk->chunk_x - Player::current_chunk_x) * (chunk->chunk_x - Player::current_chunk_x) + (chunk->chunk_z - Player::current_chunk_z) * (chunk->chunk_z - Player::current_chunk_z) >= (MyCraft::render_distance + 1) * (MyCraft::render_distance + 1))
 			{
-				///			SAVING CHUNK HERE		///
 				QueueChunkToUnload(iterator->second);
 				iterator = chunk_map.erase(iterator);
 			}

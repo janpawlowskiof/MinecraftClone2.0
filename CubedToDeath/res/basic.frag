@@ -154,5 +154,5 @@ void main()
 	// color = vec4((ambient + diffuse * (1.0f - shadow)) * color.rgb, 1);
 	color = mix(vec4(135, 206, 235, 255)/255.0, color, fog_factor);
 	frag = color;
-	//frag = vec4(normal * 0.5 + 0.5, 1);
+	//frag = vec4(fragment.colorization, 1);
 }

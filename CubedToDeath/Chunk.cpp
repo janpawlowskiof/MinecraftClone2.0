@@ -16,7 +16,7 @@ Chunk::Chunk(int chunk_x, int chunk_z)
 
 	for (int x = 0; x < 17; x++)
 		for (int z = 0; z < 17; z++)
-			moisture_values[x][z] = ChunkManager::moisture_noise.GetValue(x + 16 * chunk_x, z + 16 * chunk_z)/2.0 + 0.5;
+			moisture_values[x][z] = ChunkManager::moisture_noise.GetValue(x + 16 * chunk_x, z + 16 * chunk_z) / 2.0 + 0.5;
 }
 
 const int fluid_stride = 11 * sizeof(float);
@@ -120,7 +120,7 @@ void Chunk::GenerateTerrain()
 					int z = zs * 4 + zb;
 					//int ground_level = height_values[x][z];
 
-					float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16)/2.0 + 0.25, 0, 0.5) * 2;
+					float mountaininess = clip(ChunkManager::tectonical_noise.GetValue(x + chunk_x * 16, z + chunk_z * 16) / 2.0 + 0.25, 0, 0.5) * 2;
 					//float mountaininess = 1;
 
 					for (int ys = 0; ys < 16; ++ys) {
@@ -203,7 +203,7 @@ void Chunk::GenerateStructures()
 					tree_values[x + 1][z + 1] > tree_values[x + 1][z])
 				{
 					float tree_placement_value = clip(ChunkManager::tree_placement_noise.GetValue(chunk_x * 16 + x, chunk_z * 16 + z), 0.0f, 0.6f) / (0.6f);
-					if (tree_values[x + 1][z + 1] > tree_placement_value || height_values[x+1][z+1] < sea_level)
+					if (tree_values[x + 1][z + 1] > tree_placement_value || height_values[x + 1][z + 1] < sea_level)
 						continue;
 
 					int ground_level = height_values[x][z];
@@ -236,6 +236,8 @@ void Chunk::GenerateStructures()
 SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chunk*& chunk)
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
+	if (local_y < 0 || local_y >= 128)
+		return nullptr;
 
 	if (local_z < 0)
 	{
@@ -271,7 +273,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 	{
 		if (local_x < 0)
 		{
-			if (north_chunk == nullptr || north_chunk->east_chunk== nullptr)
+			if (north_chunk == nullptr || north_chunk->east_chunk == nullptr)
 				return nullptr;
 			chunk = north_chunk->east_chunk;
 			local_x = (local_x % 16 + 16) % 16;
@@ -281,7 +283,7 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 		//north_chunk->east_chunk->ReplaceBlock(local_x % 16 + 16, block_y, local_z % 16, block, false);
 		else if (local_x >= 16)
 		{
-			if (north_chunk == nullptr || north_chunk->west_chunk== nullptr)
+			if (north_chunk == nullptr || north_chunk->west_chunk == nullptr)
 				return nullptr;
 			chunk = north_chunk->west_chunk;
 			local_x = (local_x % 16 + 16) % 16;
@@ -328,6 +330,18 @@ SimpleBlock* Chunk::GetBlockInArea(int& local_x, int& local_y, int& local_z, Chu
 			return chunk->blocks[local_y][local_x][local_z];
 		}
 	}
+}
+
+SimpleBlock* Chunk::GetBlockInArea(int local_x, int local_y, int local_z)
+{
+	Chunk* chunk;
+	return GetBlockInArea(local_x, local_y, local_z, chunk);
+}
+
+SimpleBlock* Chunk::GetBlockInArea(glm::ivec3 local_position)
+{
+	Chunk* chunk;
+	return GetBlockInArea(local_position.x, local_position.y, local_position.z, chunk);
 }
 
 //recalculates all of the vbos WITHOUT submitting them to the gpu
@@ -414,9 +428,9 @@ void Chunk::RecalculateVbos()
 				}
 			}*/
 
-	//adding faces to buffors
+			//adding faces to buffors
 	for (int y = 0; y < 127; y++)
-		for (int x = 0; x < 16; x ++)
+		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
 				//skipping air
@@ -541,7 +555,7 @@ void Chunk::RecalculateVbos()
 	//triangles_count_simple = 0;
 
 	for (int y = 0; y < 127; y++)
-		for (int x = 0; x < 16; x++) 
+		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
 			{
 				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
@@ -566,7 +580,7 @@ void Chunk::RecalculateVbos()
 						z_offset++;
 					}*/
 					//triangles_count_simple += 2;
-					glm::vec3 color00(0.6 * (moisture_values[x][z]), 0.6, 0.3*(1 - moisture_values[x][z]));
+					glm::vec3 color00(0.6 * (moisture_values[x][z]), 0.6, 0.3 * (1 - moisture_values[x][z]));
 					glm::vec3 color01(0.6 * (moisture_values[x][z + 1]), 0.6, 0.3 * (1 - moisture_values[x][z + 1]));
 					glm::vec3 color10(0.6 * (moisture_values[x + 1][z]), 0.6, 0.3 * (1 - moisture_values[x + 1][z]));
 					glm::vec3 color11(0.6 * (moisture_values[x + 1][z + 1]), 0.6, 0.3 * (1 - moisture_values[x + 1][z + 1]));
@@ -587,9 +601,6 @@ void Chunk::RecalculateComplexVbo()
 {
 	std::lock_guard<std::mutex> lock(blocks_mutex);
 
-	if (chunk_x == 0 && chunk_z == -1)
-		std::cout << "Eyyy\n";
-
 	int triangles_count_complex = 0;
 
 	//adding faces to buffors
@@ -607,7 +618,7 @@ void Chunk::RecalculateComplexVbo()
 					triangles_count_complex += ((ComplexBlock*)blocks[y][x][z])->GetNumberOfTriangles();
 				}
 			}
-			
+
 	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
 	//if (vertices_complex)
 	//{
@@ -732,7 +743,7 @@ void Chunk::InitializeComplexBlocks()
 {
 	for (int y = 0; y < 128; y++)
 		for (int x = 0; x < 16; x++)
-			for(int z = 0; z < 16; z++)
+			for (int z = 0; z < 16; z++)
 			{
 				if (blocks[y][x][z]->GetFlag(SimpleBlock::COMPLEX))
 					((ComplexBlock*)blocks[y][x][z])->OnLoadFinalization();
@@ -795,12 +806,30 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 			blocks[block_y][local_x][local_z] = block;
 			if (destroyed_block != nullptr)
 			{
+				lock.unlock();
 				ChunkManager::QueueBlockToUnload(destroyed_block);
 				if (destroyed_block->GetFlag(SimpleBlock::COMPLEX))
 				{
-					lock.unlock();
 					((ComplexBlock*)destroyed_block)->OnDestroy();
 				}
+				if (block->GetFlag(SimpleBlock::COMPLEX))
+				{
+					((ComplexBlock*)block)->RecalculateNeightboursPowerLevel();
+				}
+
+				SimpleBlock* neightbour_block;
+				if ((neightbour_block = GetBlockInArea(local_x + 1, block_y, local_z))->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)neightbour_block)->OnNeighbourDestroyed(glm::ivec3(local_x + 16 * chunk_x, block_y, local_z + 16 * chunk_z));
+				if ((neightbour_block = GetBlockInArea(local_x - 1, block_y, local_z))->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)neightbour_block)->OnNeighbourDestroyed(glm::ivec3(local_x + 16 * chunk_x, block_y, local_z + 16 * chunk_z));
+				if ((neightbour_block = GetBlockInArea(local_x, block_y, local_z + 1))->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)neightbour_block)->OnNeighbourDestroyed(glm::ivec3(local_x + 16 * chunk_x, block_y, local_z + 16 * chunk_z));
+				if ((neightbour_block = GetBlockInArea(local_x, block_y, local_z - 1))->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)neightbour_block)->OnNeighbourDestroyed(glm::ivec3(local_x + 16 * chunk_x, block_y, local_z + 16 * chunk_z));
+				if (block_y > 0 && (neightbour_block = GetBlockInArea(local_x, block_y - 1, local_z))->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)neightbour_block)->OnNeighbourDestroyed(glm::ivec3(local_x + 16 * chunk_x, block_y, local_z + 16 * chunk_z));
+				if (block_y < 127 && (neightbour_block = GetBlockInArea(local_x, block_y + 1, local_z))->GetFlag(SimpleBlock::COMPLEX))
+					((ComplexBlock*)neightbour_block)->OnNeighbourDestroyed(glm::ivec3(local_x + 16 * chunk_x, block_y, local_z + 16 * chunk_z));
 			}
 			recalculate_vbos_needed = true;
 		}
@@ -811,7 +840,6 @@ void Chunk::ReplaceBlock(int block_x, int block_y, int block_z, SimpleBlock* blo
 
 Chunk::~Chunk()
 {
-	//std::cout << "sdest " << chunk_x << +' ' << chunk_z << '\n';
 	//Chunk wysy³a dane o swoich buforach do kolejki aby zosta³y poprawnie usuniête
 	if (buffers_initialized)
 	{
@@ -820,10 +848,6 @@ Chunk::~Chunk()
 		MyCraft::QueueBuffersToDelete(vbo[FLUID], vao[FLUID]);
 	}
 
-	/*if (vertices_simple != nullptr)
-		delete[] vertices_simple;
-	if (vertices_complex != nullptr)
-		delete[] vertices_complex;*/
 	if (vertices_fluid != nullptr)
 		delete[] vertices_fluid;
 
@@ -839,4 +863,4 @@ Chunk::~Chunk()
 	//std::cout << "fdest " << chunk_x << " " << chunk_z << '\n';
 }
 
-int Chunk::sea_level = 51;
+int Chunk::sea_level = 52;

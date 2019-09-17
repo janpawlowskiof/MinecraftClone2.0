@@ -95,6 +95,17 @@ TextureArray::TextureArray(std::string path)
 	LoadLayer(tex_id::torch, "res/block/torch.png");
 	LoadLayer(tex_id::torch_n, "res/block/torch_n.png");
 	LoadLayer(tex_id::torch_s, "res/block/torch_s.png");
+
+	LoadLayer(tex_id::redstone_torch_on, "res/block/redstone_torch.png");
+	LoadLayer(tex_id::redstone_torch_on_n, "res/block/redstone_torch_n.png");
+	LoadLayer(tex_id::redstone_torch_on_s, "res/block/redstone_torch_s.png");
+	LoadLayer(tex_id::redstone_torch_off, "res/block/redstone_torch_off.png");
+	LoadLayer(tex_id::redstone_torch_off_n, "res/block/redstone_torch_off_n.png");
+
+	LoadLayer(tex_id::redstone_block, "res/block/redstone_block.png");
+	LoadLayer(tex_id::redstone_block_n, "res/block/redstone_block_n.png");
+	LoadLayer(tex_id::redstone_block_s, "res/block/redstone_block_s.png");
+
 	LoadLayer(tex_id::redstone, "res/block/redstone_dust_line0.png");
 	LoadLayer(tex_id::redstone_dot, "res/block/redstone_dust_dot.png");
 	LoadLayer(tex_id::lever_base, "res/block/lever_base.png");
@@ -127,7 +138,7 @@ void TextureArray::LoadLayer(int layer, std::string path)
 	}
 	else
 	{
-		std::cout << "Failed to load texture" << std::endl;
+		std::cout << "Failed to load texture " << path << std::endl;
 	}
 	stbi_image_free(data);
 }

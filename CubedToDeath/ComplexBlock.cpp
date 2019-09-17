@@ -5,8 +5,47 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtx/transform.hpp>
 #include "HitInfo.h"
+#include "Models.h"
 
 using namespace blk;
+
+void CreateTorchModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z, SimpleBlock::Direction direction, TextureInfo texture_info)
+{
+	const float width = 1.0f / 8.0f;
+
+	glm::mat4 rotate = glm::mat4(1);
+	switch (direction)
+	{
+	case SimpleBlock::BOTTOM:
+		//transformation = glm::rot
+		break;
+	case SimpleBlock::NORTH:
+		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		break;
+	case SimpleBlock::SOUTH:
+		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+		break;
+	case SimpleBlock::WEST:
+		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, -1));
+		break;
+	case SimpleBlock::EAST:
+		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, 1));
+		break;
+	}
+	CreateNorthFace(vertices, 0, 0, 0.5 + width / 2, texture_info);
+	CreateSouthFace(vertices, 0, 0, 0.5 - width / 2, texture_info);
+	CreateWestFace(vertices, 0.5 + width / 2, 0, 0, texture_info);
+	CreateEastFace(vertices, 0.5 - width / 2, 0, 0, texture_info);
+	auto iterator = vertices.end();
+	for (int i = 0; i < 3 * 8; i++)
+	{
+		iterator--;
+		iterator->Translate(glm::vec3(-0.5, -0.5, -0.5));
+		iterator->Transform(rotate);
+		iterator->Translate(glm::vec3(0.5, 0.5, 0.5));
+		iterator->Translate(glm::vec3(world_x, world_y, world_z));
+	}
+}
 
 ComplexBlock::~ComplexBlock()
 {
@@ -50,45 +89,11 @@ bool blk::Torch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int bl
 }
 void blk::Torch::CreateModel(std::vector<Vertex> &vertices, int world_x, int world_y, int world_z)
 {
-	const float width = 1.0f / 8.0f;
-
 	TextureInfo texture_info;
 	texture_info.texture_id = tex_id::torch;
 	texture_info.normal_id = tex_id::torch_n;
 	texture_info.specular_id = tex_id::torch_s;
-
-	glm::mat4 rotate = glm::mat4(1);
-	switch (direction)
-	{
-	case BOTTOM:
-		//transformation = glm::rot
-		break;
-	case NORTH:
-		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		break;
-	case SOUTH:
-		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-		break;
-	case WEST:
-		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, 1));
-		break;
-	case EAST:
-		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, -1));
-		break;
-	}
-	CreateNorthFace(vertices, 0, 0, 0.5 + width / 2, texture_info);
-	CreateSouthFace(vertices, 0, 0, 0.5 - width / 2, texture_info);
-	CreateWestFace(vertices, 0.5 + width / 2, 0, 0, texture_info);
-	CreateEastFace(vertices, 0.5 - width / 2, 0, 0, texture_info);
-	auto iterator = vertices.end();
-	for (int i = 0; i < 3 * GetNumberOfTriangles(); i++)
-	{
-		iterator--;
-		iterator->Translate(glm::vec3(-0.5, -0.5, -0.5));
-		iterator->Transform(rotate);
-		iterator->Translate(glm::vec3(0.5, 0.5, 0.5));
-		iterator->Translate(glm::vec3(world_x, world_y, world_z));
-	}
+	CreateTorchModel(vertices, world_x, world_y, world_z, direction, texture_info);
 }
 
 bool blk::Switch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
@@ -129,10 +134,10 @@ void blk::Switch::CreateModel(std::vector<Vertex>& vertices, int world_x, int wo
 		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 		break;
 	case WEST:
-		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, 1));
+		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, -1));
 		break;
 	case EAST:
-		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, -1));
+		rotate = glm::rotate(glm::radians(90.0f), glm::vec3(0, 0.0f, 1));
 		break;
 	}
 	CreateNorthFace(vertices, 0, 0, 1-w, texture_info);
@@ -257,58 +262,6 @@ void blk::Door::CreateModel(std::vector<Vertex>&vertices, int world_x, int world
 	const float side_width = 1 * tex_unit;
 
 	int tex = top ? tex_id::door_top : tex_id::door_bottom;
-
-	/*const float vertices[] = {
-		xyz(p001), 0 + side_width, 1 - side_width, xyz(n001), tex,
-		xyz(p101), 1 - side_width, 1 - side_width, xyz(n001),tex,
-		xyz(p111), 1 - side_width, 0 + side_width, xyz(n001),tex,
-
-		xyz(p001), 0 + side_width, 1 - side_width, xyz(n001),tex,
-		xyz(p111), 1 - side_width, 0 + side_width, xyz(n001),tex,
-		xyz(p011), 0 + side_width, 0 + side_width, xyz(n001),tex,
-
-		xyz(p000), 0 + side_width, 1 - side_width, xyz(-n001),tex,
-		xyz(p110), 1 - side_width, 0 + side_width , xyz(-n001),tex,
-		xyz(p100), 1 - side_width, 1 - side_width, xyz(-n001),tex,
-
-		xyz(p000), 0 + side_width, 1 - side_width, xyz(-n001),tex,
-		xyz(p010), 0 + side_width, 0 + side_width, xyz(-n001),tex,
-		xyz(p110), 1 - side_width, 0 + side_width, xyz(-n001),tex,
-
-		xyz(p100), 0, 2 * side_width, xyz(n100),tex,
-		xyz(p111), 1, 0, xyz(n100),tex,
-		xyz(p101), 0, 0, xyz(n100),tex,
-
-		xyz(p100), 0, 2 * side_width, xyz(n100),tex,
-		xyz(p110), 1, 2 * side_width, xyz(n100),tex,
-		xyz(p111), 1, 0, xyz(n100),tex,
-
-		xyz(p011), 1, 0, xyz(-n100),tex,
-		xyz(p000), 0, 2 * side_width, xyz(-n100),tex,
-		xyz(p001), 0, 0, xyz(-n100),tex,
-
-		xyz(p010), 1, 2 * side_width, xyz(-n100),tex,
-		xyz(p000), 0, 2 * side_width, xyz(-n100),tex,
-		xyz(p011), 1, 0, xyz(-n100),tex,
-
-		xyz(p010), 0, 2 * side_width, xyz(n010),tex,
-		xyz(p011), 0, 0, xyz(n010),tex,
-		xyz(p111), 1, 0, xyz(n010),tex,
-
-		xyz(p010), 0, 2 * side_width, xyz(n010),tex,
-		xyz(p111), 1, 0, xyz(n010),tex,
-		xyz(p110), 1, 2 * side_width, xyz(n010),tex,
-
-		xyz(p000), 0, 2 * side_width, xyz(-n010),tex,
-		xyz(p101), 1, 0, xyz(-n010),tex,
-		xyz(p001), 0, 0, xyz(-n010),tex,
-
-		xyz(p000), 0, 2 * side_width, xyz(-n010),tex,
-		xyz(p100), 1, 2 * side_width, xyz(-n010),tex,
-		xyz(p101), 1, 0, xyz(-n010),tex,
-	};*/
-	//std::copy(vertices, vertices + sizeof(vertices) / sizeof(float), target);
-	//return target + sizeof(vertices) / sizeof(float);
 }
 
 bool blk::Redstone::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
@@ -319,19 +272,19 @@ bool blk::Redstone::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int
 
 void blk::Redstone::CreateModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z)
 {
-	auto color = glm::vec3(power_level, 0, 0);
+	auto color = glm::vec3(power_level/16.0, 0, 0);
 	TextureInfo texture_info;
 	texture_info.texture_id = tex_id::redstone_dot;
-	CreateTopFace(vertices, world_x, world_y + 0.02, world_z, texture_info, TextureInfo(), color, color, color, color);
+	CreateTopFace(vertices, world_x, world_y + 0.02, world_z, TextureInfo(), texture_info, color, color, color, color);
 	texture_info.texture_id = tex_id::redstone;
 	auto iterator = vertices.end();
 	if (south_line)
 	{
-		CreateTopFace(vertices, world_x, world_y + 0.01, world_z, texture_info, TextureInfo(), color, color, color, color);
+		CreateTopFace(vertices, world_x, world_y + 0.01, world_z, TextureInfo(), texture_info, color, color, color, color);
 	}
 	if (north_line)
 	{
-		CreateTopFace(vertices, -0.5, 0.01, -0.5, texture_info, TextureInfo(), color, color, color, color);
+		CreateTopFace(vertices, -0.5, 0.01, -0.5, TextureInfo(), texture_info, color, color, color, color);
 		auto iterator = vertices.end();
 		for (int i = 0; i < 6; i++)
 		{
@@ -342,7 +295,7 @@ void blk::Redstone::CreateModel(std::vector<Vertex>& vertices, int world_x, int 
 	}
 	if (west_line)
 	{
-		CreateTopFace(vertices, -0.5, 0.01, -0.5, texture_info, TextureInfo(), color, color, color, color);
+		CreateTopFace(vertices, -0.5, 0.01, -0.5, TextureInfo(), texture_info, color, color, color, color);
 		auto iterator = vertices.end();
 		for (int i = 0; i < 6; i++)
 		{
@@ -353,7 +306,7 @@ void blk::Redstone::CreateModel(std::vector<Vertex>& vertices, int world_x, int 
 	}
 	if (east_line)
 	{
-		CreateTopFace(vertices, -0.5, 0.01, -0.5, texture_info, TextureInfo(), color, color, color, color);
+		CreateTopFace(vertices, -0.5, 0.01, -0.5, TextureInfo(), texture_info, color, color, color, color);
 		auto iterator = vertices.end();
 		for (int i = 0; i < 6; i++)
 		{
@@ -363,4 +316,40 @@ void blk::Redstone::CreateModel(std::vector<Vertex>& vertices, int world_x, int 
 		}
 	}
 
+}
+
+void blk::RedstoneTorch::CreateModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z)
+{
+	TextureInfo texture_info;
+	if (power_level > 0)
+	{
+		texture_info.texture_id = tex_id::redstone_torch_on;
+		texture_info.normal_id = tex_id::redstone_torch_on_n;
+		texture_info.specular_id = tex_id::redstone_torch_on_s;
+	}
+	else
+	{
+		texture_info.texture_id = tex_id::redstone_torch_off;
+		texture_info.normal_id = tex_id::redstone_torch_off_n;
+	}
+	CreateTorchModel(vertices, world_x, world_y, world_z, direction, texture_info);
+}
+
+bool blk::RedstoneBlock::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
+{
+	return CheckRayVsAABB(origin, direction, position, glm::vec3(1), hit_info);
+}
+
+void blk::RedstoneBlock::CreateModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z)
+{
+	TextureInfo texture_info;
+	texture_info.texture_id = tex_id::redstone_block;
+	texture_info.normal_id = tex_id::redstone_block_n;
+	texture_info.specular_id = tex_id::redstone_block_s;
+	CreateNorthFace(vertices, world_x, world_y, world_z+1, texture_info);
+	CreateSouthFace(vertices, world_x, world_y, world_z, texture_info);
+	CreateWestFace(vertices, world_x+1, world_y, world_z, texture_info);
+	CreateEastFace(vertices, world_x, world_y, world_z, texture_info);
+	CreateTopFace(vertices, world_x, world_y+1, world_z, texture_info);
+	CreateBottomFace(vertices, world_x, world_y, world_z, texture_info);
 }

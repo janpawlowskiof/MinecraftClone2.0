@@ -35,7 +35,9 @@ public:
 	void InitializeBuffers();
 	void GenerateTerrain();
 	void GenerateStructures();
-	SimpleBlock* GetBlockInArea(int &local_x, int &local_y, int& local_z, Chunk*&chunk);
+	SimpleBlock* GetBlockInArea(int& local_x, int& local_y, int& local_z, Chunk*& chunk);
+	SimpleBlock* GetBlockInArea(int local_x, int local_y, int local_z);
+	SimpleBlock* GetBlockInArea(glm::ivec3 local_position);
 	Chunk(int chunk_x, int chunk_y);
 	~Chunk();
 	//void CountVisibleTriangles();

@@ -92,7 +92,7 @@ namespace save
 		Chunk* chunk = new Chunk(chunk_x, chunk_z);
 		SaveHeader header;
 		save_file.read(reinterpret_cast<char*>(&header), HEADERSIZE);
-		chunk->structures_generated;
+		chunk->structures_generated = header.structures_generated;
 		memcpy(chunk->height_values, header.height_values, 16 * 16 * sizeof(int));
 		save_file.unsetf(std::ios::skipws);
 

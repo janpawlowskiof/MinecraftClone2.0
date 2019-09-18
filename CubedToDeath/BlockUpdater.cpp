@@ -1,39 +1,39 @@
 #include "BlockUpdater.h"
 #include "ComplexBlock.h"
 
+int c = 0;
+
 void BlockUpdater::Update()
 {
 	chunk_map = ChunkManager::GetChunkMap();
-	bool model_changed = false;
+	std::cout << "Tick " << c++ << " !\n";
 	for (auto iterator : chunk_map)
 	{
-		bool chunk_contains_redstone = false;
-		//Updating every complex block
 		auto chunk = iterator.second;
+		if (chunk->complex_block_count <= 0)
+			continue;
+		//Updating every complex block
+		chunk->contains_redstone = false;
 		for (int y = 0; y < 127; y++)
 			for (int x = 0; x < 16; x++)
 				for (int z = 0; z < 16; z++)
 				{
 					auto block = chunk->blocks[y][x][z];
-					if (block->GetFlag(SimpleBlock::COMPLEX))
+					if (block->id == blk_id::redstone_id)
 					{
-						auto complex =(ComplexBlock*)block;
-
-						if (complex->id == blk_id::redstone_id)
-						{
-							chunk_contains_redstone = true;
-							///			temprary on not		vvv//
-							model_changed = true;
-						}
-						complex->OnTick();
-						if (complex->model_changed)
-							model_changed = true;
-						complex->model_changed = false;
-
+						chunk->contains_redstone = true;
+						block->power_level = 0;
+						///			temprary on not		vvv//
 					}
 				}
+	}
 
-		if (chunk_contains_redstone)
+	for (auto iterator : chunk_map)
+	{
+		auto chunk = iterator.second;
+		if (chunk->complex_block_count <= 0)
+			continue;
+		if (chunk->contains_redstone)
 		{
 			for (int y = 0; y < 127; y++)
 				for (int x = 0; x < 16; x++)
@@ -42,12 +42,55 @@ void BlockUpdater::Update()
 						auto block = chunk->blocks[y][x][z];
 							if (block->id == blk_id::redstone_id)
 							{
-								((blk::Redstone*)block)->PropagetePower();
+								const auto redstone = (blk::Redstone*)block;
+								redstone->PropagetePower();
 							}
 					}
+
 		}
-		if (model_changed)
+
+	}
+
+	for (auto iterator : chunk_map)
+	{
+		auto chunk = iterator.second;
+		if (chunk->complex_block_count <= 0)
+			continue;
+			for (int y = 0; y < 127; y++)
+				for (int x = 0; x < 16; x++)
+					for (int z = 0; z < 16; z++)
+					{
+						auto block = chunk->blocks[y][x][z];
+						if (block->id == blk_id::redstone_id)
+						{
+							const auto redstone = (blk::Redstone*)block;
+
+							if (redstone->power_level != redstone->stable_power_level)
+							{
+								chunk->complex_model_changed = true;
+								redstone->stable_power_level = redstone->power_level;
+
+								redstone->RecalculateNeightboursPowerLevel(true);
+							}
+						}
+
+						if (block->GetFlag(SimpleBlock::COMPLEX))
+						{
+							auto complex = (ComplexBlock*)block;
+
+							complex->OnTick();
+							if (complex->model_changed)
+								chunk->complex_model_changed = true;
+							complex->model_changed = false;
+
+						}
+					}
+
+		if (chunk->complex_model_changed)
+		{
 			chunk->RecalculateComplexVbo();
+		}
+
 	}
 
 	ChunkManager::GiveThreadPermissionToUnloadBlocks(ChunkManager::BLOCK_UPDATER);

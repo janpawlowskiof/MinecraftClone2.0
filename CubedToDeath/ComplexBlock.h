@@ -18,6 +18,7 @@ public:
 		SetFlag(POWERABLE, false);
 		this->position = position;
 		this->parent_chunk = parent_chunk;
+		parent_chunk->complex_block_count++;
 	}
 	Direction direction;
 	glm::ivec3 position;
@@ -47,7 +48,7 @@ public:
 		std::cout << "Default SelfDestruct\n";
 		parent_chunk->ReplaceBlock(position.x, position.y, position.z, SimpleBlock::CreateNew(blk_id::air_id));
 	}
-	void RecalculateNeightboursPowerLevel()
+	void RecalculateNeightboursPowerLevel(bool ignore_redstone = false)
 	{
 		glm::ivec3 local_position(position.x - 16 * parent_chunk->chunk_x, position.y, position.z - 16 * parent_chunk->chunk_z);
 
@@ -57,7 +58,7 @@ public:
 			Chunk* chunk;
 			const auto block = parent_chunk->GetBlockInArea(neightbour_position.x, neightbour_position.y, neightbour_position.z, chunk);
 			if(block != nullptr)
-				block->RecalculatePowerLevel(neightbour_position, chunk);
+				block->RecalculatePowerLevel(neightbour_position, chunk, ignore_redstone);
 		}
 	}
 };
@@ -125,13 +126,16 @@ namespace blk
 			if ((parent_power-0.5)*(power_level-0.5) > 0)
 			{
 				ticks_left_to_toggle--;
+				std::cout << "Ticks left to toggle " << (int)ticks_left_to_toggle << "\n";
 				if (ticks_left_to_toggle < 0)
 				{
 					power_level = parent_power > 0 ? 0 : 16;
 					model_changed = true;
+					ticks_left_to_toggle = ticks_to_toggle;
+					std::cout << "Toggled!";
 				}
 
-				RecalculateNeightboursPowerLevel();
+				RecalculateNeightboursPowerLevel(true);
 				//std::cout << "TPL: " << (int)power_level << std::endl;
 			}
 			else
@@ -147,7 +151,7 @@ namespace blk
 		}
 	private:
 		char ticks_left_to_toggle = 0;
-		const char ticks_to_toggle = 1;
+		const char ticks_to_toggle = 2;
 	};
 
 
@@ -232,11 +236,11 @@ namespace blk
 		void CreateModel(std::vector<Vertex>&, int world_x, int world_y, int world_z) override;
 		void OnNeighbourDestroyed(glm::ivec3 neighbour_position) override
 		{
-			RecalculateNeightboursPowerLevel();
+			RecalculateNeightboursPowerLevel(true);
 		}
 		void OnDestroy() override
 		{
-			RecalculateNeightboursPowerLevel();
+			RecalculateNeightboursPowerLevel(true);
 		}
 	private:
 	};
@@ -274,15 +278,18 @@ namespace blk
 		}
 		void OnTick() override
 		{
-			power_level = 0;
+			//power_level = 0;
 		}
 		void PropagetePower(unsigned char initial_power)
 		{
-			if (initial_power <= power_level)
+			if (initial_power <= power_level || initial_power <= 0)
 				return;
+
 
 			power_level = initial_power;
 			const auto lowered_power = power_level - 1;
+
+			//std::cout << "Power of "<< (int)power_level <<" propagated...\n";
 
 			if (north_line)
 				north_line->PropagetePower(lowered_power);
@@ -296,6 +303,16 @@ namespace blk
 		void PropagetePower()
 		{
 			RecalculatePowerLevel(glm::ivec3(position.x - 16*parent_chunk->chunk_x, position.y, position.z - 16*parent_chunk->chunk_z), parent_chunk);
+			if (north_line && north_line->power_level > 1)
+				power_level = std::max(power_level, (unsigned char)(north_line->power_level - 1));
+			if (south_line && south_line->power_level > 1)
+				power_level = std::max(power_level, (unsigned char)(south_line->power_level - 1));
+			if (west_line && west_line->power_level > 1)
+				power_level = std::max(power_level, (unsigned char)(west_line->power_level - 1));
+			if (east_line && east_line->power_level > 1)
+				power_level = std::max(power_level, (unsigned char)(east_line->power_level - 1));
+
+			//std::cout << "Propagation started at " << (int)power_level << "\n";
 
 			if (power_level <= 1)
 				return;
@@ -313,9 +330,14 @@ namespace blk
 		}
 		unsigned char GetPowerTowards(Direction direction) override
 		{
+			if (power_level <= 0)
+				return 0;
+
 			if ((direction == NORTH || direction == SOUTH) && (north_line || south_line))
 				return std::max(power_level - 1, 0);
 			if ((direction == EAST|| direction == WEST) && (west_line || east_line))
+				return std::max(power_level - 1, 0);
+			if(direction == BOTTOM)
 				return std::max(power_level - 1, 0);
 			return 0;
 		}
@@ -355,6 +377,7 @@ namespace blk
 		{
 			std::cout << "Unloading redstone\n";
 		}
+		unsigned char stable_power_level = 0;
 	private:
 		void CheckLines()
 		{

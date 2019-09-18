@@ -518,7 +518,7 @@ SimpleBlock* SimpleBlock::LoadBlockFromFile(glm::ivec3 position, Chunk* parent_c
 	}
 }
 
-void SimpleBlock::RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent_chunk)
+void SimpleBlock::RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent_chunk, bool ignore_redstone)
 {
 	if (id == blk_id::air_id)
 	{
@@ -527,6 +527,11 @@ void SimpleBlock::RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent
 	}
 	if (!GetFlag(POWERABLE))
 		return;
+	if (ignore_redstone && id == blk_id::redstone_id)
+		return;
+
+	if (id != blk_id::redstone_id)
+		power_level = 0;
 
 	/*if (GetFlag(COMPLEX))
 	{
@@ -534,7 +539,6 @@ void SimpleBlock::RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent
 	}
 	else
 	{*/
-	power_level = 0;
 	for (int i = 1; i <= 32; i *= 2)
 	{
 		const auto neightbour_block = parent_chunk->GetBlockInArea(local_position - GetOffset((Direction)i));

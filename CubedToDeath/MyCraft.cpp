@@ -226,7 +226,8 @@ void MyCraft::Run()
 
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
-		text->RenderText(text_shader, "Colliding: " + std::to_string(Player::colliding_id), 25.0f, height - 75.0f, 0.5f, Player::coliding ? glm::vec3(1, 0.1, 0.1) : glm::vec3(0.1, 1, 0.1));
+		if(Player::current_chunk)
+			text->RenderText(text_shader, "Complex Count: " + std::to_string(Player::current_chunk->complex_block_count), 25.0f, height - 75.0f, 0.5f, Player::coliding ? glm::vec3(1, 0.1, 0.1) : glm::vec3(0.1, 1, 0.1));
 
 		if (command_input_enabled)
 			text->RenderText(text_shader, "Input: " + command_input, 25.0f, 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
@@ -311,7 +312,7 @@ void MyCraft::BlockUpdaterFunction()
 	while (!program_should_close)
 	{
 		BlockUpdater::Update();
-		std::this_thread::sleep_for(std::chrono::microseconds(50000));
+		std::this_thread::sleep_for(std::chrono::microseconds(30000));
 	}
 }
 

@@ -14,9 +14,9 @@ private:
 	//float* vertices_simple = nullptr;
 	//float* vertices_complex = nullptr;
 	float* vertices_fluid = nullptr;
-	std::mutex blocks_mutex;
 	std::mutex vertices_mutex;
 public:
+	std::mutex blocks_mutex;
 	int triangles_count[3];
 	SimpleBlock* blocks[128][16][16];
 	int height_values[16][16];
@@ -59,5 +59,8 @@ public:
 		COMPLEX = 1,
 		FLUID = 2,
 	};
+	bool contains_redstone = false;
+	bool complex_model_changed = false;
+	int complex_block_count = 0;
 };
 

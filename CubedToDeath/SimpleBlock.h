@@ -83,7 +83,7 @@ public:
 	static void SaveBlockToFile(SimpleBlock* block, std::ofstream& save_file);
 	static char* SaveBlockToFile(SimpleBlock* block, char* data);
 	static SimpleBlock* LoadBlockFromFile(glm::ivec3 position, Chunk* parent_chunk, char*& data);
-	void RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent_chunk);
+	void RecalculatePowerLevel(glm::ivec3 local_position, Chunk* parent_chunk, bool ignore_redstone = false);
 };
 
 namespace blk_id

@@ -352,82 +352,6 @@ void Chunk::RecalculateVbos()
 
 	int triangles_count_simple = 0, triangles_count_complex = 0, triangles_count_fluid = 0;
 	bool visible = false;
-	//chunks in each direciton
-
-	/*Chunk* chunk = this;
-	SimpleBlock* block;
-	for (int y = 0; y < 127; y++)
-		for (int x = 0; x < 16; x += lod_level)
-			for (int z = 0; z < 16; z += lod_level)
-			{
-				int current_x, current_y, current_z;
-				current_y = y + 1;
-				if ((block = GetBlockInArea(x, current_y, z, chunk))->GetFlag(SimpleBlock::OPAQUE))
-				{
-					block->SetFaceVisible(SimpleBlock::TOP, true);
-					triangles_count_simple += 2;
-				}
-				else
-				{
-					block->SetFaceVisible(SimpleBlock::TOP, false);
-				}
-				chunk = this;
-				current_y = y - 1;
-				if ((block = GetBlockInArea(x, current_y, z, chunk))->GetFlag(SimpleBlock::OPAQUE))
-				{
-					block->SetFaceVisible(SimpleBlock::BOTTOM, true);
-					triangles_count_simple += 2;
-				}
-				else
-				{
-					block->SetFaceVisible(SimpleBlock::BOTTOM, false);
-				}
-				chunk = this;
-				current_z = z + lod_level;
-				if ((block = GetBlockInArea(x, y, current_z, chunk))->GetFlag(SimpleBlock::OPAQUE))
-				{
-					block->SetFaceVisible(SimpleBlock::NORTH, true);
-					triangles_count_simple += 2;
-				}
-				else
-				{
-					block->SetFaceVisible(SimpleBlock::NORTH, false);
-				}
-				chunk = this;
-				current_z = z - lod_level;
-				if ((block = GetBlockInArea(x, y, current_z, chunk))->GetFlag(SimpleBlock::OPAQUE))
-				{
-					block->SetFaceVisible(SimpleBlock::SOUTH, true);
-					triangles_count_simple += 2;
-				}
-				else
-				{
-					block->SetFaceVisible(SimpleBlock::SOUTH, false);
-				}
-				chunk = this;
-				current_x = x + lod_level;
-				if ((block = GetBlockInArea(current_x, y, z, chunk))->GetFlag(SimpleBlock::OPAQUE))
-				{
-					block->SetFaceVisible(SimpleBlock::WEST, true);
-					triangles_count_simple += 2;
-				}
-				else
-				{
-					block->SetFaceVisible(SimpleBlock::WEST, false);
-				}
-				chunk = this;
-				current_x = x - lod_level;
-				if ((block = GetBlockInArea(current_x, y, z, chunk))->GetFlag(SimpleBlock::OPAQUE))
-				{
-					block->SetFaceVisible(SimpleBlock::EAST, true);
-					triangles_count_simple += 2;
-				}
-				else
-				{
-					block->SetFaceVisible(SimpleBlock::EAST, false);
-				}
-			}*/
-
 			//adding faces to buffors
 	for (int y = 0; y < 127; y++)
 		for (int x = 0; x < 16; x++)
@@ -525,14 +449,7 @@ void Chunk::RecalculateVbos()
 			}
 
 	std::lock_guard<std::mutex> lock_vertices(vertices_mutex);
-	/*if (vertices_simple)
-	{
-		delete[] vertices_simple;
-	}*/
-	/*if (vertices_complex)
-	{
-		delete[] vertices_complex;
-	}*/
+
 	if (vertices_fluid)
 	{
 		delete[] vertices_fluid;
@@ -553,7 +470,7 @@ void Chunk::RecalculateVbos()
 	bool drawn[128][16][16] = { 0 };
 
 	//triangles_count_simple = 0;
-
+	glm::vec3 color00, color01, color10, color11;
 	for (int y = 0; y < 127; y++)
 		for (int x = 0; x < 16; x++)
 			for (int z = 0; z < 16; z++)
@@ -564,10 +481,10 @@ void Chunk::RecalculateVbos()
 				}
 				else if (blocks[y][x][z]->GetFlag(SimpleBlock::FLUID))
 				{
-					glm::vec3 color00(0, 1 - moisture_values[x][z], 0.9);
-					glm::vec3 color01(0, 1 - moisture_values[x][z + 1], 0.9);
-					glm::vec3 color10(0, 1 - moisture_values[x + 1][z], 0.9);
-					glm::vec3 color11(0, 1 - moisture_values[x + 1][z + 1], 0.9);
+					color00 = glm::vec3(0, 1 - moisture_values[x][z], 0.9);
+					color01 = glm::vec3(0, 1 - moisture_values[x][z + 1], 0.9);
+					color10 = glm::vec3(0, 1 - moisture_values[x + 1][z], 0.9);
+					color11 = glm::vec3(0, 1 - moisture_values[x + 1][z + 1], 0.9);
 					target_fluid = blocks[y][x][z]->CreateFluidModel(target_fluid, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11);
 				}
 				else
@@ -580,10 +497,10 @@ void Chunk::RecalculateVbos()
 						z_offset++;
 					}*/
 					//triangles_count_simple += 2;
-					glm::vec3 color00(0.6 * (moisture_values[x][z]), 0.6, 0.3 * (1 - moisture_values[x][z]));
-					glm::vec3 color01(0.6 * (moisture_values[x][z + 1]), 0.6, 0.3 * (1 - moisture_values[x][z + 1]));
-					glm::vec3 color10(0.6 * (moisture_values[x + 1][z]), 0.6, 0.3 * (1 - moisture_values[x + 1][z]));
-					glm::vec3 color11(0.6 * (moisture_values[x + 1][z + 1]), 0.6, 0.3 * (1 - moisture_values[x + 1][z + 1]));
+					color00 = glm::vec3(0.6 * (moisture_values[x][z]), 0.6, 0.3 * (1 - moisture_values[x][z]));
+					color01 = glm::vec3(0.6 * (moisture_values[x][z + 1]), 0.6, 0.3 * (1 - moisture_values[x][z + 1]));
+					color10 = glm::vec3(0.6 * (moisture_values[x + 1][z]), 0.6, 0.3 * (1 - moisture_values[x + 1][z]));
+					color11 = glm::vec3(0.6 * (moisture_values[x + 1][z + 1]), 0.6, 0.3 * (1 - moisture_values[x + 1][z + 1]));
 					blocks[y][x][z]->CreateSolidModel(vertices_simple, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11, 1, 1);
 					//target_simple = blocks[y][x][z]->CreateSolidModel(target_simple, x + 16 * chunk_x, y, z + 16 * chunk_z, color00, color01, color10, color11, 1, z_offset + 1);
 					//z += z_offset;
@@ -641,6 +558,7 @@ void Chunk::RecalculateComplexVbo()
 			}
 	//recalculate_complex_vbo_needed = true;
 	vbo_complex_update_needed = true;
+	complex_model_changed = false;
 	triangles_count[COMPLEX] = triangles_count_complex;
 }
 

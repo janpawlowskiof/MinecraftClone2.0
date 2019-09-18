@@ -49,6 +49,7 @@ void CreateTorchModel(std::vector<Vertex>& vertices, int world_x, int world_y, i
 
 ComplexBlock::~ComplexBlock()
 {
+	parent_chunk->complex_block_count--;
 }
 
 bool blk::Torch::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int block_x, int block_y, int block_z, RayHitInfo& hit_info)
@@ -272,7 +273,7 @@ bool blk::Redstone::CheckRayCollision(glm::vec3 origin, glm::vec3 direction, int
 
 void blk::Redstone::CreateModel(std::vector<Vertex>& vertices, int world_x, int world_y, int world_z)
 {
-	auto color = glm::vec3(power_level/16.0, 0, 0);
+	auto color = glm::vec3(stable_power_level/16.0, 0, 0);
 	TextureInfo texture_info;
 	texture_info.texture_id = tex_id::redstone_dot;
 	CreateTopFace(vertices, world_x, world_y + 0.02, world_z, TextureInfo(), texture_info, color, color, color, color);

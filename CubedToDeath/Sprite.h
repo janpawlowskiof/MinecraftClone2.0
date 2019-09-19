@@ -21,6 +21,7 @@ public:
 	}
 
 	void Draw(int x, int y, int width, int height);
+	void Draw(float x, float y, float width, float height);
 
 	~Sprite()
 	{

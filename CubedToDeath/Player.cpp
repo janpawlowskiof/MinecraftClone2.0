@@ -33,8 +33,8 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 {
 	//time form prev update
 	double delta_time = glfwGetTime() - last_time;
-	if (delta_time > 0.5)
-		delta_time = 0.01;
+	if (delta_time > 0.4)
+		delta_time = 0.001;
 	last_time = glfwGetTime();
 
 	//finding chunk on which player stands
@@ -46,8 +46,6 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 	//movement delta in every given LOCAL direction
 
 	float delta_forward = 0, delta_right = 0, delta_up = 0;
-	if (!MyCraft::command_input_enabled)
-	{
 		delta_forward =
 			((glfwGetKey(MyCraft::window, GLFW_KEY_W) == GLFW_PRESS) - (glfwGetKey(MyCraft::window, GLFW_KEY_S) == GLFW_PRESS));
 		delta_right =
@@ -59,7 +57,6 @@ void Player::Update(std::map<std::pair<int, int>, Chunk*> chunk_map)
 		{
 			speed.y = 10;
 		}*/
-	}
 
 	//forward but aligned to the ground
 	forward_flat = glm::angleAxis(glm::radians(yaw), glm::vec3(0, 1, 0)) * glm::vec3(0, 0, -1);

@@ -126,13 +126,11 @@ namespace blk
 			if ((parent_power-0.5)*(power_level-0.5) > 0)
 			{
 				ticks_left_to_toggle--;
-				std::cout << "Ticks left to toggle " << (int)ticks_left_to_toggle << "\n";
 				if (ticks_left_to_toggle < 0)
 				{
 					power_level = parent_power > 0 ? 0 : 16;
 					model_changed = true;
 					ticks_left_to_toggle = ticks_to_toggle;
-					std::cout << "Toggled!";
 				}
 
 				RecalculateNeightboursPowerLevel(true);

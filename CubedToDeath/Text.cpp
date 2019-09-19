@@ -6,7 +6,7 @@
 
 Text::Text(std::string path)
 {
-	sprite = new Sprite("res/background_bar.png");
+	//sprite = new Sprite("res/background_bar.png");
 
 	if (FT_Init_FreeType(&ft))
 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
@@ -87,7 +87,7 @@ void Text::RenderText(Shader* shader, std::string text, float x, float y, float 
 		total_height = std::max(ch.Size.y* scale, total_height);
 	}
 	
-	sprite->Draw(x - 15, y - 5, total_width + 15, total_height);
+	//sprite->Draw(x - 15, y - 5, total_width + 15, total_height);
 
 	shader->Use();
 	shader->SetMat4(shader->projection_location, projection);
@@ -132,7 +132,7 @@ Text::~Text()
 {
 	FT_Done_Face(face);
 	FT_Done_FreeType(ft);
-	delete sprite;
+	//delete sprite;
 	glDeleteBuffers(1, &vbo);
 	glDeleteVertexArrays(1, &vao);
 }

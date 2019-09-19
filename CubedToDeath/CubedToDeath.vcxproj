@@ -184,6 +184,7 @@
     <ClCompile Include="TextureArray.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BlockMenu.h" />
     <ClInclude Include="BlockUpdater.h" />
     <ClInclude Include="Chunk.h" />
     <ClInclude Include="ChunkManager.h" />

@@ -55,6 +55,7 @@ void MyCraft::InitializeOpenGL()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetCharCallback(window, character_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
 
 	glGenFramebuffers(1, &fbo_shadow_map);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo_shadow_map);
@@ -140,6 +141,7 @@ void MyCraft::Run()
 	std::cout << glGetString(GL_RENDERER) << std::endl;
 	//std::cout << glGetString(GL_VENDOR) << std::endl;
 	command.Initialize();
+	block_menu.Initialize();
 
 	//texture_terrain = new Texture(config_map["texture_terrain_path"], 0);
 	texture_terrain_array = new TextureArray("res");
@@ -203,12 +205,16 @@ void MyCraft::Run()
 	while (!(program_should_close = glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS))
 	{
 		glfwPollEvents();
+		glEnable(GL_DEPTH_TEST);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		chunk_map = ChunkManager::GetChunkMap();
 		//glActiveTexture(GL_TEXTURE0);
 
-		player->Update(chunk_map);
+		if (!command_input_enabled)
+		{
+			player->Update(chunk_map);
+		}
 
 		DeleteBuffers();
 		RenderShadowMaps();
@@ -220,18 +226,34 @@ void MyCraft::Run()
 		ChunkManager::GiveThreadPermissionToUnloadChunks(ChunkManager::MAIN);
 
 		current_time = glfwGetTime();
-		glClear(GL_DEPTH_BUFFER_BIT);
+		
 
-		crosshair->Draw(width / 2 - 40, height / 2 - 40, 80, 80);
-
+		glDisable(GL_DEPTH_TEST);
 		text->RenderText(text_shader, "Postion: " + std::to_string(Player::position.x) + ", " + std::to_string(Player::position.y) + ", " + std::to_string(Player::position.z), 25.0f, 25.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		text->RenderText(text_shader, "Fps: " + std::to_string((int)(1.0 / (current_time - last_time))), 25.0f, height - 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
 		if(Player::current_chunk)
 			text->RenderText(text_shader, "Complex Count: " + std::to_string(Player::current_chunk->complex_block_count), 25.0f, height - 75.0f, 0.5f, Player::coliding ? glm::vec3(1, 0.1, 0.1) : glm::vec3(0.1, 1, 0.1));
 
 		if (command_input_enabled)
+		{
 			text->RenderText(text_shader, "Input: " + command_input, 25.0f, 50.0f, 0.5f, glm::vec3(0.9, 0.9, 0.9));
+			block_menu.Render((float)width/(float)height, Player::selected_block_id);
+
+			if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+			{
+				int selected_item = block_menu.SelectItem(glm::vec2(last_x, height-last_y)/(float)height, (float)width/(float)height);
+				if (selected_item > 0)
+				{
+					Player::selected_block_id = selected_item;
+				}
+			}
+		}
+		else
+		{
+			crosshair->Draw(width / 2 - 40, height / 2 - 40, 80, 80);
+		}
 		
+
 		last_time = current_time;
 
 		//post_shader->Use();
@@ -293,6 +315,7 @@ void MyCraft::LoadConfig(std::string path)
 		std::cerr << "Couldn't open config file\n";
 	}
 }
+
 
 void MyCraft::WorldManagerFunction()
 {
@@ -602,6 +625,13 @@ void MyCraft::RenderParticles()
 
 void MyCraft::mouse_callback(GLFWwindow* window, double x, double y)
 {
+	if (command_input_enabled)
+	{
+		last_x = x;
+		last_y = y;
+		return;
+	}
+
 	if (first_mouse)
 	{
 		last_x = x;
@@ -614,8 +644,9 @@ void MyCraft::mouse_callback(GLFWwindow* window, double x, double y)
 	last_x = x;
 	last_y = y;
 
-	//updates player camera position
-	player->UpdateMouse(xoffset, yoffset);
+
+	if(!command_input_enabled)
+		player->UpdateMouse(xoffset, yoffset);
 }
 
 void MyCraft::character_callback(GLFWwindow* window, unsigned int codepoint)
@@ -628,15 +659,17 @@ void MyCraft::character_callback(GLFWwindow* window, unsigned int codepoint)
 
 void MyCraft::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
+	if (key == GLFW_KEY_E && action == GLFW_PRESS)
 	{
 		if (command_input_enabled)
 		{
 			command_input_enabled = false;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		else
 		{
 			command_input_enabled = true;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		}
 	}
 	if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS)
@@ -712,6 +745,7 @@ Sprite* MyCraft::crosshair;
 glm::vec3 MyCraft::light_direction = glm::normalize(glm::vec3(0.5, 0.9, 0.1));
 glm::vec3 MyCraft::light_color = glm::vec3(0.9, 0.7, 0.7);
 bool MyCraft::program_should_close = false;
+BlockMenu MyCraft::block_menu;
 
 ///testing
 unsigned int MyCraft::quadVAO;

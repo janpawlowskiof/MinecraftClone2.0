@@ -18,6 +18,7 @@
 #include "Sprite.h"
 #include "Command.h"
 #include "ParticleSystem.h"
+#include "BlockMenu.h"
 
 class MyCraft
 {
@@ -94,6 +95,7 @@ private:
 	//crosshair sprite
 	static Sprite* crosshair;
 	static Command command;
+	static BlockMenu block_menu;
 	static std::string command_input;
 	static std::mutex buffers_queue_mutex;
 	static std::vector<unsigned int> vbos_delete_queue;

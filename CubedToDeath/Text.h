@@ -21,7 +21,6 @@ public:
 	Text(std::string path);
 	~Text();
 	void RenderText(Shader* shader, std::string text, float x, float y, float scale, glm::vec3 color);
-	Sprite* sprite;
 private:
 	std::map<char, Character> Characters;
 	FT_Library ft;

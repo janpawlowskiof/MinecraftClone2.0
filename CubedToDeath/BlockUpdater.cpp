@@ -6,7 +6,6 @@ int c = 0;
 void BlockUpdater::Update()
 {
 	chunk_map = ChunkManager::GetChunkMap();
-	std::cout << "Tick " << c++ << " !\n";
 	for (auto iterator : chunk_map)
 	{
 		auto chunk = iterator.second;

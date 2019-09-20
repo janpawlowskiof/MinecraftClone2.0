@@ -9,8 +9,14 @@ void BlockUpdater::Update()
 	for (auto iterator : chunk_map)
 	{
 		auto chunk = iterator.second;
+
 		if (chunk->complex_block_count <= 0)
 			continue;
+
+		if (!chunk->north_chunk || !chunk->south_chunk || !chunk->east_chunk || !chunk->west_chunk ||
+			!chunk->north_chunk->west_chunk || !chunk->south_chunk->east_chunk || !chunk->east_chunk->south_chunk || !chunk->west_chunk->north_chunk)
+			continue;
+
 		//Updating every complex block
 		chunk->contains_redstone = false;
 		for (int y = 0; y < 127; y++)
@@ -31,6 +37,9 @@ void BlockUpdater::Update()
 	{
 		auto chunk = iterator.second;
 		if (chunk->complex_block_count <= 0)
+			continue;
+		if (!chunk->north_chunk || !chunk->south_chunk || !chunk->east_chunk || !chunk->west_chunk ||
+			!chunk->north_chunk->west_chunk || !chunk->south_chunk->east_chunk || !chunk->east_chunk->south_chunk || !chunk->west_chunk->north_chunk)
 			continue;
 		if (chunk->contains_redstone)
 		{
@@ -55,6 +64,10 @@ void BlockUpdater::Update()
 		auto chunk = iterator.second;
 		if (chunk->complex_block_count <= 0)
 			continue;
+		if (!chunk->north_chunk || !chunk->south_chunk || !chunk->east_chunk || !chunk->west_chunk ||
+			!chunk->north_chunk->west_chunk || !chunk->south_chunk->east_chunk || !chunk->east_chunk->south_chunk || !chunk->west_chunk->north_chunk)
+			continue;
+
 			for (int y = 0; y < 127; y++)
 				for (int x = 0; x < 16; x++)
 					for (int z = 0; z < 16; z++)

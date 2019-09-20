@@ -131,6 +131,13 @@ void main()
 	vec3 diffuse = diff * 1.0 * light_color;
 	vec3 specular_value = vec3(0);
 	//float specular_strength = 0.1;
+
+		if(specular.b > 0.5)
+	{
+		frag = mix(vec4(135, 206, 235, 255)/255.0, color, fog_factor);
+		return;
+	}
+
 	if(specular.r > 0)
 	{
 		vec3 view_dir = normalize(view_pos - fragment.position);

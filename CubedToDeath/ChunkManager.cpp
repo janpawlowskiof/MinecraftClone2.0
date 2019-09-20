@@ -4,12 +4,21 @@
 #include <stdlib.h>
 #include "ComplexBlock.h"
 #include "Save.h"
+#include <filesystem>
 
-ChunkManager::ChunkManager()
+void ChunkManager::Initialize(std::string world_path)
 {
+	std::filesystem::create_directories("./" + world_path);
+
+
+	ChunkManager::world_path = world_path;
+	save::WorldSaveHeader world_save_header = save::LoadWorldSaveHeader(world_path);
+	Player::position = world_save_header.player_position;
+	ChunkManager::seed = world_save_header.seed;
+
 	//noise map initialization
 	test_noise.SetNoiseType(FastNoise::Cubic);
-	test_noise.SetSeed(1337);
+	test_noise.SetSeed(seed);
 	//test_noise.SetFractalOctaves(2);
 	//test_noise.SetFractalLacunarity(1.5);
 	//test_noise.SetFractalGain(1.1);
@@ -17,29 +26,29 @@ ChunkManager::ChunkManager()
 	test_noise.SetGradientPerturbAmp(2.0);
 
 	d3_noise.SetNoiseType(FastNoise::Cubic);
-	d3_noise.SetSeed(18797);
+	d3_noise.SetSeed(8 * seed + 736);
 	d3_noise.SetFrequency(0.08);
 	//d3_noise.SetGradientPerturbAmp(2.0);
 
 	tree_noise.SetNoiseType(FastNoise::Value);
 	tree_noise.SetFrequency(0.2);
-	tree_noise.SetSeed(42319);
+	tree_noise.SetSeed(seed * 5.84);
 
 	tree_placement_noise.SetNoiseType(FastNoise::Simplex);
 	tree_placement_noise.SetFrequency(0.005);
-	tree_placement_noise.SetSeed(427);
+	tree_placement_noise.SetSeed((seed + 97912)%37100 * 3.7);
 
 	moisture_noise.SetNoiseType(FastNoise::Simplex);
 	//mountain_placement_noise.SetFractalOctaves(2);
 	moisture_noise.SetFrequency(0.006);
-	moisture_noise.SetSeed(1543676);
+	moisture_noise.SetSeed(9072512 * seed);
 
 	tectonical_noise.SetNoiseType(FastNoise::Simplex);
 	tectonical_noise.SetFrequency(0.005);
-	moisture_noise.SetSeed(847593);
+	moisture_noise.SetSeed(seed * 6.6 + 543133);
 
 	ocean_noise.SetFrequency(0.001);
-	ocean_noise.SetSeed(55645);
+	ocean_noise.SetSeed(seed * 0.3 + 7812);
 }
 
 void ChunkManager::Update()
@@ -405,6 +414,7 @@ void ChunkManager::QueueBlockToUnload(SimpleBlock* block)
 //saves all of the loaded chunks if they need to be saved
 void ChunkManager::CleanUp()
 {
+	save::SaveWorldHeader(seed, Player::position, world_path);
 	for (auto iterator : chunk_map)
 	{
 		auto chunk = iterator.second;
@@ -445,3 +455,5 @@ std::mutex ChunkManager::block_unload_queue_mutex;
 std::mutex ChunkManager::chunk_unload_queue_mutex;
 int ChunkManager::last_chunk_x = 10;
 int ChunkManager::last_chunk_z = 10;
+int ChunkManager::seed = 1111;
+std::string ChunkManager::world_path = "world";

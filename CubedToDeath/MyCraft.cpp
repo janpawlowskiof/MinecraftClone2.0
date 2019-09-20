@@ -109,11 +109,7 @@ void MyCraft::InitializeOpenGL()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//glEnable(GL_MULTISAMPLE);
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-	//glEnable(GL_DEBUG_OUTPUT);
-	//glDebugMessageCallback(MessageCallback, 0);
+	std::cout << glGetString(GL_RENDERER) << std::endl;
 }
 
 bool LineInView(glm::vec2 p1, glm::vec2 p2)
@@ -134,14 +130,12 @@ void MyCraft::Run()
 	height = std::stoi(config_map["height"]);
 	width = std::stoi(config_map["width"]);
 	render_distance = std::stoi(config_map["render_distance"]);
-
 	//Initializing opengl stuff
 	InitializeOpenGL();
-
-	std::cout << glGetString(GL_RENDERER) << std::endl;
 	//std::cout << glGetString(GL_VENDOR) << std::endl;
 	command.Initialize();
 	block_menu.Initialize();
+	ChunkManager::Initialize(config_map["world_path"]);
 
 	//texture_terrain = new Texture(config_map["texture_terrain_path"], 0);
 	texture_terrain_array = new TextureArray("res");

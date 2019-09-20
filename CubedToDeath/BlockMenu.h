@@ -39,6 +39,7 @@ public:
 		AddItem(blk_id::cobblestone_id, "res/block/cobblestone.png");
 		AddItem(blk_id::grass_id, "res/block/grass_block_side.png");
 		AddItem(blk_id::gold_ore_id, "res/block/gold_ore.png");
+		AddItem(blk_id::lapis_ore_id, "res/block/lapis_ore.png");
 		AddItem(blk_id::iron_block_id, "res/block/iron_block.png");
 		AddItem(blk_id::planks_id, "res/block/birch_planks.png");
 		AddItem(blk_id::wood_id, "res/block/birch_log.png");
@@ -74,19 +75,16 @@ public:
 	}
 	int SelectItem(glm::vec2 cursor_position, float aspect_ratio)
 	{
-		std::cout << "mx " << cursor_position.x << "   my " << cursor_position.y << "\n";
 		for (auto iterator : block_sprite_map)
 		{
 			auto item = iterator.second;
 			const float x = item->position.x + aspect_ratio / 2.0f - TOTAL_WIDTH() / 2.0f;
 			const float y = -item->position.y + 1.0f / 2.0f + TOTAL_HEIGHT() / 2.0f;
-			std::cout << "y " << y << "\n";
 
 			if (cursor_position.x >= x && cursor_position.y >= y &&
 				cursor_position.x <= x + item_size && cursor_position.y <= y + item_size)
 			{
-			std::cout << "Selected " << (int)item->id << "\n";
-			return item->id;
+				return item->id;
 			}
 		}
 		return -1;

@@ -7,13 +7,51 @@
 #include <vector>
 #include <iterator>
 
-#define HEADERSIZE sizeof(save::SaveHeader)
+#define CHUNKHEADERSIZE sizeof(save::ChunkSaveHeader)
+#define WORLDHEADERSIZE sizeof(save::WorldSaveHeader)
 #define cpx(x) ((ComplexBlock*)x)
 
 namespace save
 {
+	struct WorldSaveHeader
+	{
+		int seed;
+		glm::vec3 player_position;
+	};
+
+	void SaveWorldHeader(int seed, glm::vec3 player_position, std::string world_name)
+	{
+		WorldSaveHeader header;
+		header.seed = seed;
+		header.player_position = player_position;
+
+		std::ofstream save_file;
+		save_file.open(world_name + ".world", std::ios::out | std::ios::trunc | std::ios::binary);
+		save_file.write(reinterpret_cast<const char*>(&header), WORLDHEADERSIZE);
+	}
+
+	WorldSaveHeader LoadWorldSaveHeader(std::string name)
+	{
+		WorldSaveHeader header;
+		std::ifstream file;
+		file.open(name+".world", std::ios::in | std::ios::binary | std::ios::beg);
+		if (file.is_open())
+		{
+			file.read(reinterpret_cast<char*>(&header), WORLDHEADERSIZE);
+			file.close();
+		}
+		else
+		{
+			header.player_position = glm::vec3(0, 100, 0);
+			srand(time(NULL));
+			header.seed = rand();
+			SaveWorldHeader(header.seed, header.player_position, name);
+		}
+		return header;
+	}
+
 	//header info containing chunk specific data
-	struct SaveHeader
+	struct ChunkSaveHeader
 	{
 		int height_values[16][16];
 		int chunk_x = 0, chunk_z = 0;
@@ -24,7 +62,7 @@ namespace save
 	//returns path to save file for chunk of given coordinates
 	std::string GetSavePath(int chunk_x, int chunk_z)
 	{
-		const std::string filename = MyCraft::config_map["world_path"] + "/" + std::to_string(chunk_x) + "x" + std::to_string(chunk_z) + ".bin";
+		const std::string filename = ChunkManager::world_path + "/" + std::to_string(chunk_x) + "x" + std::to_string(chunk_z) + ".bin";
 		return filename;
 	}
 
@@ -32,7 +70,7 @@ namespace save
 	void SaveChunk(Chunk* chunk)
 	{
 		//		1)	a header is written into a file
-		SaveHeader header;
+		ChunkSaveHeader header;
 		memcpy(header.height_values, chunk->height_values, 16 * 16 * sizeof(int));
 		header.chunk_x = chunk->chunk_x;
 		header.chunk_z = chunk->chunk_z;
@@ -43,7 +81,7 @@ namespace save
 
 		std::ofstream save_file;
 		save_file.open(GetSavePath(chunk->chunk_x, chunk->chunk_z), std::ios::out | std::ios::trunc | std::ios::binary);
-		save_file.write(reinterpret_cast<const char*>(&header), HEADERSIZE);
+		save_file.write(reinterpret_cast<const char*>(&header), CHUNKHEADERSIZE);
 
 		const int block_save_data_size = 1;
 
@@ -90,8 +128,8 @@ namespace save
 
 		//		1) header is read from a file
 		Chunk* chunk = new Chunk(chunk_x, chunk_z);
-		SaveHeader header;
-		save_file.read(reinterpret_cast<char*>(&header), HEADERSIZE);
+		ChunkSaveHeader header;
+		save_file.read(reinterpret_cast<char*>(&header), CHUNKHEADERSIZE);
 		chunk->structures_generated = header.structures_generated;
 		memcpy(chunk->height_values, header.height_values, 16 * 16 * sizeof(int));
 		save_file.unsetf(std::ios::skipws);

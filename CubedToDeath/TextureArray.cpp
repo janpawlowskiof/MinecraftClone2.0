@@ -81,9 +81,15 @@ TextureArray::TextureArray(std::string path)
 	LoadLayer(tex_id::planks, "res/block/birch_planks.png");
 	LoadLayer(tex_id::planks_n, "res/block/birch_planks_n.png");
 	LoadLayer(tex_id::planks_s, "res/block/birch_planks_s.png");
+
 	LoadLayer(tex_id::gold_ore, "res/block/gold_ore.png");
 	LoadLayer(tex_id::gold_ore_n, "res/block/gold_ore_n.png");
 	LoadLayer(tex_id::gold_ore_s, "res/block/gold_ore_s.png");
+
+	LoadLayer(tex_id::lapis_ore, "res/block/lapis_ore.png");
+	LoadLayer(tex_id::lapis_ore_n, "res/block/lapis_ore_n.png");
+	LoadLayer(tex_id::lapis_ore_s, "res/block/lapis_ore_s.png");
+
 	LoadLayer(tex_id::iron_block, "res/block/iron_block.png");
 	LoadLayer(tex_id::iron_block_n, "res/block/iron_block_n.png");
 	LoadLayer(tex_id::iron_block_s, "res/block/iron_block_s.png");
@@ -105,6 +111,13 @@ TextureArray::TextureArray(std::string path)
 	LoadLayer(tex_id::redstone_block, "res/block/redstone_block.png");
 	LoadLayer(tex_id::redstone_block_n, "res/block/redstone_block_n.png");
 	LoadLayer(tex_id::redstone_block_s, "res/block/redstone_block_s.png");
+
+	LoadLayer(tex_id::redstone_lamp_on, "res/block/redstone_lamp_on.png");
+	LoadLayer(tex_id::redstone_lamp_on_n, "res/block/redstone_lamp_on_n.png");
+	LoadLayer(tex_id::redstone_lamp_on_s, "res/block/redstone_lamp_on_s.png");
+	LoadLayer(tex_id::redstone_lamp_off, "res/block/redstone_lamp.png");
+	LoadLayer(tex_id::redstone_lamp_off_n, "res/block/redstone_lamp_n.png");
+	LoadLayer(tex_id::redstone_lamp_off_s, "res/block/redstone_lamp_s.png");
 
 	LoadLayer(tex_id::redstone, "res/block/redstone_dust_line0.png");
 	LoadLayer(tex_id::redstone_dot, "res/block/redstone_dust_dot.png");

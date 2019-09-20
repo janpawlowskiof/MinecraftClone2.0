@@ -209,6 +209,12 @@ void SimpleBlock::CreateSolidModel(std::vector<Vertex>& vertices, int world_x, i
 		texture_side.specular_id = texture_top.specular_id = tex_id::gold_ore_s;
 		color00 = color01 = color10 = color11 = no_colorization;
 		break;
+	case blk_id::lapis_ore_id:
+		texture_side.texture_id = texture_top.texture_id = tex_id::lapis_ore;
+		texture_side.normal_id = texture_top.normal_id = tex_id::lapis_ore_n;
+		texture_side.specular_id = texture_top.specular_id = tex_id::lapis_ore_s;
+		color00 = color01 = color10 = color11 = no_colorization;
+		break;
 	case blk_id::iron_block_id:
 		texture_side.texture_id = texture_top.texture_id = tex_id::iron_block;
 		texture_side.normal_id = texture_top.normal_id = tex_id::iron_block_n;

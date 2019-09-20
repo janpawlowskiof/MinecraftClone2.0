@@ -11,7 +11,7 @@ typedef std::map<std::pair<int, int>, Chunk*> chunk_hash_map;
 class ChunkManager
 {
 public:
-	ChunkManager();
+	static void Initialize(std::string world_path);
 	//noise maps for terrain generation
 	static FastNoise test_noise;
 	static FastNoise moisture_noise;
@@ -53,6 +53,8 @@ public:
 	static void CleanUp();
 	//helper struct
 	static void UnloadChunks();
+	static int seed;
+	static std::string world_path;
 private:
 	template <typename T>
 	struct ItemQueuedToUnload

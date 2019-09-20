@@ -219,7 +219,27 @@ void Chunk::GenerateStructures()
 					ReplaceBlock(x, ground_level + 4, z + 1, new SimpleBlock(blk_id::leaves_id), false);
 					ReplaceBlock(x, ground_level + 4, z - 1, new SimpleBlock(blk_id::leaves_id), false);
 					ReplaceBlock(x, ground_level + 4, z + 2, new SimpleBlock(blk_id::leaves_id), false);
-					ReplaceBlock(x, ground_level + 4, z - 2, SimpleBlock::CreateNew(blk_id::leaves_id), false);
+					ReplaceBlock(x, ground_level + 4, z - 2, new SimpleBlock(blk_id::leaves_id), false);
+
+					ReplaceBlock(x + 1, ground_level + 4, z + 1, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x - 1, ground_level + 4, z + 1, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x - 1, ground_level + 4, z - 1, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x+1, ground_level + 4, z-1, new SimpleBlock(blk_id::leaves_id), false);
+
+					ReplaceBlock(x + 2, ground_level + 4, z - 1, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x + 2, ground_level + 4, z + 1, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x - 2, ground_level + 4, z - 1, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x - 2, ground_level + 4, z + 1, new SimpleBlock(blk_id::leaves_id), false);
+
+					ReplaceBlock(x + 1, ground_level + 4, z + 2, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x - 1, ground_level + 4, z + 2, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x + 1, ground_level + 4, z - 2, new SimpleBlock(blk_id::leaves_id), false);
+					ReplaceBlock(x - 1, ground_level + 4, z - 2, new SimpleBlock(blk_id::leaves_id), false);
+
+					for (int x_offset = -1; x_offset <= 1; x_offset++)
+						for(int z_offset = -1; z_offset <= 1; z_offset++)
+							ReplaceBlock(x + x_offset, ground_level + 5, z + z_offset, new SimpleBlock(blk_id::leaves_id), false);
+
 					//ReplaceBlock(x, ground_level + 5, z, SimpleBlock::CreateNew(blk_id::torch_id), false);
 					//ReplaceBlock(x, ground_level + 3, z + 1, new SimpleBlock(blk_id::leaves_id), false);
 					//ReplaceBlock(x, ground_level + 3, z-1, new SimpleBlock(blk_id::leaves_id), false);
